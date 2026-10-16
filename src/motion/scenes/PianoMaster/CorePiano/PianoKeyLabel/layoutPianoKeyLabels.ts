@@ -10,17 +10,17 @@ import {
   pitchClass,
   type KeyRect,
   type NoteInput,
-} from '../../../shared/piano';
-import type { KeyboardLook } from './keyboardLook';
+} from '../../../../../shared/piano';
+import type { PianoKeyLabelLook } from './pianoKeyLabelLook';
 
 /**
  * "white": every white key, with the octave on each C.
  * "all": black keys too. "none": no names.
  * A list of notes: only those keys, letter only (as in a lesson hand position).
  */
-export type PianoLabels = 'white' | 'all' | 'none' | readonly NoteInput[];
+export type PianoKeyLabels = 'white' | 'all' | 'none' | readonly NoteInput[];
 
-export type KeyLabel = {
+export type PianoKeyLabelLayout = {
   midi: number;
   text: string;
   centerX: number;
@@ -29,30 +29,27 @@ export type KeyLabel = {
   color: string;
 };
 
-/** Smallest name worth showing, in points. */
-const MIN_SIZE = 6;
-const BLACK_SCALE = 0.8;
-
-export function keyLabels(
+export function layoutPianoKeyLabels(
   rects: readonly KeyRect[],
-  mode: PianoLabels,
-  look: KeyboardLook,
+  mode: PianoKeyLabels,
+  look: PianoKeyLabelLook,
   pitch: number,
-): KeyLabel[] {
-  const size = look.label.size * pitch;
-  if (mode === 'none' || size < MIN_SIZE) {
+): PianoKeyLabelLayout[] {
+  const size = look.size * pitch;
+  if (mode === 'none' || size < look.minSize) {
     return [];
   }
+  const blackSize = size * look.black.scale;
   const chosen =
     typeof mode === 'string'
       ? null
       : new Set(mode.map(note => parseNote(note)));
-  const labels: KeyLabel[] = [];
+  const labels: PianoKeyLabelLayout[] = [];
   for (const key of rects) {
     const listed = chosen?.has(key.midi) ?? false;
     const wanted = chosen
       ? listed
-      : !key.isBlack || (mode === 'all' && size * BLACK_SCALE >= MIN_SIZE);
+      : !key.isBlack || (mode === 'all' && blackSize >= look.minSize);
     if (!wanted) {
       continue;
     }
@@ -68,10 +65,10 @@ export function keyLabels(
       text,
       centerX: key.x + key.width / 2,
       baseline: key.isBlack
-        ? bottom - 0.3 * pitch
-        : bottom - look.label.baseline * pitch,
-      size: key.isBlack ? size * BLACK_SCALE : size,
-      color: key.isBlack ? look.label.blackColor : look.label.color,
+        ? bottom - look.black.baseline * pitch
+        : bottom - look.baseline * pitch,
+      size: key.isBlack ? blackSize : size,
+      color: key.isBlack ? look.black.color : look.color,
     });
   }
   return labels;

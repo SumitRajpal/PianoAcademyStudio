@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
-import { MIDI_MAX } from '../../../shared/piano';
+import { MIDI_MAX } from '../../../../shared/piano';
 
 /** What a lit key means. Each role has its own colour in the theme. */
 export const KeyRole = {
@@ -43,7 +43,7 @@ export function createKeyLights(): PianoKeyLights {
   };
 }
 
-/** Creates the key state for one or more PianoMaster keyboards. */
+/** Creates the key state for one or more CorePiano keyboards. */
 export function usePianoState(): PianoState {
   const [initial] = useState(createKeyLights);
   return useSharedValue(initial);

@@ -23,7 +23,16 @@
       "description": "animation drivers, scenes and rendering (UI thread + GPU)",
       "modules": [
         "src/motion/scenes/PianoMaster",
-        "src/motion/scenes/SheetMusic"
+        "src/motion/scenes/PianoMaster/CoreNotes",
+        "src/motion/scenes/PianoMaster/CorePiano",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+        "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+        "src/motion/scenes/PianoMaster/shared"
       ]
     },
     {
@@ -124,16 +133,54 @@
       "kind": "scene",
       "plane": "motion",
       "thread": "ui",
-      "purpose": "The piano's single source of truth on screen: draws a keyboard of any range (48 keys by default, 88, 108 or any other) with Skia, and owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "entry": "src/motion/scenes/PianoMaster/index.ts",
       "files": [
-        "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-        "src/motion/scenes/PianoMaster/drawKeyboard.ts",
-        "src/motion/scenes/PianoMaster/index.ts",
-        "src/motion/scenes/PianoMaster/keyboardLook.ts",
-        "src/motion/scenes/PianoMaster/labels.ts",
-        "src/motion/scenes/PianoMaster/pianoState.ts",
-        "src/motion/scenes/PianoMaster/theme.ts"
+        "src/motion/scenes/PianoMaster/index.ts"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes",
+      "name": "motion/scenes/PianoMaster/CoreNotes",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+        "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native-skia"
+      ],
+      "assets": [
+        "assets/fonts/Bravura.otf",
+        "assets/fonts/Leland.otf"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano",
+      "name": "motion/scenes/PianoMaster/CorePiano",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The piano keyboard at the bottom of PianoMaster: draws any range with Skia from one WhitePianoKey and one BlackPianoKey reused at every position, with the keybed, shadows, marker dots, note names and lit keys.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+        "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts"
       ],
       "packages": [
         "react",
@@ -144,31 +191,152 @@
       "hasWorklets": true
     },
     {
-      "id": "src/motion/scenes/SheetMusic",
-      "name": "motion/scenes/SheetMusic",
-      "kind": "scene",
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "name": "motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "kind": "module",
       "plane": "motion",
       "thread": "ui",
-      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
-      "entry": "src/motion/scenes/SheetMusic/index.ts",
+      "purpose": "The one black piano key: how it looks at rest and when lit. CorePiano draws it at every black key position.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
       "files": [
-        "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-        "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-        "src/motion/scenes/SheetMusic/drawStaff.ts",
-        "src/motion/scenes/SheetMusic/index.ts",
-        "src/motion/scenes/SheetMusic/paint.ts",
-        "src/motion/scenes/SheetMusic/score.ts",
-        "src/motion/scenes/SheetMusic/staffLook.ts",
-        "src/motion/scenes/SheetMusic/useNotationTypefaces.ts"
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKey.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKeyLight.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "name": "motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The shadows the black piano keys cast on the white keys, drawn for all black keys in one blurred layer.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/drawBlackPianoKeyShadows.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "name": "motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The shadow the keyboard frame casts across the top of the white piano keys.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/drawPianoFrameShadow.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "name": "motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "Note names on the piano keys: which keys show one and where (pure), and the system text that draws each name.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts"
+      ],
+      "packages": [
+        "react-native"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "name": "motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The dot under a marked piano key, such as middle C.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/drawPianoKeyMarker.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "name": "motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The keybed under the piano keys: the colour that shows through the gaps between the keys and the frame around them.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/drawPianoKeybed.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/pianoKeybedLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "name": "motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The one white piano key: how it looks at rest and when lit. CorePiano draws it at every white key position.",
+      "entry": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKey.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKeyLight.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+        "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared",
+      "name": "motion/scenes/PianoMaster/shared",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, picture recording and the look units.",
+      "entry": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/shared/index.ts",
+        "src/motion/scenes/PianoMaster/shared/keyRoleColors.ts",
+        "src/motion/scenes/PianoMaster/shared/linearGradient.ts",
+        "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
+        "src/motion/scenes/PianoMaster/shared/pianoLookUnits.ts",
+        "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+        "src/motion/scenes/PianoMaster/shared/recordPicture.ts"
       ],
       "packages": [
         "react",
+        "react-native-reanimated",
         "react-native-skia"
       ],
-      "assets": [
-        "assets/fonts/Bravura.otf",
-        "assets/fonts/Leland.otf"
-      ]
+      "hasWorklets": true
     },
     {
       "id": "src/screens/LessonScreen",
@@ -260,125 +428,8 @@
       "lang": "swift"
     },
     {
-      "id": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "PianoMaster",
-        "PianoMasterProps"
-      ],
-      "hasWorklets": true
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "Size",
-        "drawBlackLayer",
-        "drawWhiteLayer",
-        "pitchOf",
-        "recordPicture"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/index.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "purpose": "The piano's single source of truth on screen: draws a keyboard of any range (48 keys by default, 88, 108 or any other) with Skia, and owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
-      "exports": [
-        "DEFAULT_RANGE",
-        "DEFAULT_ROLE_COLORS",
-        "GradientStop",
-        "KeyLabel",
-        "KeyRole",
-        "KeyboardLook",
-        "KeyboardProportions",
-        "KeyboardRange",
-        "LESSON_LOOK",
-        "NoteInput",
-        "PIANO_RANGES",
-        "PianoKeyLights",
-        "PianoLabels",
-        "PianoMaster",
-        "PianoMasterProps",
-        "PianoState",
-        "RoleColors",
-        "createKeyLights",
-        "drawBlackLayer",
-        "drawWhiteLayer",
-        "keyLabels",
-        "lightKey",
-        "pitchOf",
-        "recordPicture",
-        "unlightAllKeys",
-        "unlightKey",
-        "usePianoState"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/keyboardLook.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "GradientStop",
-        "KeyboardLook",
-        "LESSON_LOOK"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/labels.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "KeyLabel",
-        "PianoLabels",
-        "keyLabels"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/pianoState.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "KeyRole",
-        "PianoKeyLights",
-        "PianoState",
-        "createKeyLights",
-        "lightKey",
-        "unlightAllKeys",
-        "unlightKey",
-        "usePianoState"
-      ],
-      "hasWorklets": true
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/theme.ts",
-      "module": "src/motion/scenes/PianoMaster",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "DEFAULT_ROLE_COLORS",
-        "RoleColors",
-        "roleColors"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -388,8 +439,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -398,8 +449,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/drawStaff.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -411,8 +462,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/index.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -441,8 +492,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/paint.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -452,8 +503,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/score.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -469,8 +520,8 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/staffLook.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
@@ -482,13 +533,541 @@
       ]
     },
     {
-      "id": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
-      "module": "src/motion/scenes/SheetMusic",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
       "exports": [
         "useNotationTypefaces"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "BlackPianoKeyLook",
+        "LESSON_BLACK_PIANO_KEY_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKey.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawBlackPianoKey"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKeyLight.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawBlackPianoKeyLight"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The one black piano key: how it looks at rest and when lit. CorePiano draws it at every black key position.",
+      "exports": [
+        "BlackPianoKeyLook",
+        "LESSON_BLACK_PIANO_KEY_LOOK",
+        "drawBlackPianoKey",
+        "drawBlackPianoKeyLight"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "BlackPianoKeyShadowsLook",
+        "LESSON_BLACK_PIANO_KEY_SHADOWS_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/drawBlackPianoKeyShadows.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawBlackPianoKeyShadows"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The shadows the black piano keys cast on the white keys, drawn for all black keys in one blurred layer.",
+      "exports": [
+        "BlackPianoKeyShadowsLook",
+        "LESSON_BLACK_PIANO_KEY_SHADOWS_LOOK",
+        "drawBlackPianoKeyShadows"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CorePiano",
+        "CorePianoProps"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/drawPianoFrameShadow.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawPianoFrameShadow"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The shadow the keyboard frame casts across the top of the white piano keys.",
+      "exports": [
+        "LESSON_PIANO_FRAME_SHADOW_LOOK",
+        "PianoFrameShadowLook",
+        "drawPianoFrameShadow"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_PIANO_FRAME_SHADOW_LOOK",
+        "PianoFrameShadowLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "PianoKeyLabel",
+        "PianoKeyLabelProps"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "Note names on the piano keys: which keys show one and where (pure), and the system text that draws each name.",
+      "exports": [
+        "LESSON_PIANO_KEY_LABEL_LOOK",
+        "PianoKeyLabel",
+        "PianoKeyLabelLayout",
+        "PianoKeyLabelLook",
+        "PianoKeyLabelProps",
+        "PianoKeyLabels",
+        "layoutPianoKeyLabels"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "PianoKeyLabelLayout",
+        "PianoKeyLabels",
+        "layoutPianoKeyLabels"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_PIANO_KEY_LABEL_LOOK",
+        "PianoKeyLabelLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/drawPianoKeyMarker.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawPianoKeyMarker"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The dot under a marked piano key, such as middle C.",
+      "exports": [
+        "LESSON_PIANO_KEY_MARKER_LOOK",
+        "PianoKeyMarkerLook",
+        "drawPianoKeyMarker"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_PIANO_KEY_MARKER_LOOK",
+        "PianoKeyMarkerLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/drawPianoKeybed.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawPianoKeybed"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The keybed under the piano keys: the colour that shows through the gaps between the keys and the frame around them.",
+      "exports": [
+        "LESSON_PIANO_KEYBED_LOOK",
+        "PianoKeybedLook",
+        "drawPianoKeybed"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/pianoKeybedLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_PIANO_KEYBED_LOOK",
+        "PianoKeybedLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKey.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawWhitePianoKey"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKeyLight.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawWhitePianoKeyLight"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The one white piano key: how it looks at rest and when lit. CorePiano draws it at every white key position.",
+      "exports": [
+        "LESSON_WHITE_PIANO_KEY_LOOK",
+        "WhitePianoKeyLook",
+        "drawWhitePianoKey",
+        "drawWhitePianoKeyLight"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_WHITE_PIANO_KEY_LOOK",
+        "WhitePianoKeyLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CorePianoLook",
+        "LESSON_PIANO_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawCorePianoBlackLayer",
+        "drawCorePianoWhiteLayer"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The piano keyboard at the bottom of PianoMaster: draws any range with Skia from one WhitePianoKey and one BlackPianoKey reused at every position, with the keybed, shadows, marker dots, note names and lit keys.",
+      "exports": [
+        "BlackPianoKeyLook",
+        "BlackPianoKeyShadowsLook",
+        "CorePiano",
+        "CorePianoLayout",
+        "CorePianoLook",
+        "CorePianoProps",
+        "DrawPianoKeyLight",
+        "LESSON_PIANO_LOOK",
+        "PianoFrameShadowLook",
+        "PianoKeyLabelLayout",
+        "PianoKeyLabelLook",
+        "PianoKeyLabels",
+        "PianoKeyLightLayer",
+        "PianoKeyMarkerLook",
+        "PianoKeybedLook",
+        "WhitePianoKeyLook",
+        "drawBlackPianoKeyLight",
+        "drawCorePianoBlackLayer",
+        "drawCorePianoWhiteLayer",
+        "drawPianoKeyLights",
+        "drawWhitePianoKeyLight",
+        "layoutCorePiano",
+        "layoutPianoKeyLabels"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CorePianoLayout",
+        "layoutCorePiano"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePiano",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "DrawPianoKeyLight",
+        "PianoKeyLightLayer",
+        "drawPianoKeyLights",
+        "usePianoKeyLights"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/index.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "exports": [
+        "CorePiano",
+        "CorePianoLook",
+        "CorePianoProps",
+        "DEFAULT_RANGE",
+        "DEFAULT_ROLE_COLORS",
+        "GlyphFit",
+        "GradientStop",
+        "KeyRole",
+        "KeyboardProportions",
+        "KeyboardRange",
+        "LESSON_PIANO_LOOK",
+        "LESSON_STAFF",
+        "MusicFont",
+        "NotationTypefaces",
+        "NoteInput",
+        "NoteState",
+        "PIANO_RANGES",
+        "PianoKeyLabels",
+        "PianoKeyLights",
+        "PianoState",
+        "Playhead",
+        "QuarterNotes",
+        "QuarterNotesProps",
+        "RoleColors",
+        "Score",
+        "ScoreItem",
+        "StaffLayout",
+        "StaffLook",
+        "beatX",
+        "createKeyLights",
+        "diatonicStep",
+        "drawPlayhead",
+        "drawQuarterNotes",
+        "drawStaff",
+        "ledgerLines",
+        "lightKey",
+        "recordPicture",
+        "trebleY",
+        "unlightAllKeys",
+        "unlightKey",
+        "useNotationTypefaces",
+        "usePianoState"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, picture recording and the look units.",
+      "exports": [
+        "Box",
+        "DEFAULT_ROLE_COLORS",
+        "GradientStop",
+        "KeyRole",
+        "PianoKeyLights",
+        "PianoState",
+        "REFERENCE_PITCH",
+        "RoleColors",
+        "Size",
+        "clipToBox",
+        "createKeyLights",
+        "lightKey",
+        "pianoKeyShape",
+        "pt",
+        "recordPicture",
+        "roleColors",
+        "setLinearGradient",
+        "unlightAllKeys",
+        "unlightKey",
+        "usePianoState"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/keyRoleColors.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "DEFAULT_ROLE_COLORS",
+        "RoleColors",
+        "roleColors"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/linearGradient.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "GradientStop",
+        "setLinearGradient"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "Box",
+        "clipToBox",
+        "pianoKeyShape"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/pianoLookUnits.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "REFERENCE_PITCH",
+        "pt"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "KeyRole",
+        "PianoKeyLights",
+        "PianoState",
+        "createKeyLights",
+        "lightKey",
+        "unlightAllKeys",
+        "unlightKey",
+        "usePianoState"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "Size",
+        "recordPicture"
       ]
     },
     {
@@ -637,206 +1216,604 @@
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
-      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
       "kind": "imports",
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
-      "to": "src/shared/piano/index.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
       "kind": "imports",
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/labels.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/theme.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/shared/piano/index.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/labels.ts",
-      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
       "kind": "imports",
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/labels.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
       "to": "src/shared/piano/index.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/motion/scenes/PianoMaster/labels.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/motion/scenes/PianoMaster/theme.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
-      "to": "src/shared/typography/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/pianoState.ts",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/theme.ts",
-      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/SheetMusic/paint.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/SheetMusic/score.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
-      "to": "src/motion/scenes/SheetMusic/paint.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
-      "to": "src/motion/scenes/SheetMusic/score.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
-      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/drawStaff.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/score.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/index.ts",
-      "to": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-      "to": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-      "to": "src/motion/scenes/SheetMusic/score.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
-      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/score.ts",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
       "to": "assets/fonts/Bravura.otf",
       "kind": "uses-asset"
     },
     {
-      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
       "to": "assets/fonts/Leland.otf",
       "kind": "uses-asset"
     },
     {
-      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
-      "to": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
       "kind": "imports",
       "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKey.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKey.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKeyLight.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKeyLight.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKey.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/drawBlackPianoKeyLight.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/drawBlackPianoKeyShadows.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/drawBlackPianoKeyShadows.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/drawBlackPianoKeyShadows.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/drawCorePiano.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/layoutCorePiano.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/drawPianoFrameShadow.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/drawPianoFrameShadow.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/drawPianoFrameShadow.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/drawPianoKeybed.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/pianoKeybedLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/drawPianoKeybed.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/drawPianoKeybed.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/pianoKeybedLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/layoutPianoKeyLabels.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
+      "to": "src/shared/typography/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/drawPianoKeyMarker.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/drawPianoKeyMarker.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/drawPianoKeyMarker.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKey.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKey.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKeyLight.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKeyLight.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKey.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/drawWhitePianoKeyLight.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/keyRoleColors.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/linearGradient.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoLookUnits.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/keyRoleColors.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
     },
     {
       "from": "src/screens/LessonScreen/drawLessonBackground.ts",
@@ -866,12 +1843,6 @@
     },
     {
       "from": "src/screens/LessonScreen/lessonDesign.ts",
-      "to": "src/motion/scenes/SheetMusic/index.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/screens/LessonScreen/lessonDesign.ts",
       "to": "src/shared/piano/index.ts",
       "kind": "imports"
     },
@@ -883,16 +1854,6 @@
     {
       "from": "src/screens/LessonScreen/LessonScreen.tsx",
       "to": "src/motion/scenes/PianoMaster/index.ts",
-      "kind": "renders"
-    },
-    {
-      "from": "src/screens/LessonScreen/LessonScreen.tsx",
-      "to": "src/motion/scenes/SheetMusic/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/screens/LessonScreen/LessonScreen.tsx",
-      "to": "src/motion/scenes/SheetMusic/index.ts",
       "kind": "renders"
     },
     {
@@ -944,20 +1905,168 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster",
-      "to": "src/shared/piano",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes",
       "kinds": [
         "imports"
       ]
     },
     {
       "from": "src/motion/scenes/PianoMaster",
+      "to": "src/motion/scenes/PianoMaster/CorePiano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
       "to": "src/shared/typography",
       "kinds": [
         "imports"
       ]
     },
     {
-      "from": "src/motion/scenes/SheetMusic",
+      "from": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared",
       "to": "src/shared/piano",
       "kinds": [
         "imports"
@@ -966,14 +2075,6 @@
     {
       "from": "src/screens/LessonScreen",
       "to": "src/motion/scenes/PianoMaster",
-      "kinds": [
-        "imports",
-        "renders"
-      ]
-    },
-    {
-      "from": "src/screens/LessonScreen",
-      "to": "src/motion/scenes/SheetMusic",
       "kinds": [
         "imports",
         "renders"

@@ -9,17 +9,15 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Canvas, Group, Picture } from 'react-native-skia';
 
 import {
-  PianoMaster,
-  recordPicture,
-  usePianoState,
-} from '../../motion/scenes/PianoMaster';
-import {
+  CorePiano,
   drawPlayhead,
   drawStaff,
   LESSON_STAFF,
   QuarterNotes,
+  recordPicture,
   useNotationTypefaces,
-} from '../../motion/scenes/SheetMusic';
+  usePianoState,
+} from '../../motion/scenes/PianoMaster';
 import {
   lineHeight,
   ROUNDED_FAMILY,
@@ -97,7 +95,7 @@ export function LessonScreen() {
       <DesignText run={design.timer} scale={scale} />
       <DesignText run={design.measureNumber} scale={scale} />
       <RotatedDesignText run={design.hand} scale={scale} />
-      <PianoMaster
+      <CorePiano
         state={piano}
         from={design.keyboard.range.from}
         to={design.keyboard.range.to}

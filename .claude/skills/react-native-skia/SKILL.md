@@ -32,7 +32,10 @@ Everything drawn for the piano in this app uses React Native Skia. This file hol
 ## Rules for this project
 
 - **Piano visuals use Skia.** Add Reanimated only when the drawing moves. Animation that doesn't involve the piano, such as a mascot, celebrations or onboarding, uses Rive instead.
-- **`PianoMaster` is the source of truth for the piano on screen.** It lives in `src/motion/scenes/PianoMaster`, draws keyboards of any range, and owns the key state.
+- **`PianoMaster` is the source of truth for the piano on screen.** It lives in `src/motion/scenes/PianoMaster` and owns the key state (`shared/`). It has two parts:
+  - `CorePiano/`: the keyboard, any range. It is built from atoms, one folder each (`drawX.ts`, `xLook.ts`, `index.ts`): `WhitePianoKey` and `BlackPianoKey` (one of each, drawn at every position, at rest and lit), `PianoKeybed`, `PianoFrameShadow`, `BlackPianoKeyShadows`, `PianoKeyMarker`, `PianoKeyLabel`. Change a part's look only in its own `xLook.ts`.
+  - `CoreNotes/`: the sheet music above the keyboard (staff, QuarterNotes, playhead). It isn't split into atoms yet.
+  - Code used by more than one part goes in `PianoMaster/shared/`.
   - Notes and key geometry live in `src/shared/piano`.
   - Other piano visuals (falling notes, a sheet-music cursor, particles over keys) take key positions from `layoutKeyboard()` there instead of computing their own.
 - **Code in `src/motion` runs every frame on the UI thread.** It never calls `runOnJS` or `scheduleOnRN`, and it takes durations and easing from `src/motion/tokens` (architecture rules `motion-no-js-hop` and `motion-tokens`).

@@ -13,24 +13,20 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { Skia, type SkCanvas, type SkTypeface } from 'react-native-skia';
 
-import {
-  buildKeyboard,
-  layoutKeyboard,
-  parseNote,
-} from '../../../src/shared/piano';
-import {
-  drawBlackLayer,
-  drawWhiteLayer,
-  keyLabels,
-  LESSON_LOOK,
-  pitchOf,
-} from '../../../src/motion/scenes/PianoMaster';
+import { buildKeyboard, parseNote } from '../../../src/shared/piano';
 import {
   drawPlayhead,
   drawQuarterNotes,
   drawStaff,
   LESSON_STAFF,
-} from '../../../src/motion/scenes/SheetMusic';
+} from '../../../src/motion/scenes/PianoMaster';
+import {
+  drawCorePianoBlackLayer,
+  drawCorePianoWhiteLayer,
+  layoutCorePiano,
+  layoutPianoKeyLabels,
+  LESSON_PIANO_LOOK,
+} from '../../../src/motion/scenes/PianoMaster/CorePiano';
 import {
   DESIGN_SIZE,
   drawLessonBackground,
@@ -127,7 +123,7 @@ test('renders the lesson screen', () => {
   drawPlayhead(canvas, design.playhead, LESSON_STAFF);
 
   const keyboard = { width, height: design.keyboard.height };
-  const rects = layoutKeyboard(
+  const layout = layoutCorePiano(
     buildKeyboard(design.keyboard.range),
     keyboard,
     {},
@@ -136,8 +132,8 @@ test('renders the lesson screen', () => {
   canvas.save();
   canvas.translate(0, design.keyboard.top);
   const markers = new Set(design.keyboard.markers.map(note => parseNote(note)));
-  drawWhiteLayer(canvas, rects, keyboard, LESSON_LOOK, markers);
-  drawBlackLayer(canvas, rects, keyboard, LESSON_LOOK);
+  drawCorePianoWhiteLayer(canvas, layout, keyboard, LESSON_PIANO_LOOK, markers);
+  drawCorePianoBlackLayer(canvas, layout, keyboard, LESSON_PIANO_LOOK);
   canvas.restore();
 
   if (existsSync(ROUNDED_FONT) && existsSync(SYSTEM_FONT)) {
@@ -146,12 +142,11 @@ test('renders the lesson screen', () => {
     text.run(canvas, design.timer);
     text.run(canvas, design.measureNumber);
     text.rotated(canvas, design.hand);
-    const pitch = pitchOf(rects, width);
-    for (const label of keyLabels(
-      rects,
+    for (const label of layoutPianoKeyLabels(
+      layout.rects,
       design.keyboard.labels,
-      LESSON_LOOK,
-      pitch,
+      LESSON_PIANO_LOOK.label,
+      layout.pitch,
     )) {
       text.run(canvas, {
         text: label.text,

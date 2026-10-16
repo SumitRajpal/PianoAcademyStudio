@@ -3,7 +3,7 @@
  * the bar lines are. Pitches use the shared piano model.
  */
 
-import { parseNote, pitchClass, type NoteInput } from '../../../shared/piano';
+import { parseNote, pitchClass, type NoteInput } from '../../../../shared/piano';
 
 export type NoteState = 'normal' | 'attention';
 

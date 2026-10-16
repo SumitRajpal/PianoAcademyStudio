@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
-import { PIANO_RANGES, PianoMaster, usePianoState } from '..';
+import { CorePiano, PIANO_RANGES, usePianoState } from '../..';
 
 function Keyboard(props: { from?: string; to?: string }) {
   const piano = usePianoState();
-  return <PianoMaster state={piano} {...props} />;
+  return <CorePiano state={piano} {...props} />;
 }
 
 async function render(element: ReactElement) {
@@ -16,7 +16,7 @@ async function render(element: ReactElement) {
   return renderer!;
 }
 
-describe('PianoMaster', () => {
+describe('CorePiano', () => {
   it('describes the default four-octave keyboard to screen readers', async () => {
     const renderer = await render(<Keyboard />);
     expect(

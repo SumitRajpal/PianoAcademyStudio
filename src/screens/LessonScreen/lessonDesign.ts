@@ -5,12 +5,12 @@
  */
 
 import type {
+  GradientStop,
   Playhead,
   Score,
   StaffLayout,
-} from '../../motion/scenes/SheetMusic';
+} from '../../motion/scenes/PianoMaster';
 import { DEFAULT_RANGE, type NoteInput } from '../../shared/piano';
-import type { GradientStop } from '../../motion/scenes/PianoMaster';
 
 export const DESIGN_SIZE = { width: 932, height: 430 };
 
