@@ -1,0 +1,1041 @@
+{
+  "schema": 1,
+  "generator": "scripts/architecture/build.mjs",
+  "planes": [
+    {
+      "id": "audio",
+      "label": "AUDIO",
+      "thread": "audio",
+      "description": "mic capture, playback, DSP, onset and pitch detection (native audio thread)",
+      "modules": []
+    },
+    {
+      "id": "sync",
+      "label": "SYNC",
+      "thread": "any",
+      "description": "shared clock, latency compensation, event stream (lock-free)",
+      "modules": []
+    },
+    {
+      "id": "motion",
+      "label": "MOTION",
+      "thread": "ui",
+      "description": "animation drivers, scenes and rendering (UI thread + GPU)",
+      "modules": [
+        "src/motion/scenes/PianoMaster",
+        "src/motion/scenes/SheetMusic"
+      ]
+    },
+    {
+      "id": "shared",
+      "label": "SHARED",
+      "thread": "any",
+      "description": "types, utilities and music-theory tables usable from any thread",
+      "modules": [
+        "src/shared/piano",
+        "src/shared/typography"
+      ]
+    },
+    {
+      "id": "platform",
+      "label": "PLATFORM",
+      "thread": "native",
+      "description": "iOS and Android projects and native modules",
+      "modules": [
+        "android",
+        "ios"
+      ]
+    },
+    {
+      "id": "app",
+      "label": "APP",
+      "thread": "js",
+      "description": "screens, navigation, lessons, scoring, progress, storage (JS thread)",
+      "modules": [
+        "App.tsx",
+        "index.js",
+        "src/screens/LessonScreen"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "App.tsx",
+      "name": "App.tsx",
+      "kind": "entry",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "Root component: safe-area provider, hidden status bar and the lesson screen, full screen in landscape.",
+      "entry": "App.tsx",
+      "files": [
+        "App.tsx"
+      ],
+      "packages": [
+        "react-native",
+        "react-native-safe-area-context"
+      ]
+    },
+    {
+      "id": "android",
+      "name": "android",
+      "kind": "platform",
+      "plane": "platform",
+      "thread": "native",
+      "purpose": "Android app project: Gradle build, MainActivity, manifest and native Android code",
+      "entry": null,
+      "files": [
+        "android/app/src/main/java/com/pianoacademystudio/MainActivity.kt",
+        "android/app/src/main/java/com/pianoacademystudio/MainApplication.kt"
+      ]
+    },
+    {
+      "id": "index.js",
+      "name": "index.js",
+      "kind": "entry",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "Native entry point: registers the root App component with React Native.",
+      "entry": "index.js",
+      "files": [
+        "index.js"
+      ],
+      "packages": [
+        "react-native"
+      ],
+      "assets": [
+        "app.json"
+      ]
+    },
+    {
+      "id": "ios",
+      "name": "ios",
+      "kind": "platform",
+      "plane": "platform",
+      "thread": "native",
+      "purpose": "iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code",
+      "entry": null,
+      "files": [
+        "ios/PianoAcademyStudio/AppDelegate.swift"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster",
+      "name": "motion/scenes/PianoMaster",
+      "kind": "scene",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The piano's single source of truth on screen: draws a keyboard of any range (48 keys by default, 88, 108 or any other) with Skia, and owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "entry": "src/motion/scenes/PianoMaster/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+        "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+        "src/motion/scenes/PianoMaster/index.ts",
+        "src/motion/scenes/PianoMaster/keyboardLook.ts",
+        "src/motion/scenes/PianoMaster/labels.ts",
+        "src/motion/scenes/PianoMaster/pianoState.ts",
+        "src/motion/scenes/PianoMaster/theme.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-skia"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic",
+      "name": "motion/scenes/SheetMusic",
+      "kind": "scene",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
+      "entry": "src/motion/scenes/SheetMusic/index.ts",
+      "files": [
+        "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+        "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+        "src/motion/scenes/SheetMusic/drawStaff.ts",
+        "src/motion/scenes/SheetMusic/index.ts",
+        "src/motion/scenes/SheetMusic/paint.ts",
+        "src/motion/scenes/SheetMusic/score.ts",
+        "src/motion/scenes/SheetMusic/staffLook.ts",
+        "src/motion/scenes/SheetMusic/useNotationTypefaces.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native-skia"
+      ],
+      "assets": [
+        "assets/fonts/Bravura.otf",
+        "assets/fonts/Leland.otf"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen",
+      "name": "screens/LessonScreen",
+      "kind": "screen",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape.",
+      "entry": "src/screens/LessonScreen/index.ts",
+      "files": [
+        "src/screens/LessonScreen/LessonScreen.tsx",
+        "src/screens/LessonScreen/drawLessonBackground.ts",
+        "src/screens/LessonScreen/index.ts",
+        "src/screens/LessonScreen/lessonDesign.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/shared/piano",
+      "name": "shared/piano",
+      "kind": "module",
+      "plane": "shared",
+      "thread": "any",
+      "purpose": "The piano model: notes, MIDI numbers, frequencies, keyboards of any size and key positions. Pure code, usable from any thread.",
+      "entry": "src/shared/piano/index.ts",
+      "files": [
+        "src/shared/piano/index.ts",
+        "src/shared/piano/keyboard.ts",
+        "src/shared/piano/notes.ts"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/shared/typography",
+      "name": "shared/typography",
+      "kind": "module",
+      "plane": "shared",
+      "thread": "any",
+      "purpose": "The system fonts (SF Pro and SF Pro Rounded) and their metrics, so text can be placed by its baseline. React Native font family for SF Pro Rounded on iOS.",
+      "entry": "src/shared/typography/index.ts",
+      "files": [
+        "src/shared/typography/index.ts"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "id": "App.tsx",
+      "module": "App.tsx",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "purpose": "Root component: safe-area provider, hidden status bar and the lesson screen, full screen in landscape.",
+      "exports": [
+        "default"
+      ]
+    },
+    {
+      "id": "android/app/src/main/java/com/pianoacademystudio/MainActivity.kt",
+      "module": "android",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "kotlin"
+    },
+    {
+      "id": "android/app/src/main/java/com/pianoacademystudio/MainApplication.kt",
+      "module": "android",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "kotlin"
+    },
+    {
+      "id": "index.js",
+      "module": "index.js",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "purpose": "Native entry point: registers the root App component with React Native."
+    },
+    {
+      "id": "ios/PianoAcademyStudio/AppDelegate.swift",
+      "module": "ios",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "swift"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "PianoMaster",
+        "PianoMasterProps"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "Size",
+        "drawBlackLayer",
+        "drawWhiteLayer",
+        "pitchOf",
+        "recordPicture"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/index.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The piano's single source of truth on screen: draws a keyboard of any range (48 keys by default, 88, 108 or any other) with Skia, and owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "exports": [
+        "DEFAULT_RANGE",
+        "DEFAULT_ROLE_COLORS",
+        "GradientStop",
+        "KeyLabel",
+        "KeyRole",
+        "KeyboardLook",
+        "KeyboardProportions",
+        "KeyboardRange",
+        "LESSON_LOOK",
+        "NoteInput",
+        "PIANO_RANGES",
+        "PianoKeyLights",
+        "PianoLabels",
+        "PianoMaster",
+        "PianoMasterProps",
+        "PianoState",
+        "RoleColors",
+        "createKeyLights",
+        "drawBlackLayer",
+        "drawWhiteLayer",
+        "keyLabels",
+        "lightKey",
+        "pitchOf",
+        "recordPicture",
+        "unlightAllKeys",
+        "unlightKey",
+        "usePianoState"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "GradientStop",
+        "KeyboardLook",
+        "LESSON_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/labels.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "KeyLabel",
+        "PianoLabels",
+        "keyLabels"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "KeyRole",
+        "PianoKeyLights",
+        "PianoState",
+        "createKeyLights",
+        "lightKey",
+        "unlightAllKeys",
+        "unlightKey",
+        "usePianoState"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/theme.ts",
+      "module": "src/motion/scenes/PianoMaster",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "DEFAULT_ROLE_COLORS",
+        "RoleColors",
+        "roleColors"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "QuarterNotes",
+        "QuarterNotesProps"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawQuarterNotes"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "NotationTypefaces",
+        "Playhead",
+        "drawPlayhead",
+        "drawStaff"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/index.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
+      "exports": [
+        "GlyphFit",
+        "LESSON_STAFF",
+        "MusicFont",
+        "NotationTypefaces",
+        "NoteState",
+        "Playhead",
+        "QuarterNotes",
+        "QuarterNotesProps",
+        "Score",
+        "ScoreItem",
+        "StaffLayout",
+        "StaffLook",
+        "beatX",
+        "diatonicStep",
+        "drawPlayhead",
+        "drawQuarterNotes",
+        "drawStaff",
+        "ledgerLines",
+        "trebleY",
+        "useNotationTypefaces"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/paint.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "fillPaint",
+        "fillRect"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/score.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "NoteState",
+        "Score",
+        "ScoreItem",
+        "StaffLayout",
+        "beatX",
+        "diatonicStep",
+        "ledgerLines",
+        "trebleY"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/staffLook.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "GlyphFit",
+        "LESSON_STAFF",
+        "MusicFont",
+        "StaffLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "module": "src/motion/scenes/SheetMusic",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "useNotationTypefaces"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/LessonScreen.tsx",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "LessonScreen"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/drawLessonBackground.ts",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawLessonBackground"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/index.ts",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape.",
+      "exports": [
+        "DESIGN_SIZE",
+        "LESSON_DESIGN",
+        "LessonScreen",
+        "RotatedTextRun",
+        "TextRun",
+        "drawLessonBackground"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/lessonDesign.ts",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "DESIGN_SIZE",
+        "LESSON_DESIGN",
+        "RotatedTextRun",
+        "TextRun"
+      ]
+    },
+    {
+      "id": "src/shared/piano/index.ts",
+      "module": "src/shared/piano",
+      "plane": "shared",
+      "thread": "any",
+      "lang": "code",
+      "purpose": "The piano model: notes, MIDI numbers, frequencies, keyboards of any size and key positions. Pure code, usable from any thread.",
+      "exports": [
+        "*"
+      ]
+    },
+    {
+      "id": "src/shared/piano/keyboard.ts",
+      "module": "src/shared/piano",
+      "plane": "shared",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "BlackKeyPlacement",
+        "DEFAULT_PROPORTIONS",
+        "DEFAULT_RANGE",
+        "KeyRect",
+        "KeyboardProportions",
+        "KeyboardRange",
+        "PIANO_RANGES",
+        "PianoKey",
+        "buildKeyboard",
+        "countWhiteKeys",
+        "layoutKeyboard"
+      ]
+    },
+    {
+      "id": "src/shared/piano/notes.ts",
+      "module": "src/shared/piano",
+      "plane": "shared",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "A4_FREQUENCY",
+        "MIDDLE_C",
+        "MIDI_MAX",
+        "MIDI_MIN",
+        "NoteInput",
+        "frequencyOf",
+        "isBlackKey",
+        "nearestNote",
+        "noteLetter",
+        "noteName",
+        "octaveOf",
+        "parseNote",
+        "pitchClass"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/shared/typography/index.ts",
+      "module": "src/shared/typography",
+      "plane": "shared",
+      "thread": "any",
+      "lang": "code",
+      "purpose": "The system fonts (SF Pro and SF Pro Rounded) and their metrics, so text can be placed by its baseline. React Native font family for SF Pro Rounded on iOS.",
+      "exports": [
+        "ROUNDED_FAMILY",
+        "ROUNDED_METRICS",
+        "SYSTEM_FAMILY",
+        "lineHeight",
+        "textTop"
+      ]
+    }
+  ],
+  "assets": [
+    "app.json",
+    "assets/fonts/Bravura.otf",
+    "assets/fonts/Leland.otf"
+  ],
+  "edges": [
+    {
+      "from": "App.tsx",
+      "to": "src/screens/LessonScreen/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/LessonScreen/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "index.js",
+      "to": "app.json",
+      "kind": "uses-asset"
+    },
+    {
+      "from": "index.js",
+      "to": "App.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/labels.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/theme.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/labels.ts",
+      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/labels.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/motion/scenes/PianoMaster/drawKeyboard.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/motion/scenes/PianoMaster/keyboardLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/motion/scenes/PianoMaster/labels.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/motion/scenes/PianoMaster/theme.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/PianoMaster.tsx",
+      "to": "src/shared/typography/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/theme.ts",
+      "to": "src/motion/scenes/PianoMaster/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/SheetMusic/paint.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/SheetMusic/score.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "to": "src/motion/scenes/SheetMusic/paint.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "to": "src/motion/scenes/SheetMusic/score.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/score.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/index.ts",
+      "to": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+      "to": "src/motion/scenes/SheetMusic/drawQuarterNotes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+      "to": "src/motion/scenes/SheetMusic/score.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/QuarterNotes.tsx",
+      "to": "src/motion/scenes/SheetMusic/staffLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/score.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "to": "assets/fonts/Bravura.otf",
+      "kind": "uses-asset"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "to": "assets/fonts/Leland.otf",
+      "kind": "uses-asset"
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic/useNotationTypefaces.ts",
+      "to": "src/motion/scenes/SheetMusic/drawStaff.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/LessonScreen/drawLessonBackground.ts",
+      "to": "src/screens/LessonScreen/lessonDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/drawLessonBackground.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/lessonDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/LessonScreen.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/lessonDesign.ts",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/LessonScreen/lessonDesign.ts",
+      "to": "src/motion/scenes/SheetMusic/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/LessonScreen/lessonDesign.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/motion/scenes/SheetMusic/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/motion/scenes/SheetMusic/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/screens/LessonScreen/drawLessonBackground.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/screens/LessonScreen/lessonDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/LessonScreen.tsx",
+      "to": "src/shared/typography/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/shared/piano/index.ts",
+      "to": "src/shared/piano/keyboard.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/shared/piano/index.ts",
+      "to": "src/shared/piano/notes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/shared/piano/keyboard.ts",
+      "to": "src/shared/piano/notes.ts",
+      "kind": "imports"
+    }
+  ],
+  "moduleEdges": [
+    {
+      "from": "App.tsx",
+      "to": "src/screens/LessonScreen",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "index.js",
+      "to": "App.tsx",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster",
+      "to": "src/shared/typography",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/SheetMusic",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/LessonScreen",
+      "to": "src/motion/scenes/PianoMaster",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "src/screens/LessonScreen",
+      "to": "src/motion/scenes/SheetMusic",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "src/screens/LessonScreen",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/LessonScreen",
+      "to": "src/shared/typography",
+      "kinds": [
+        "imports"
+      ]
+    }
+  ],
+  "unresolved": [],
+  "rules": [
+    {
+      "id": "screens-no-audio-internals",
+      "type": "forbid-imports",
+      "description": "Screens never touch audio internals or native modules."
+    },
+    {
+      "id": "public-api-only",
+      "type": "public-api",
+      "description": "Features and audio are imported only through their public index.ts."
+    },
+    {
+      "id": "motion-isolation",
+      "type": "allow-only",
+      "description": "Motion code may not import features, screens, state stores or audio; it uses other motion code, sync/ and shared/."
+    },
+    {
+      "id": "audio-no-ui",
+      "type": "forbid-imports",
+      "description": "Audio code has no UI imports."
+    },
+    {
+      "id": "motion-no-js-hop",
+      "type": "forbid-pattern",
+      "description": "Code that runs every frame in motion never hands work back to the JS thread."
+    },
+    {
+      "id": "motion-tokens",
+      "type": "forbid-pattern",
+      "description": "Motion code takes durations and easing from tokens, not hard-coded numbers."
+    },
+    {
+      "id": "thread-boundary",
+      "type": "thread-boundary",
+      "description": "Code on the UI or audio thread never imports JS-thread code."
+    },
+    {
+      "id": "no-cycles",
+      "type": "no-cycles",
+      "description": "No circular imports anywhere."
+    }
+  ],
+  "violations": []
+}

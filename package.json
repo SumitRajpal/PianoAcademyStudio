@@ -10,10 +10,15 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native/new-app-screen": "0.87.1",
+    "@rive-app/react-native": "^0.5.5",
     "react": "19.2.3",
     "react-native": "0.87.1",
-    "@react-native/new-app-screen": "0.87.1",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-nitro-modules": "^0.36.5",
+    "react-native-reanimated": "^4.7.1",
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-skia": "^3.5.0",
+    "react-native-worklets": "^0.13.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
