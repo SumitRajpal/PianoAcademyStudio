@@ -6,7 +6,7 @@
 
 import type {
   GradientStop,
-  Playhead,
+  PlayheadPosition,
   Score,
   StaffLayout,
 } from '../../motion/scenes/PianoMaster';
@@ -131,7 +131,7 @@ export const LESSON_DESIGN = {
       { kind: 'note', pitch: 'G4', measure: 3, beat: 0, beats: 1 },
     ],
   } satisfies Score,
-  playhead: { x: 1148 / 3, top: 67, bottom: 803.5 / 3 } satisfies Playhead,
+  playhead: { x: 1148 / 3, top: 67, bottom: 803.5 / 3 } satisfies PlayheadPosition,
   keyboard: {
     top: KEYBOARD_TOP,
     height: 365 / 3,

@@ -1,11 +1,13 @@
 /**
  * What the staff shows: notes and rests placed on a beat grid, plus where
- * the bar lines are. Pitches use the shared piano model.
+ * the barlines are. Pitches use the shared piano model.
  */
 
 import { parseNote, pitchClass, type NoteInput } from '../../../../shared/piano';
+import type { QuarterNoteState } from './symbols';
 
-export type NoteState = 'normal' | 'attention';
+/** "attention" is the note to play now. */
+export type NoteState = QuarterNoteState;
 
 export type ScoreItem =
   | {
@@ -26,9 +28,9 @@ export type StaffLayout = {
   /** Where the paper strip and the staff lines start. */
   left: number;
   right: number;
-  /** Centre of each bar line; measure i starts at measureStarts[i]. */
+  /** Centre of each barline; measure i starts at measureStarts[i]. */
   measureStarts: readonly number[];
-  /** Bar lines that are drawn (the first measure may have none). */
+  /** Barlines that are drawn (the first measure may have none). */
   barlines: readonly number[];
   /** Distance from a measure start to the stem of its first beat. */
   firstBeat: number;
@@ -58,7 +60,7 @@ export function trebleY(pitch: NoteInput, top: number, space: number): number {
   return bottomLine - ((diatonicStep(pitch) - TREBLE_BOTTOM_STEP) * space) / 2;
 }
 
-/** The stem position (right edge of the head) of a beat. */
+/** The stem position (right edge of the notehead) of a beat. */
 export function beatX(layout: StaffLayout, measure: number, beat: number) {
   return layout.measureStarts[measure] + layout.firstBeat + beat * layout.beat;
 }

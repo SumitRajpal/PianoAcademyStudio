@@ -1,15 +1,13 @@
 /**
- * @purpose The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.
+ * @purpose The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead).
  */
 
 export { QuarterNotes, type QuarterNotesProps } from './QuarterNotes';
-export { drawQuarterNotes } from './drawQuarterNotes';
 export {
-  drawPlayhead,
-  drawStaff,
-  type NotationTypefaces,
-  type Playhead,
-} from './drawStaff';
+  drawCoreNotesNoteLayer,
+  drawCoreNotesStaffLayer,
+} from './drawCoreNotes';
+export { LESSON_NOTES_LOOK, type CoreNotesLook } from './coreNotesLook';
 export {
   beatX,
   diatonicStep,
@@ -20,10 +18,10 @@ export {
   type ScoreItem,
   type StaffLayout,
 } from './score';
-export {
-  LESSON_STAFF,
-  type GlyphFit,
-  type MusicFont,
-  type StaffLook,
-} from './staffLook';
 export { useNotationTypefaces } from './useNotationTypefaces';
+export {
+  drawPlayhead,
+  LESSON_PLAYHEAD_LOOK,
+  type PlayheadLook,
+  type PlayheadPosition,
+} from './Playhead';

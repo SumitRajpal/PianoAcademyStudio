@@ -1,6 +1,6 @@
 import { useTypeface } from 'react-native-skia';
 
-import type { NotationTypefaces } from './drawStaff';
+import type { NotationTypefaces } from '../shared';
 
 /** Loads the music fonts; null until both are ready. */
 export function useNotationTypefaces(): NotationTypefaces | null {

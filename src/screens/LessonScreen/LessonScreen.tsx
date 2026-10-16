@@ -10,9 +10,9 @@ import { Canvas, Group, Picture } from 'react-native-skia';
 
 import {
   CorePiano,
+  drawCoreNotesStaffLayer,
   drawPlayhead,
-  drawStaff,
-  LESSON_STAFF,
+  LESSON_NOTES_LOOK,
   QuarterNotes,
   recordPicture,
   useNotationTypefaces,
@@ -55,11 +55,11 @@ export function LessonScreen() {
         ? recordPicture({ width, height }, canvas => {
             canvas.scale(scale, scale);
             drawLessonBackground(canvas, height / scale);
-            drawStaff(
+            drawCoreNotesStaffLayer(
               canvas,
               design.staff,
               design.score,
-              LESSON_STAFF,
+              LESSON_NOTES_LOOK,
               typefaces,
             );
           })
@@ -69,7 +69,7 @@ export function LessonScreen() {
   const playhead = useMemo(
     () =>
       recordPicture(DESIGN_SIZE, canvas =>
-        drawPlayhead(canvas, design.playhead, LESSON_STAFF),
+        drawPlayhead(canvas, design.playhead, LESSON_NOTES_LOOK.playhead),
       ),
     [design],
   );
@@ -84,7 +84,7 @@ export function LessonScreen() {
               <QuarterNotes
                 layout={design.staff}
                 score={design.score}
-                look={LESSON_STAFF}
+                look={LESSON_NOTES_LOOK}
               />
               <Picture picture={playhead} />
             </Group>

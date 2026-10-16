@@ -1,4 +1,4 @@
-/** Small Skia helpers shared by the staff and the notes. */
+/** Small Skia helpers for drawing flat shapes. */
 
 import { Skia, type SkCanvas, type SkPaint } from 'react-native-skia';
 

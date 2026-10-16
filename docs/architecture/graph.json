@@ -24,6 +24,20 @@
       "modules": [
         "src/motion/scenes/PianoMaster",
         "src/motion/scenes/PianoMaster/CoreNotes",
+        "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+        "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+        "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
         "src/motion/scenes/PianoMaster/CorePiano",
         "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
         "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
@@ -145,16 +159,14 @@
       "kind": "module",
       "plane": "motion",
       "thread": "ui",
-      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
+      "purpose": "The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead).",
       "entry": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "files": [
         "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
-        "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
-        "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
         "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
-        "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
         "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
-        "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
         "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts"
       ],
       "packages": [
@@ -164,6 +176,239 @@
       "assets": [
         "assets/fonts/Bravura.otf",
         "assets/fonts/Leland.otf"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "name": "motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/durationBarLook.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "name": "motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The playhead: the big see-through vertical line marking where the music is now. Part of the lesson design, not a music symbol.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/Playhead/drawPlayhead.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/Playhead/playheadLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "name": "motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The white paper strip behind the staff, with its soft shadow: part of the lesson design, not a music symbol.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/drawStaffPaper.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/staffPaperLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The music notation symbols, one folder each and named as in music: Staff (the 5 lines), SystemicBarline, Barline, TrebleClef, TimeSignature, Notehead, Stem, LedgerLine, QuarterNote (notehead + stem) and QuarterRest. Each draws on its own, to be reused by any component.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The single barline: the vertical line that separates two measures.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/drawBarline.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The ledger line: the short line through or under a notehead above or below the staff, such as middle C on a treble staff.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/drawLedgerLine.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The notehead: the filled oval of a note, centred on the note's line or space, and where a stem meets it.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/drawNotehead.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The quarter note: a notehead and a stem, with ledger lines when it sits above or below the staff; drawn in ink, or see-through red when it is the note to play now.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The quarter rest: one beat of silence, on the middle line of the staff.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/drawQuarterRest.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The staff: the 5 horizontal lines music is written on, and how far they reach.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/drawStaff.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The stem: the vertical line attached to a notehead.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/drawStem.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The systemic barline: the vertical line at the very start of the staff.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/drawSystemicBarline.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The time signature: the two stacked numbers at the start of the staff, beats per measure over the beat's note value (as in 4/4).",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/drawTimeSignature.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "name": "motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "The treble clef (G clef): the sign at the start of the staff that fixes line 2 as G4.",
+      "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/drawTrebleClef.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+        "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts"
+      ],
+      "packages": [
+        "react-native-skia"
       ]
     },
     {
@@ -320,16 +565,20 @@
       "kind": "module",
       "plane": "motion",
       "thread": "ui",
-      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, picture recording and the look units.",
+      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, paint helpers, picture recording and the look units; and for the music symbols, SMuFL glyph drawing, staff line positions and the notation ink.",
       "entry": "src/motion/scenes/PianoMaster/shared/index.ts",
       "files": [
         "src/motion/scenes/PianoMaster/shared/index.ts",
         "src/motion/scenes/PianoMaster/shared/keyRoleColors.ts",
         "src/motion/scenes/PianoMaster/shared/linearGradient.ts",
+        "src/motion/scenes/PianoMaster/shared/musicGlyph.ts",
+        "src/motion/scenes/PianoMaster/shared/notationInk.ts",
+        "src/motion/scenes/PianoMaster/shared/paint.ts",
         "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
         "src/motion/scenes/PianoMaster/shared/pianoLookUnits.ts",
         "src/motion/scenes/PianoMaster/shared/pianoState.ts",
-        "src/motion/scenes/PianoMaster/shared/recordPicture.ts"
+        "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
+        "src/motion/scenes/PianoMaster/shared/staffPosition.ts"
       ],
       "packages": [
         "react",
@@ -428,6 +677,80 @@
       "lang": "swift"
     },
     {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "DurationBarFade",
+        "DurationBarPlacement",
+        "drawDurationBar"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/durationBarLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "DurationBarLook",
+        "LESSON_DURATION_BAR_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol.",
+      "exports": [
+        "DurationBarFade",
+        "DurationBarLook",
+        "DurationBarPlacement",
+        "LESSON_DURATION_BAR_LOOK",
+        "drawDurationBar"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/drawPlayhead.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "PlayheadPosition",
+        "drawPlayhead"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The playhead: the big see-through vertical line marking where the music is now. Part of the lesson design, not a music symbol.",
+      "exports": [
+        "LESSON_PLAYHEAD_LOOK",
+        "PlayheadLook",
+        "PlayheadPosition",
+        "drawPlayhead"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/playheadLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_PLAYHEAD_LOOK",
+        "PlayheadLook"
+      ]
+    },
+    {
       "id": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
@@ -439,26 +762,59 @@
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
-      "module": "src/motion/scenes/PianoMaster/CoreNotes",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/drawStaffPaper.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
       "exports": [
-        "drawQuarterNotes"
+        "drawStaffPaper"
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The white paper strip behind the staff, with its soft shadow: part of the lesson design, not a music symbol.",
+      "exports": [
+        "LESSON_STAFF_PAPER_LOOK",
+        "StaffPaperLook",
+        "drawStaffPaper"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/staffPaperLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_STAFF_PAPER_LOOK",
+        "StaffPaperLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
       "exports": [
-        "NotationTypefaces",
-        "Playhead",
-        "drawPlayhead",
-        "drawStaff"
+        "CoreNotesLook",
+        "LESSON_NOTES_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawCoreNotesNoteLayer",
+        "drawCoreNotesStaffLayer"
       ]
     },
     {
@@ -467,39 +823,27 @@
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
-      "purpose": "The staff of a lesson, drawn with Skia and SMuFL music fonts: the staff with its clef, time signature and rests, the QuarterNotes component (heads, stems and duration bars) and the playhead.",
+      "purpose": "The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead).",
       "exports": [
-        "GlyphFit",
-        "LESSON_STAFF",
-        "MusicFont",
-        "NotationTypefaces",
+        "CoreNotesLook",
+        "LESSON_NOTES_LOOK",
+        "LESSON_PLAYHEAD_LOOK",
         "NoteState",
-        "Playhead",
+        "PlayheadLook",
+        "PlayheadPosition",
         "QuarterNotes",
         "QuarterNotesProps",
         "Score",
         "ScoreItem",
         "StaffLayout",
-        "StaffLook",
         "beatX",
         "diatonicStep",
+        "drawCoreNotesNoteLayer",
+        "drawCoreNotesStaffLayer",
         "drawPlayhead",
-        "drawQuarterNotes",
-        "drawStaff",
         "ledgerLines",
         "trebleY",
         "useNotationTypefaces"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
-      "module": "src/motion/scenes/PianoMaster/CoreNotes",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "code",
-      "exports": [
-        "fillPaint",
-        "fillRect"
       ]
     },
     {
@@ -520,16 +864,413 @@
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
-      "module": "src/motion/scenes/PianoMaster/CoreNotes",
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
       "exports": [
-        "GlyphFit",
-        "LESSON_STAFF",
-        "MusicFont",
+        "BarlineLook",
+        "LESSON_BARLINE_LOOK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/drawBarline.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawBarline"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The single barline: the vertical line that separates two measures.",
+      "exports": [
+        "BarlineLook",
+        "LESSON_BARLINE_LOOK",
+        "drawBarline"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/drawLedgerLine.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawLedgerLine"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The ledger line: the short line through or under a notehead above or below the staff, such as middle C on a treble staff.",
+      "exports": [
+        "LESSON_LEDGER_LINE_LOOK",
+        "LedgerLineLook",
+        "drawLedgerLine"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_LEDGER_LINE_LOOK",
+        "LedgerLineLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/drawNotehead.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawNotehead",
+        "fillNoteheadShape",
+        "noteheadGeometry"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The notehead: the filled oval of a note, centred on the note's line or space, and where a stem meets it.",
+      "exports": [
+        "LESSON_NOTEHEAD_LOOK",
+        "NoteheadLook",
+        "drawNotehead",
+        "fillNoteheadShape",
+        "noteheadGeometry"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_NOTEHEAD_LOOK",
+        "NoteheadLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "QuarterNotePlacement",
+        "QuarterNoteState",
+        "drawQuarterNote",
+        "fillQuarterNoteShape",
+        "quarterNoteGeometry"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The quarter note: a notehead and a stem, with ledger lines when it sits above or below the staff; drawn in ink, or see-through red when it is the note to play now.",
+      "exports": [
+        "LESSON_QUARTER_NOTE_LOOK",
+        "QuarterNoteLook",
+        "QuarterNotePlacement",
+        "QuarterNoteState",
+        "drawQuarterNote",
+        "fillQuarterNoteShape",
+        "quarterNoteGeometry"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_QUARTER_NOTE_LOOK",
+        "QuarterNoteLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/drawQuarterRest.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawQuarterRest"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The quarter rest: one beat of silence, on the middle line of the staff.",
+      "exports": [
+        "LESSON_QUARTER_REST_LOOK",
+        "QuarterRestLook",
+        "drawQuarterRest"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_QUARTER_REST_LOOK",
+        "QuarterRestLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/drawStaff.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "StaffPlacement",
+        "drawStaff",
+        "staffSpan"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The staff: the 5 horizontal lines music is written on, and how far they reach.",
+      "exports": [
+        "LESSON_STAFF_LOOK",
+        "StaffLook",
+        "StaffPlacement",
+        "drawStaff",
+        "staffSpan"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_STAFF_LOOK",
         "StaffLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/drawStem.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawStem",
+        "stemRect"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The stem: the vertical line attached to a notehead.",
+      "exports": [
+        "LESSON_STEM_LOOK",
+        "StemLook",
+        "drawStem",
+        "stemRect"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_STEM_LOOK",
+        "StemLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/drawSystemicBarline.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawSystemicBarline"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The systemic barline: the vertical line at the very start of the staff.",
+      "exports": [
+        "LESSON_SYSTEMIC_BARLINE_LOOK",
+        "SystemicBarlineLook",
+        "drawSystemicBarline"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_SYSTEMIC_BARLINE_LOOK",
+        "SystemicBarlineLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/drawTimeSignature.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "TimeSignatureNumbers",
+        "drawTimeSignature"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The time signature: the two stacked numbers at the start of the staff, beats per measure over the beat's note value (as in 4/4).",
+      "exports": [
+        "LESSON_TIME_SIGNATURE_LOOK",
+        "TimeSignatureLook",
+        "TimeSignatureNumbers",
+        "drawTimeSignature"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_TIME_SIGNATURE_LOOK",
+        "TimeSignatureLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/drawTrebleClef.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "drawTrebleClef"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The treble clef (G clef): the sign at the start of the staff that fixes line 2 as G4.",
+      "exports": [
+        "LESSON_TREBLE_CLEF_LOOK",
+        "TrebleClefLook",
+        "drawTrebleClef"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_TREBLE_CLEF_LOOK",
+        "TrebleClefLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "The music notation symbols, one folder each and named as in music: Staff (the 5 lines), SystemicBarline, Barline, TrebleClef, TimeSignature, Notehead, Stem, LedgerLine, QuarterNote (notehead + stem) and QuarterRest. Each draws on its own, to be reused by any component.",
+      "exports": [
+        "BarlineLook",
+        "LESSON_BARLINE_LOOK",
+        "LESSON_LEDGER_LINE_LOOK",
+        "LESSON_NOTEHEAD_LOOK",
+        "LESSON_QUARTER_NOTE_LOOK",
+        "LESSON_QUARTER_REST_LOOK",
+        "LESSON_STAFF_LOOK",
+        "LESSON_STEM_LOOK",
+        "LESSON_SYSTEMIC_BARLINE_LOOK",
+        "LESSON_TIME_SIGNATURE_LOOK",
+        "LESSON_TREBLE_CLEF_LOOK",
+        "LedgerLineLook",
+        "NoteheadLook",
+        "QuarterNoteLook",
+        "QuarterNotePlacement",
+        "QuarterNoteState",
+        "QuarterRestLook",
+        "StaffLook",
+        "StaffPlacement",
+        "StemLook",
+        "SystemicBarlineLook",
+        "TimeSignatureLook",
+        "TimeSignatureNumbers",
+        "TrebleClefLook",
+        "drawBarline",
+        "drawLedgerLine",
+        "drawNotehead",
+        "drawQuarterNote",
+        "drawQuarterRest",
+        "drawStaff",
+        "drawStem",
+        "drawSystemicBarline",
+        "drawTimeSignature",
+        "drawTrebleClef",
+        "fillNoteheadShape",
+        "fillQuarterNoteShape",
+        "noteheadGeometry",
+        "quarterNoteGeometry",
+        "staffSpan",
+        "stemRect"
       ]
     },
     {
@@ -920,6 +1661,7 @@
       "lang": "code",
       "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "exports": [
+        "CoreNotesLook",
         "CorePiano",
         "CorePianoLook",
         "CorePianoProps",
@@ -930,8 +1672,8 @@
         "KeyRole",
         "KeyboardProportions",
         "KeyboardRange",
+        "LESSON_NOTES_LOOK",
         "LESSON_PIANO_LOOK",
-        "LESSON_STAFF",
         "MusicFont",
         "NotationTypefaces",
         "NoteInput",
@@ -940,20 +1682,19 @@
         "PianoKeyLabels",
         "PianoKeyLights",
         "PianoState",
-        "Playhead",
+        "PlayheadPosition",
         "QuarterNotes",
         "QuarterNotesProps",
         "RoleColors",
         "Score",
         "ScoreItem",
         "StaffLayout",
-        "StaffLook",
         "beatX",
         "createKeyLights",
         "diatonicStep",
+        "drawCoreNotesNoteLayer",
+        "drawCoreNotesStaffLayer",
         "drawPlayhead",
-        "drawQuarterNotes",
-        "drawStaff",
         "ledgerLines",
         "lightKey",
         "recordPicture",
@@ -970,25 +1711,34 @@
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
-      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, picture recording and the look units.",
+      "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, paint helpers, picture recording and the look units; and for the music symbols, SMuFL glyph drawing, staff line positions and the notation ink.",
       "exports": [
         "Box",
         "DEFAULT_ROLE_COLORS",
+        "GlyphFit",
         "GradientStop",
         "KeyRole",
+        "LESSON_NOTATION_INK",
+        "MusicFont",
+        "NotationTypefaces",
         "PianoKeyLights",
         "PianoState",
         "REFERENCE_PITCH",
         "RoleColors",
         "Size",
+        "StaffPosition",
         "clipToBox",
         "createKeyLights",
+        "drawMusicGlyph",
+        "fillPaint",
+        "fillRect",
         "lightKey",
         "pianoKeyShape",
         "pt",
         "recordPicture",
         "roleColors",
         "setLinearGradient",
+        "staffLineY",
         "unlightAllKeys",
         "unlightKey",
         "usePianoState"
@@ -1015,6 +1765,40 @@
       "exports": [
         "GradientStop",
         "setLinearGradient"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/musicGlyph.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "GlyphFit",
+        "MusicFont",
+        "NotationTypefaces",
+        "drawMusicGlyph"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/notationInk.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LESSON_NOTATION_INK"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/paint.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "fillPaint",
+        "fillRect"
       ]
     },
     {
@@ -1068,6 +1852,17 @@
       "exports": [
         "Size",
         "recordPicture"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/staffPosition.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "StaffPosition",
+        "staffLineY"
       ]
     },
     {
@@ -1216,45 +2011,91 @@
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
       "kind": "imports",
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/paint.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
       "to": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
       "kind": "imports",
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/durationBarLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/durationBarLook.ts",
       "kind": "imports"
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
       "kind": "imports"
     },
     {
@@ -1269,17 +2110,38 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "to": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
       "kind": "imports"
     },
     {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/drawPlayhead.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/playheadLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/drawPlayhead.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/drawPlayhead.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/playheadLook.ts",
+      "kind": "imports"
+    },
+    {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawQuarterNotes.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawCoreNotes.ts",
       "kind": "imports"
     },
     {
@@ -1289,13 +2151,371 @@
       "typeOnly": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/staffLook.ts",
-      "kind": "imports"
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "kind": "imports",
+      "typeOnly": true
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/score.ts",
       "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/drawStaffPaper.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/staffPaperLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/drawStaffPaper.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/drawStaffPaper.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/staffPaperLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/drawBarline.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/drawBarline.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/drawBarline.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/drawLedgerLine.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/drawLedgerLine.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/drawLedgerLine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/drawNotehead.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/drawNotehead.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/drawNotehead.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/drawQuarterNote.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/drawQuarterRest.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/drawQuarterRest.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/drawQuarterRest.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/drawStaff.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/drawStem.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/drawStem.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/drawStem.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/drawSystemicBarline.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/drawSystemicBarline.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/drawSystemicBarline.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/drawTimeSignature.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/drawTimeSignature.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/drawTimeSignature.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/drawTrebleClef.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/drawTrebleClef.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/drawTrebleClef.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
       "kind": "imports"
     },
     {
@@ -1310,7 +2530,7 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
-      "to": "src/motion/scenes/PianoMaster/CoreNotes/drawStaff.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/index.ts",
       "kind": "imports",
       "typeOnly": true
     },
@@ -1787,6 +3007,21 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/musicGlyph.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/notationInk.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/paint.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
       "to": "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
       "kind": "imports"
     },
@@ -1803,6 +3038,11 @@
     {
       "from": "src/motion/scenes/PianoMaster/shared/index.ts",
       "to": "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/staffPosition.ts",
       "kind": "imports"
     },
     {
@@ -1933,7 +3173,224 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes",
       "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "to": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
+      "to": "src/motion/scenes/PianoMaster/shared",
       "kinds": [
         "imports"
       ]

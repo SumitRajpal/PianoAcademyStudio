@@ -15,10 +15,10 @@ import { Skia, type SkCanvas, type SkTypeface } from 'react-native-skia';
 
 import { buildKeyboard, parseNote } from '../../../src/shared/piano';
 import {
+  drawCoreNotesNoteLayer,
+  drawCoreNotesStaffLayer,
   drawPlayhead,
-  drawQuarterNotes,
-  drawStaff,
-  LESSON_STAFF,
+  LESSON_NOTES_LOOK,
 } from '../../../src/motion/scenes/PianoMaster';
 import {
   drawCorePianoBlackLayer,
@@ -114,13 +114,13 @@ test('renders the lesson screen', () => {
   canvas.scale(SCALE, SCALE);
 
   drawLessonBackground(canvas, height);
-  // In the app's order: the staff, the QuarterNotes, then the playhead.
-  drawStaff(canvas, design.staff, design.score, LESSON_STAFF, {
+  // In the app's order: the staff layer, the notes, then the playhead.
+  drawCoreNotesStaffLayer(canvas, design.staff, design.score, LESSON_NOTES_LOOK, {
     bravura: typeface('assets/fonts/Bravura.otf'),
     leland: typeface('assets/fonts/Leland.otf'),
   });
-  drawQuarterNotes(canvas, design.staff, design.score, LESSON_STAFF);
-  drawPlayhead(canvas, design.playhead, LESSON_STAFF);
+  drawCoreNotesNoteLayer(canvas, design.staff, design.score, LESSON_NOTES_LOOK);
+  drawPlayhead(canvas, design.playhead, LESSON_NOTES_LOOK.playhead);
 
   const keyboard = { width, height: design.keyboard.height };
   const layout = layoutCorePiano(
