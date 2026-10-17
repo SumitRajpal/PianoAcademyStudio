@@ -4,8 +4,14 @@
 
 export {
   createKeyLights,
+  isKeyPressed,
   KeyRole,
   lightKey,
+  pressKey,
+  releaseAllKeys,
+  releaseKey,
+  setPressedKeys,
+  setPressedMidiKeys,
   unlightAllKeys,
   unlightKey,
   usePianoState,
@@ -18,6 +24,16 @@ export {
   type RoleColors,
 } from './keyRoleColors';
 export { clipToBox, pianoKeyShape, type Box } from './pianoKeyShape';
+export {
+  drawPressedPianoKeyFace,
+  makePianoKeyLightGradient,
+  makePressedPianoKeyFace,
+  setPianoKeyLightShader,
+  type KeyBand,
+  type PianoKeyLightStop,
+  type PressedPianoKeyFace,
+  type PressedPianoKeyFaceLook,
+} from './pressedPianoKey';
 export { setLinearGradient, type GradientStop } from './linearGradient';
 export { fillPaint, fillRect } from './paint';
 export { recordPicture, type Size } from './recordPicture';

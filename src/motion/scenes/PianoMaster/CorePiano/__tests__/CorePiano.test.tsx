@@ -1,7 +1,14 @@
 import type { ReactElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { makeMutable } from 'react-native-reanimated';
 
-import { CorePiano, PIANO_RANGES, usePianoState } from '../..';
+import {
+  CorePiano,
+  createKeyLights,
+  PIANO_RANGES,
+  setPressedKeys,
+  usePianoState,
+} from '../..';
 
 function Keyboard(props: { from?: string; to?: string }) {
   const piano = usePianoState();
@@ -33,5 +40,23 @@ describe('CorePiano', () => {
         accessibilityLabel: 'Piano keyboard, 108 keys from C0 to B8',
       }),
     ).toBeTruthy();
+  });
+
+  it('accepts external chords without re-rendering the controller', async () => {
+    const piano = makeMutable(createKeyLights());
+    const rendered = jest.fn();
+    function Controller() {
+      rendered();
+      return <CorePiano state={piano} />;
+    }
+    const renderer = await render(<Controller />);
+    await act(() => {
+      setPressedKeys(piano, ['C4', 'C#4', 'E4']);
+      setPressedKeys(piano, ['D4', 'F#4']);
+      setPressedKeys(piano, []);
+    });
+    expect(rendered).toHaveBeenCalledTimes(1);
+    expect(piano.value).toEqual(createKeyLights());
+    await act(() => renderer.unmount());
   });
 });

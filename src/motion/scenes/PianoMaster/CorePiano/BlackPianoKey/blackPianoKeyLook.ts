@@ -4,7 +4,12 @@
  * shared/pianoLookUnits); positions along the key are shares of its length.
  */
 
-import { pt, type GradientStop } from '../../shared';
+import {
+  pt,
+  type GradientStop,
+  type PianoKeyLightStop,
+  type PressedPianoKeyFaceLook,
+} from '../../shared';
 
 export type BlackPianoKeyLook = {
   cornerRadius: number;
@@ -38,10 +43,41 @@ export type BlackPianoKeyLook = {
     radius: number;
     stops: readonly GradientStop[];
   };
+  pressed: PressedPianoKeyFaceLook & {
+    body: readonly PianoKeyLightStop[];
+    /** A longer face leaves less raised front visible than the resting key. */
+    panelBottom: number;
+  };
 };
 
 export const LESSON_BLACK_PIANO_KEY_LOOK: BlackPianoKeyLook = {
   cornerRadius: pt(3.5),
+  pressed: {
+    body: [
+      [0, -0.8],
+      [1, -0.55],
+    ],
+    panelBottom: 0.96,
+    face: [
+      [0, -0.18],
+      [0.3, -0.03],
+      [0.82, 0.12],
+      [1, -0.04],
+    ],
+    inset: [
+      [0, -0.65, 0.6],
+      [1, -0.35, 0],
+    ],
+    insetDepth: pt(4),
+    front: [
+      [0, 0.18],
+      [0.2, -0.18],
+      [1, -0.32],
+    ],
+    frontDepth: pt(1.8),
+    edgeWidth: pt(0.65),
+    edgeLightness: -0.32,
+  },
   body: [
     [0, '#0B0B0B'],
     [0.18, '#131313'],

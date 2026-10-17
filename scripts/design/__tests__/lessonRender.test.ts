@@ -23,10 +23,24 @@ import {
 import {
   drawCorePianoBlackLayer,
   drawCorePianoWhiteLayer,
+  drawBlackPianoKeyLight,
+  drawPianoKeyLights,
+  drawWhitePianoKeyLight,
   layoutCorePiano,
+  makeBlackPianoKeyLight,
+  makePianoKeyLights,
+  makeWhitePianoKeyLight,
   layoutPianoKeyLabels,
   LESSON_PIANO_LOOK,
 } from '../../../src/motion/scenes/PianoMaster/CorePiano';
+import {
+  createKeyLights,
+  DEFAULT_ROLE_COLORS,
+  roleColors,
+  setPressedKeys,
+  type PianoKeyLights,
+  type PianoState,
+} from '../../../src/motion/scenes/PianoMaster/shared';
 import {
   DESIGN_SIZE,
   drawLessonBackground,
@@ -115,10 +129,16 @@ test('renders the lesson screen', () => {
 
   drawLessonBackground(canvas, height);
   // In the app's order: the staff layer, the notes, then the playhead.
-  drawCoreNotesStaffLayer(canvas, design.staff, design.score, LESSON_NOTES_LOOK, {
-    bravura: typeface('assets/fonts/Bravura.otf'),
-    leland: typeface('assets/fonts/Leland.otf'),
-  });
+  drawCoreNotesStaffLayer(
+    canvas,
+    design.staff,
+    design.score,
+    LESSON_NOTES_LOOK,
+    {
+      bravura: typeface('assets/fonts/Bravura.otf'),
+      leland: typeface('assets/fonts/Leland.otf'),
+    },
+  );
   drawCoreNotesNoteLayer(canvas, design.staff, design.score, LESSON_NOTES_LOOK);
   drawPlayhead(canvas, design.playhead, LESSON_NOTES_LOOK.playhead);
 
@@ -132,8 +152,51 @@ test('renders the lesson screen', () => {
   canvas.save();
   canvas.translate(0, design.keyboard.top);
   const markers = new Set(design.keyboard.markers.map(note => parseNote(note)));
+  // Optional headless preview only; the app never hardcodes active notes.
+  const piano = {
+    value: createKeyLights(),
+    modify(modifier: (value: PianoKeyLights) => PianoKeyLights) {
+      piano.value = modifier(piano.value);
+    },
+  };
+  setPressedKeys(
+    piano as unknown as PianoState,
+    (process.env.DESIGN_PRESSED_KEYS ?? '').split(',').filter(Boolean),
+  );
+  const lights = piano.value;
+  const colors = roleColors(DEFAULT_ROLE_COLORS);
+  const paint = Skia.Paint();
+  paint.setAntiAlias(true);
+  const whites = {
+    keys: layout.whites,
+    look: LESSON_PIANO_LOOK.whiteKey,
+    pitch: layout.pitch,
+    makeLight: makeWhitePianoKeyLight,
+    drawLight: drawWhitePianoKeyLight,
+  };
+  const blacks = {
+    keys: layout.blacks,
+    look: LESSON_PIANO_LOOK.blackKey,
+    pitch: layout.pitch,
+    makeLight: makeBlackPianoKeyLight,
+    drawLight: drawBlackPianoKeyLight,
+  };
   drawCorePianoWhiteLayer(canvas, layout, keyboard, LESSON_PIANO_LOOK, markers);
+  drawPianoKeyLights(
+    canvas,
+    whites,
+    lights,
+    makePianoKeyLights(whites, colors),
+    paint,
+  );
   drawCorePianoBlackLayer(canvas, layout, keyboard, LESSON_PIANO_LOOK);
+  drawPianoKeyLights(
+    canvas,
+    blacks,
+    lights,
+    makePianoKeyLights(blacks, colors),
+    paint,
+  );
   canvas.restore();
 
   if (existsSync(ROUNDED_FONT) && existsSync(SYSTEM_FONT)) {

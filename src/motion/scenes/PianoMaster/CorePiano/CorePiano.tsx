@@ -33,9 +33,15 @@ import {
   type PianoState,
   type RoleColors,
 } from '../shared';
-import { drawBlackPianoKeyLight } from './BlackPianoKey';
+import {
+  drawBlackPianoKeyLight,
+  makeBlackPianoKeyLight,
+} from './BlackPianoKey';
 import { LESSON_PIANO_LOOK, type CorePianoLook } from './corePianoLook';
-import { drawCorePianoBlackLayer, drawCorePianoWhiteLayer } from './drawCorePiano';
+import {
+  drawCorePianoBlackLayer,
+  drawCorePianoWhiteLayer,
+} from './drawCorePiano';
 import { layoutCorePiano } from './layoutCorePiano';
 import {
   layoutPianoKeyLabels,
@@ -43,10 +49,18 @@ import {
   type PianoKeyLabels,
 } from './PianoKeyLabel';
 import { usePianoKeyLights } from './usePianoKeyLights';
-import { drawWhitePianoKeyLight } from './WhitePianoKey';
+import {
+  drawWhitePianoKeyLight,
+  makeWhitePianoKeyLight,
+} from './WhitePianoKey';
 
 export type CorePianoProps = {
-  /** Key state from usePianoState(). Several keyboards can share one state. */
+  /**
+   * Key state from usePianoState(). Input presses keys with pressKey /
+   * releaseKey, or setPressedKeys(state, ['C4', 'C#4', 'E4']) for the whole
+   * held set; lessons light keys with lightKey. Several keyboards can share
+   * one state.
+   */
   state: PianoState;
   /** Lowest note, as a name ("C2") or a MIDI number (36). Defaults to C2. */
   from?: NoteInput;
@@ -113,13 +127,25 @@ export function CorePiano({
   );
   const whiteLights = usePianoKeyLights(
     state,
-    { keys: whites, look: look.whiteKey, pitch, drawLight: drawWhitePianoKeyLight },
+    {
+      keys: whites,
+      look: look.whiteKey,
+      pitch,
+      makeLight: makeWhitePianoKeyLight,
+      drawLight: drawWhitePianoKeyLight,
+    },
     colors,
     size,
   );
   const blackLights = usePianoKeyLights(
     state,
-    { keys: blacks, look: look.blackKey, pitch, drawLight: drawBlackPianoKeyLight },
+    {
+      keys: blacks,
+      look: look.blackKey,
+      pitch,
+      makeLight: makeBlackPianoKeyLight,
+      drawLight: drawBlackPianoKeyLight,
+    },
     colors,
     size,
   );

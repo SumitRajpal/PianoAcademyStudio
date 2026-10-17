@@ -3,7 +3,11 @@
  */
 
 export { drawWhitePianoKey } from './drawWhitePianoKey';
-export { drawWhitePianoKeyLight } from './drawWhitePianoKeyLight';
+export {
+  drawWhitePianoKeyLight,
+  makeWhitePianoKeyLight,
+  type WhitePianoKeyLight,
+} from './drawWhitePianoKeyLight';
 export {
   LESSON_WHITE_PIANO_KEY_LOOK,
   type WhitePianoKeyLook,

@@ -1,23 +1,47 @@
-import type { SkCanvas, SkPaint } from 'react-native-skia';
+import type { SkCanvas, SkColor, SkPaint } from 'react-native-skia';
 
-import { clipToBox, pianoKeyShape, type Box } from '../../shared';
+import {
+  drawPressedPianoKeyFace,
+  makePressedPianoKeyFace,
+  type Box,
+  type KeyBand,
+  type PressedPianoKeyFace,
+} from '../../shared';
 import type { WhitePianoKeyLook } from './whitePianoKeyLook';
 
+export type WhitePianoKeyLight = PressedPianoKeyFace;
+
+/** The shaders of a lit white key in one role colour, made once per layout. */
+export function makeWhitePianoKeyLight(
+  band: KeyBand,
+  look: WhitePianoKeyLook,
+  pitch: number,
+  color: SkColor,
+): WhitePianoKeyLight {
+  return makePressedPianoKeyFace(band, pitch, look.pressed, color);
+}
+
 /**
- * One lit white key: the key's shape filled with `paint`, which holds the
- * colour of the key's role. A worklet: the UI thread draws it every time the
- * key state changes.
+ * A pastel, sunken white-key face. The inactive key is never changed.
  */
 export function drawWhitePianoKeyLight(
   canvas: SkCanvas,
   key: Box,
   look: WhitePianoKeyLook,
   pitch: number,
+  light: WhitePianoKeyLight,
+  level: number,
   paint: SkPaint,
 ) {
   'worklet';
-  canvas.save();
-  clipToBox(canvas, key);
-  canvas.drawRRect(pianoKeyShape(key, look.cornerRadius * pitch), paint);
-  canvas.restore();
+  drawPressedPianoKeyFace(
+    canvas,
+    key,
+    look.cornerRadius * pitch,
+    pitch,
+    look.pressed,
+    light,
+    level,
+    paint,
+  );
 }

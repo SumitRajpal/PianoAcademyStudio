@@ -8,11 +8,12 @@ export type RoleColors = {
   wrong: string;
 };
 
+/** Pastel key faces; the pressed renderers add depth without neon or glow. */
 export const DEFAULT_ROLE_COLORS: RoleColors = {
-  pressed: '#64D2FF',
-  target: '#FFD60A',
-  correct: '#30D158',
-  wrong: '#FF453A',
+  pressed: '#B9E2F5',
+  target: '#F5E6B8',
+  correct: '#BFE8CE',
+  wrong: '#F2C4CB',
 };
 
 /**

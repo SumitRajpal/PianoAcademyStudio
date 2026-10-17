@@ -4,7 +4,7 @@
  * (an iPhone 15 Plus in landscape) and scaled to the screen width.
  */
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Canvas, Group, Picture } from 'react-native-skia';
 
@@ -17,6 +17,7 @@ import {
   recordPicture,
   useNotationTypefaces,
   usePianoState,
+  type PianoState,
 } from '../../motion/scenes/PianoMaster';
 import {
   lineHeight,
@@ -36,16 +37,18 @@ import {
 /** Width of the box a text run is laid out in; wider than any run. */
 const TEXT_BOX = 600;
 
-export function LessonScreen() {
+export type LessonScreenProps = {
+  /** An external controller can press notes without re-rendering this screen. */
+  pianoState?: PianoState;
+};
+
+export function LessonScreen({ pianoState }: LessonScreenProps = {}) {
   const { width, height } = useWindowDimensions();
   const scale = width / DESIGN_SIZE.width;
   const typefaces = useNotationTypefaces();
-  const piano = usePianoState();
+  const localPiano = usePianoState();
+  const piano = pianoState ?? localPiano;
   const design = LESSON_DESIGN;
-
-  useEffect(() => {
-    // The lesson logic will light keys; nothing is lit in the design yet.
-  }, [piano]);
 
   // The background and the staff, then the notes, then the playhead over
   // them. The notes and the playhead are drawn in design points.

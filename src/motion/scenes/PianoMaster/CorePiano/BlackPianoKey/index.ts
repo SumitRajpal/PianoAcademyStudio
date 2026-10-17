@@ -3,7 +3,11 @@
  */
 
 export { drawBlackPianoKey } from './drawBlackPianoKey';
-export { drawBlackPianoKeyLight } from './drawBlackPianoKeyLight';
+export {
+  drawBlackPianoKeyLight,
+  makeBlackPianoKeyLight,
+  type BlackPianoKeyLight,
+} from './drawBlackPianoKeyLight';
 export {
   LESSON_BLACK_PIANO_KEY_LOOK,
   type BlackPianoKeyLook,

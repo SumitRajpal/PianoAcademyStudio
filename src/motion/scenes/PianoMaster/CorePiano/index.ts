@@ -11,15 +11,22 @@ export {
 } from './drawCorePiano';
 export {
   drawPianoKeyLights,
+  makePianoKeyLights,
   type DrawPianoKeyLight,
+  type MakePianoKeyLight,
   type PianoKeyLightLayer,
+  type PianoKeyLightSource,
 } from './usePianoKeyLights';
 export {
   drawWhitePianoKeyLight,
+  makeWhitePianoKeyLight,
+  type WhitePianoKeyLight,
   type WhitePianoKeyLook,
 } from './WhitePianoKey';
 export {
   drawBlackPianoKeyLight,
+  makeBlackPianoKeyLight,
+  type BlackPianoKeyLight,
   type BlackPianoKeyLook,
 } from './BlackPianoKey';
 export type { BlackPianoKeyShadowsLook } from './BlackPianoKeyShadows';
