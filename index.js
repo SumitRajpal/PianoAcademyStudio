@@ -1,4 +1,5 @@
 /**
+ * @purpose Native entry point: registers the root App component with React Native.
  * @format
  */
 

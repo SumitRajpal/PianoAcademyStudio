@@ -109,3 +109,12 @@ pnpm-debug.log*
 # Caches
 .eslintcache
 *.tsbuildinfo
+
+# Note engine desktop test builds
+src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/.build/
+
+# Claude Code: personal and local files (the repo is public)
+.claude/settings.local.json
+.claude/state/
+.claude/handoff/
+CLAUDE.local.md

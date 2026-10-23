@@ -1,0 +1,43 @@
+# Checks for every pull request and every push to main (docs/claude-setup/DESIGN.md 6.6).
+# macOS runners: the design render tests use the macOS system fonts, and the note engine's
+# tests build with clang.
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: lint, types, tests, architecture
+    runs-on: macos-latest
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --ci
+      - run: npm run test:tooling
+      - name: Architecture graph is committed and up to date, rules pass
+        run: node scripts/architecture/check.mjs --ci
+
+  engine:
+    name: note engine regression gate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Scenarios
+        run: bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh scenarios
+      - name: Threads under ThreadSanitizer
+        run: bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh engine
