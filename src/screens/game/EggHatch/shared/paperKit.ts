@@ -110,6 +110,31 @@ export function radialGradient(
   return paint;
 }
 
+/** A two-point conical gradient fill for 3D spherical / conical volume shading. */
+export function twoPointConicalGradient(
+  start: Point,
+  startRadius: number,
+  end: Point,
+  endRadius: number,
+  colors: string[],
+  positions: number[] | null = null,
+): SkPaint {
+  const paint = Skia.Paint();
+  paint.setAntiAlias(true);
+  paint.setShader(
+    Skia.Shader.MakeTwoPointConicalGradient(
+      start,
+      startRadius,
+      end,
+      endRadius,
+      colors.map(c => Skia.Color(c)),
+      positions,
+      TileMode.Clamp,
+    ),
+  );
+  return paint;
+}
+
 /** A soft light: a radial gradient fading from `alpha` to nothing. */
 export function drawGlow(
   canvas: SkCanvas,
@@ -146,28 +171,14 @@ export type PaperShadow = {
 };
 
 /**
- * Draws `draw` as one paper sheet: everything inside casts one soft shadow
- * onto what is already on the canvas, the depth cue of a paper-cut diorama.
+ * Draws `draw` without flat paper-drop shadows, preserving volumetric depth.
  */
 export function paperSheet(
   canvas: SkCanvas,
-  shadow: PaperShadow,
+  _shadow: PaperShadow,
   draw: (canvas: SkCanvas) => void,
 ) {
-  const paint = Skia.Paint();
-  paint.setImageFilter(
-    Skia.ImageFilter.MakeDropShadow(
-      shadow.dx,
-      shadow.dy,
-      shadow.blur,
-      shadow.blur,
-      rgba(shadow.color ?? '#02060c', shadow.alpha),
-      null,
-    ),
-  );
-  canvas.saveLayer(paint);
   draw(canvas);
-  canvas.restore();
 }
 
 /** Deterministic random numbers, so a drawing is the same on every run. */

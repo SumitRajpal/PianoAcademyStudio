@@ -27,7 +27,7 @@ function ghostFont() {
   const face = Skia.Typeface.MakeFreeTypeFaceFromData(
     Skia.Data.fromBytes(new Uint8Array(readFileSync(ROUNDED_FONT))),
   );
-  const font = Skia.Font(face ?? undefined, 15);
+  const font = Skia.Font(face ?? undefined, 22);
   font.setEmbolden(true);
   return font;
 }

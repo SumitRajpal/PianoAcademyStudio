@@ -1,7 +1,7 @@
 # Pressed piano keys
 
-The inactive design is unchanged. Active white and black keys use pastel
-role colours, a clipped inset shadow and a short front lip. Black keys keep
+The inactive design is unchanged. Active white and black keys use the role
+colours below, a clipped inset shadow and a short front lip. Black keys keep
 dark side rails around the coloured face. Press/release is immediate; there
 is no continuous animation, touch handler or audio implementation.
 
@@ -61,6 +61,11 @@ unchanged chord, a repeated press or a release of a key that is up changes
 nothing and does not redraw. Invalid MIDI numbers are ignored; a level of 0
 releases.
 
+The mic does not call these from JS. `CorePianoNotesDetection` (or
+`useCorePianoNotesDetection({ pianoState })`) lights the keys on the UI thread
+straight from the engine's native key table, so detected keys never wait for
+the JS thread: see [note-events.md](note-events.md).
+
 All of these are worklets. Call them on the UI thread (a worklet input
 callback) or from JS, which costs one hop to the UI thread per call. Call
 `isKeyPressed` on the UI thread: on JS, reading the shared value waits for the
@@ -82,10 +87,15 @@ whatever the chord size or how often it changes.
 
 | Role    | Default face colour  |
 | ------- | -------------------- |
-| Pressed | Sky blue `#B9E2F5`   |
+| Pressed | Marigold `#FFB648`   |
 | Target  | Warm cream `#F5E6B8` |
 | Correct | Mint `#BFE8CE`       |
 | Wrong   | Blush `#F2C4CB`      |
+
+Pressed is an orange-yellow, stronger than the pastel lesson roles, so a held
+key stands out and never reads as a Target. Keys the mic detects light at
+least 55% strong (`CORE_PIANO_NOTES_DETECTION_LOOK.keys.softestLevel`), so a
+soft strike still shows clearly.
 
 The `CorePiano` `roles` prop overrides these defaults.
 

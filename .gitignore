@@ -109,3 +109,6 @@ pnpm-debug.log*
 # Caches
 .eslintcache
 *.tsbuildinfo
+
+# Note engine desktop test builds
+src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/.build/

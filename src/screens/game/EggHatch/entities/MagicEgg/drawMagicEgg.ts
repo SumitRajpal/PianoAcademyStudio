@@ -1,19 +1,15 @@
 /**
- * The enchanted egg, drawn centred on (0,0) so the scene can shake and split
- * it around its own centre. Deep berry shell with gold scallops, a teal band,
- * a ruby medallion flanked by teal teardrops and gold swirls, and a zigzag
- * hem, all clipped to the egg outline.
- *
- * - `drawMagicEgg(.., part)` draws the whole egg, the bottom cup, or one of
- *   the top shards, cut along SHATTER_LINES (the break lines the last crack
- *   draws), so the shell bursts exactly where it cracked.
- * - `drawEggGold` draws only the gold ornaments: the mask the scene sweeps
- *   a shimmer across.
- * - `drawEggAura` is the golden light around it, drawn separately to pulse.
- * The cracks themselves live in eggCracks.ts.
+ * The enchanted egg, drawn centred on (0,0).
+ * Rendered in 3D CGI stylized cartoon aesthetic (Pixar / The Incredibles standard):
+ * - Spherical 3D form modeling with off-center key light.
+ * - Subsurface scattering (warm ruby-magenta glow through shell).
+ * - Embossed 3D gold filigree with metallic specular sweeps.
+ * - Faceted 3D ruby medallion with internal refraction facets and diamond gleam.
+ * - Glossy ceramic specular highlight lobe and crisp Fresnel rim kicker.
+ * - Ambient bounce light from lotus petals below.
  */
 
-import { ClipOp, PathOp, Skia, type SkCanvas, type SkPath } from 'react-native-skia';
+import { BlendMode, BlurStyle, ClipOp, PaintStyle, PathOp, Skia, TileMode, type SkCanvas, type SkPaint, type SkPath } from 'react-native-skia';
 
 import {
   blurred,
@@ -22,6 +18,7 @@ import {
   linearGradient,
   radialGradient,
   stroke,
+  twoPointConicalGradient,
   type Point,
 } from '../../shared/paperKit';
 import { eggPath, leafPath, sparklePath } from '../../shared/paperShapes';
@@ -43,14 +40,11 @@ function polyline(points: Point[]): SkPath {
 const [WAIST, ...CUTS] = SHATTER_LINES;
 const FAR = 120;
 
-/** Waist points between x0 and x1, in order of x. */
 function waistBetween(x0: number, x1: number): Point[] {
   return WAIST.filter(p => p.x > x0 && p.x < x1);
 }
 
-/** The pieces the shell bursts into: the cup, then the top shards left to right. */
 export type EggPart = 'whole' | 'cup' | number;
-
 export const EGG_SHARD_COUNT = CUTS.length + 1;
 
 function partRegion(part: Exclude<EggPart, 'whole'>): SkPath {
@@ -60,7 +54,6 @@ function partRegion(part: Exclude<EggPart, 'whole'>): SkPath {
       true,
     );
   }
-  // Shard i lies between cut i-1 (or the far left) and cut i (or the far right).
   const leftCut = part > 0 ? CUTS[part - 1] : null;
   const rightCut = part < CUTS.length ? CUTS[part] : null;
   const leftX = leftCut ? leftCut[leftCut.length - 1].x : -FAR;
@@ -80,7 +73,6 @@ function partRegion(part: Exclude<EggPart, 'whole'>): SkPath {
   return Skia.Path.Polygon(pts, true);
 }
 
-/** The middle of a shell piece (egg points): the shard spins around it. */
 export function eggPartCentre(part: Exclude<EggPart, 'whole'>): Point {
   const { width: w, height: h } = MAGIC_EGG_SIZE;
   const piece = Skia.Path.MakeFromOp(eggPath({ x: 0, y: 0 }, w, h), partRegion(part), PathOp.Intersect);
@@ -103,67 +95,131 @@ function spiralPath(center: Point, radius: number, turns: number, flip: 1 | -1):
   return b.build();
 }
 
+/** Draws embossed 3D metallic gold and glossy enamel ornaments. */
 function drawOrnaments(canvas: SkCanvas, w: number, h: number, look: MagicEggLook, goldOnly = false) {
-  const gold = stroke(look.gold, 1.6);
+  const goldStroke = stroke(look.gold, 1.8);
   const goldFill = fill(look.gold);
-  // In the gold-only mask, the coloured parts are left out.
+  const goldShade = stroke(look.goldDeep, 1.8);
   const tealFill = fill(look.teal, goldOnly ? 0 : 1);
 
-  // Top: a small gold crown of dots and a teal drop at the tip.
+  // Top: a small crown of gold dots and a teal teardrop with specular glint.
   for (let i = -2; i <= 2; i++) {
-    canvas.drawCircle(i * 7, -h * 0.43 + Math.abs(i) * 3, 1.8, goldFill);
+    const dx = i * 7;
+    const dy = -h * 0.43 + Math.abs(i) * 3;
+    // 3D sphere dot
+    canvas.drawCircle(dx + 0.3, dy + 0.5, 2.0, fill(look.goldDeep));
+    canvas.drawCircle(dx, dy, 1.9, goldFill);
+    canvas.drawCircle(dx - 0.5, dy - 0.5, 0.7, fill(look.goldHighlight));
   }
-  canvas.drawPath(leafPath({ x: 0, y: -h * 0.52 }, 13, 8, 90, 0, 0.6), tealFill);
+  const topDrop = leafPath({ x: 0, y: -h * 0.52 }, 13, 8, 90, 0, 0.6);
+  if (!goldOnly) {
+    canvas.drawPath(topDrop, linearGradient({ x: 0, y: -h * 0.56 }, { x: 0, y: -h * 0.48 }, [look.tealLight, look.teal, look.tealDeep]));
+  }
+  canvas.drawPath(topDrop, stroke(look.gold, 1.2));
 
-  // Gold scallop band.
+  // Gold scallop band with embossed 3D drop highlights.
   const scallopY = -h * 0.3;
   for (let x = -w / 2; x < w / 2; x += 9) {
-    canvas.drawArc({ x, y: scallopY - 4.5, width: 9, height: 9 }, 0, 180, false, gold);
-    canvas.drawCircle(x + 4.5, scallopY + 9, 1.3, goldFill);
+    canvas.drawArc({ x, y: scallopY - 4, width: 9, height: 9 }, 0, 180, false, goldShade);
+    canvas.drawArc({ x, y: scallopY - 5, width: 9, height: 9 }, 0, 180, false, goldStroke);
+    canvas.drawCircle(x + 4.5, scallopY + 9, 1.6, fill(look.goldDeep));
+    canvas.drawCircle(x + 4.5, scallopY + 8.5, 1.4, goldFill);
+    canvas.drawCircle(x + 4.0, scallopY + 8.0, 0.6, fill(look.goldHighlight));
   }
 
-  // Teal band with a gold edge and dots.
+  // Teal enamel band with 3D gold borders and glossy enamel beads.
   const bandY = -h * 0.12;
-  canvas.drawRect({ x: -w, y: bandY - 5, width: w * 2, height: 10 }, fill(look.tealDeep, goldOnly ? 0 : 1));
-  canvas.drawLine(-w, bandY - 5, w, bandY - 5, stroke(look.gold, 1.2));
+  if (!goldOnly) {
+    canvas.drawRect(
+      { x: -w, y: bandY - 6, width: w * 2, height: 12 },
+      linearGradient({ x: 0, y: bandY - 6 }, { x: 0, y: bandY + 6 }, [look.tealDeep, look.teal, look.tealDeep])
+    );
+  }
+  canvas.drawLine(-w, bandY - 6, w, bandY - 6, stroke(look.goldDeep, 1.5));
+  canvas.drawLine(-w, bandY - 7, w, bandY - 7, stroke(look.goldHighlight, 1.2));
+  canvas.drawLine(-w, bandY + 6, w, bandY + 6, stroke(look.goldDeep, 1.5));
   canvas.drawLine(-w, bandY + 5, w, bandY + 5, stroke(look.gold, 1.2));
+
   for (let x = -w / 2; x < w / 2; x += 7) {
-    canvas.drawCircle(x, bandY, 1.6, tealFill);
+    canvas.drawCircle(x + 0.4, bandY + 0.4, 1.8, fill(look.tealDeep, goldOnly ? 0 : 1));
+    canvas.drawCircle(x, bandY, 1.7, tealFill);
+    if (!goldOnly) {
+      canvas.drawCircle(x - 0.5, bandY - 0.5, 0.6, fill('#ffffff', 0.8));
+    }
   }
 
-  // The ruby medallion with teal teardrops and gold swirls.
+  // The 3D Ruby Medallion with teal teardrops and gold filigree swirls.
   const m = { x: 0, y: h * 0.12 };
   for (const side of [-1, 1] as const) {
     const drop = leafPath({ x: m.x + side * 8, y: m.y }, 24, 15, side > 0 ? 0 : 180, 0.2 * side, 0.55);
-    canvas.drawPath(drop, tealFill);
+    if (!goldOnly) {
+      canvas.drawPath(drop, linearGradient({ x: m.x + side * 5, y: m.y - 6 }, { x: m.x + side * 15, y: m.y + 6 }, [look.tealLight, look.teal, look.tealDeep]));
+    }
+    canvas.drawPath(drop, stroke(look.goldDeep, 1.4));
     canvas.drawPath(drop, stroke(look.gold, 1.1));
-    canvas.drawPath(spiralPath({ x: m.x + side * 22, y: m.y - 16 }, 7, 1.4, side), gold);
-    canvas.drawPath(spiralPath({ x: m.x + side * 22, y: m.y + 17 }, 6, 1.3, -side as 1 | -1), gold);
-  }
-  const gem = Skia.Path.Polygon(
-    [{ x: m.x, y: m.y - 14 }, { x: m.x + 9, y: m.y }, { x: m.x, y: m.y + 14 }, { x: m.x - 9, y: m.y }],
-    true,
-  );
-  if (!goldOnly) {
-    canvas.drawPath(gem, linearGradient({ x: m.x - 9, y: m.y - 14 }, { x: m.x + 9, y: m.y + 14 }, [look.gemLight, look.gem, '#8a1028']));
-  }
-  canvas.drawPath(gem, stroke(look.gold, 2));
-  if (!goldOnly) {
-    canvas.drawPath(
-      Skia.Path.Polygon([{ x: m.x - 1, y: m.y - 9 }, { x: m.x - 5, y: m.y }, { x: m.x - 1, y: m.y - 2 }], true),
-      fill(look.highlight, 0.6),
-    );
+
+    // Gold filigree swirls with embossed highlight and shadow
+    const s1 = spiralPath({ x: m.x + side * 22, y: m.y - 16 }, 7, 1.4, side);
+    const s2 = spiralPath({ x: m.x + side * 22, y: m.y + 17 }, 6, 1.3, -side as 1 | -1);
+    canvas.drawPath(s1, stroke(look.goldDeep, 1.8));
+    canvas.drawPath(s1, stroke(look.gold, 1.2));
+    canvas.drawPath(s2, stroke(look.goldDeep, 1.8));
+    canvas.drawPath(s2, stroke(look.gold, 1.2));
   }
 
-  // Zigzag hem with teal dots.
+  // Faceted 3D Diamond-Cut Ruby Gem
+  const gemTop = { x: m.x, y: m.y - 14 };
+  const gemRight = { x: m.x + 9, y: m.y };
+  const gemBottom = { x: m.x, y: m.y + 14 };
+  const gemLeft = { x: m.x - 9, y: m.y };
+  const gemCenter = { x: m.x - 1, y: m.y - 1 };
+
+  // Bezel setting shadow & gold border
+  const gemOutline = Skia.Path.Polygon([gemTop, gemRight, gemBottom, gemLeft], true);
+  canvas.drawPath(gemOutline, stroke(look.goldDeep, 3.2));
+  canvas.drawPath(gemOutline, stroke(look.goldHighlight, 1.5));
+
+  if (!goldOnly) {
+    // 4 Facets with physically simulated refraction lighting:
+    // Top-Left facet (Direct key reflection: bright ruby)
+    const facetTL = Skia.Path.Polygon([gemTop, gemLeft, gemCenter], true);
+    canvas.drawPath(facetTL, fill(look.gemFacetLight));
+
+    // Top-Right facet (Translucent core: vivid ruby)
+    const facetTR = Skia.Path.Polygon([gemTop, gemRight, gemCenter], true);
+    canvas.drawPath(facetTR, fill(look.gem));
+
+    // Bottom-Left facet (Internal caustic reflection)
+    const facetBL = Skia.Path.Polygon([gemBottom, gemLeft, gemCenter], true);
+    canvas.drawPath(facetBL, fill(look.gemDeep));
+
+    // Bottom-Right facet (Deep absorption shadow)
+    const facetBR = Skia.Path.Polygon([gemBottom, gemRight, gemCenter], true);
+    canvas.drawPath(facetBR, fill(look.gemShadow));
+
+    // Crisp diamond specular glint
+    const glint = Skia.Path.Polygon([
+      { x: m.x - 1, y: m.y - 9 },
+      { x: m.x - 5, y: m.y - 2 },
+      { x: m.x - 1, y: m.y - 3 },
+    ], true);
+    canvas.drawPath(glint, fill('#ffffff', 0.95));
+  }
+
+  // Zigzag hem with 3D embossed gold points and teal enamel beads.
   const hemY = h * 0.33;
   const zig: Point[] = [];
   for (let x = -w / 2, i = 0; x <= w / 2; x += 6, i++) {
     zig.push({ x, y: hemY + (i % 2 ? 4 : -4) });
   }
-  canvas.drawPath(polyline(zig), gold);
+  canvas.drawPath(polyline(zig), stroke(look.goldDeep, 1.8));
+  canvas.drawPath(polyline(zig), stroke(look.gold, 1.3));
   for (let x = -w / 2 + 3; x < w / 2; x += 12) {
-    canvas.drawCircle(x, hemY + 10, 1.7, tealFill);
+    canvas.drawCircle(x, hemY + 10, 2.0, fill(look.tealDeep, goldOnly ? 0 : 1));
+    canvas.drawCircle(x, hemY + 9.6, 1.8, tealFill);
+    if (!goldOnly) {
+      canvas.drawCircle(x - 0.5, hemY + 9.2, 0.7, fill('#ffffff', 0.8));
+    }
   }
 }
 
@@ -177,34 +233,102 @@ export function drawMagicEgg(
   canvas.save();
   if (part !== 'whole') canvas.clipPath(partRegion(part), ClipOp.Intersect, true);
 
-  // Soft shadow under the egg, then the shell.
-  canvas.drawPath(shell, blurred(fill('#05020a', 0.5), 4));
-  canvas.drawPath(
-    shell,
-    radialGradient({ x: -w * 0.22, y: -h * 0.24 }, h * 0.85, [
-      { color: look.shell[0], at: 0 },
-      { color: look.shell[1], at: 0.55 },
-      { color: look.shell[2], at: 1 },
-    ]),
+  // 1. Soft Volumetric Ground / Lotus Contact Shadow under the egg
+  canvas.drawPath(shell, blurred(fill(look.coreShadow, 0.65), 8));
+
+  // 2. Volumetric 3D Spherical Shell Gradient (Conical / Off-center Key Light)
+  const sphereShading = twoPointConicalGradient(
+    { x: -w * 0.22, y: -h * 0.28 }, 0,     // Focal highlight point
+    { x: 0, y: 0 }, h * 0.82,              // Enclosing sphere boundary
+    [
+      look.shell[0],                       // Bright berry highlight
+      look.shell[1],                       // Saturated berry midtone
+      look.shell[2],                       // Deep berry core
+      look.shell[3],                       // Shadow
+    ],
+    [0.0, 0.35, 0.72, 1.0],
   );
+  canvas.drawPath(shell, sphereShading);
+
+  // 3. Subsurface Scattering (SSS): Warm radiant ruby-crimson light bleeding through the shell
+  const sssPaint = Skia.Paint();
+  sssPaint.setShader(
+    Skia.Shader.MakeRadialGradient(
+      { x: w * 0.1, y: h * 0.15 }, h * 0.75,
+      [Skia.Color('transparent'), Skia.Color(look.sss)],
+      [0.4, 1.0],
+      TileMode.Clamp
+    )
+  );
+  sssPaint.setAlphaf(look.sssAlpha);
+  sssPaint.setBlendMode(BlendMode.Screen);
+  canvas.drawPath(shell, sssPaint);
+
+  // 4. Ambient Bounce Light from the glowing pink lotus petals below
+  const lotusBounce = Skia.Paint();
+  lotusBounce.setShader(
+    Skia.Shader.MakeLinearGradient(
+      { x: 0, y: h * 0.5 },
+      { x: 0, y: 0 },
+      [Skia.Color(look.bounceLotus), Skia.Color('transparent')],
+      [0.0, 1.0],
+      TileMode.Clamp
+    )
+  );
+  lotusBounce.setAlphaf(look.bounceAlpha);
+  lotusBounce.setBlendMode(BlendMode.Screen);
+  canvas.drawPath(shell, lotusBounce);
+
+  // 5. Draw 3D Embossed Ornaments clipped to the shell
   canvas.save();
   canvas.clipPath(shell, ClipOp.Intersect, true);
   drawOrnaments(canvas, w, h, look);
-  // Shading: dark on the right, a soft shine top-left.
-  canvas.drawRect(
-    { x: -w, y: -h, width: w * 2, height: h * 2 },
-    linearGradient({ x: -w * 0.1, y: 0 }, { x: w / 2, y: 0 }, ['#00000000', '#1a0410aa']),
-  );
-  canvas.drawOval({ x: -w * 0.36, y: -h * 0.46, width: w * 0.3, height: h * 0.34 }, blurred(fill(look.highlight, 0.22), 5));
-  canvas.restore();
-  canvas.drawPath(shell, stroke(look.gold, 1.1, 0.55));
 
-  // A broken piece glows along its broken edges, with the light inside.
+  // 6. Volumetric Form Shadow & Terminator Line (carving the right side of the egg)
+  const terminatorPaint = Skia.Paint();
+  terminatorPaint.setShader(
+    Skia.Shader.MakeLinearGradient(
+      { x: -w * 0.05, y: -h * 0.1 },
+      { x: w * 0.52, y: h * 0.35 },
+      [Skia.Color('transparent'), Skia.Color(look.coreShadow)],
+      [0.2, 1.0],
+      TileMode.Clamp
+    )
+  );
+  terminatorPaint.setAlphaf(0.55);
+  terminatorPaint.setBlendMode(BlendMode.Multiply);
+  canvas.drawRect({ x: -w, y: -h, width: w * 2, height: h * 2 }, terminatorPaint);
+
+  // 7. Blinn-Phong Glossy Ceramic Specular Highlight
+  const specLobe = Skia.Paint();
+  specLobe.setColor(Skia.Color(look.highlight));
+  specLobe.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 5, true));
+  specLobe.setBlendMode(BlendMode.Plus);
+  specLobe.setAlphaf(0.85);
+  canvas.drawOval({ x: -w * 0.36, y: -h * 0.46, width: w * 0.28, height: h * 0.24 }, specLobe);
+
+  // Sharp secondary specular pinpoint
+  const sharpGlint = Skia.Paint();
+  sharpGlint.setColor(Skia.Color('#ffffff'));
+  sharpGlint.setBlendMode(BlendMode.Plus);
+  canvas.drawCircle(-w * 0.24, -h * 0.38, 2.5, sharpGlint);
+
+  canvas.restore();
+
+  // 8. Fresnel Rim Kicker Light carving the outer contour from the dark trees
+  const rimPaint = Skia.Paint();
+  rimPaint.setStyle(PaintStyle.Stroke);
+  rimPaint.setStrokeWidth(1.6);
+  rimPaint.setColor(Skia.Color(look.highlightRim));
+  rimPaint.setBlendMode(BlendMode.Plus);
+  canvas.drawPath(shell, rimPaint);
+
+  // Broken shell pieces glow with internal energy and god rays
   if (part !== 'whole') {
     canvas.clipPath(shell, ClipOp.Intersect, true);
     for (const line of SHATTER_LINES) {
-      canvas.drawPath(polyline(line), blurred(stroke(look.crackGlow, 6, 0.9), 3));
-      canvas.drawPath(polyline(line), stroke(look.inside, 1.6));
+      canvas.drawPath(polyline(line), blurred(stroke(look.crackGlow, 8, 0.95), 4));
+      canvas.drawPath(polyline(line), stroke(look.inside, 2.2));
     }
   }
   canvas.restore();
@@ -231,11 +355,11 @@ export function drawShimmerBand(canvas: SkCanvas, look: MagicEggLook = MAGIC_EGG
   canvas.restore();
 }
 
-/** The golden aura around the egg, with a few sparkles. */
+/** The golden aura around the egg, with volumetric bloom and sparkles. */
 export function drawEggAura(canvas: SkCanvas, look: MagicEggLook = MAGIC_EGG_LOOK) {
   const { width: w, height: h } = MAGIC_EGG_SIZE;
-  drawGlow(canvas, { x: 0, y: -h * 0.05 }, h * 1.25, look.aura, look.auraAlpha);
-  drawGlow(canvas, { x: 0, y: -h * 0.05 }, h * 0.7, look.aura, look.auraAlpha * 0.8);
+  drawGlow(canvas, { x: 0, y: -h * 0.05 }, h * 1.35, look.aura, look.auraAlpha, BlendMode.Plus);
+  drawGlow(canvas, { x: 0, y: -h * 0.05 }, h * 0.75, look.aura, look.auraAlpha * 0.9, BlendMode.Plus);
   const sparkle = fill(look.inside, 0.95);
   for (const [x, y, r] of [
     [-w * 0.78, -h * 0.4, 5],

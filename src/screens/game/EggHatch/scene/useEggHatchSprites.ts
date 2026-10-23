@@ -11,6 +11,7 @@
 import { useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 import {
+  BlendMode,
   Skia,
   TileMode,
   type SkCanvas,
@@ -119,8 +120,13 @@ function around(r: number, cx = 0, cy = 0): SkRect {
 }
 
 function sparkle(c: SkCanvas) {
-  c.drawCircle(0, 0, 4, blurred(fill('#fff3c8', 0.6), 2.5));
-  c.drawPath(sparklePath({ x: 0, y: 0 }, 7, 0.2), fill('#ffffff'));
+  const halo = fill('#fff3c8', 0.7);
+  halo.setBlendMode(BlendMode.Plus);
+  c.drawCircle(0, 0, 4.5, blurred(halo, 2.5));
+
+  const star = fill('#ffffff', 0.98);
+  star.setBlendMode(BlendMode.Plus);
+  c.drawPath(sparklePath({ x: 0, y: 0 }, 7.5, 0.2), star);
 }
 
 export function buildEggHatchSprites(font: SkFont | null, density: number, plan: HitPlan) {
@@ -196,7 +202,9 @@ export function buildEggHatchSprites(font: SkFont | null, density: number, plan:
         ),
       ),
     ),
-    ghostFaces: GHOST_LETTERS.map(letter => bake(around(r * 1.15, 0, r * 0.15), ghostDensity, c => drawGhostFace(c, r, letter, font))),
+    ghostFaces: GHOST_LETTERS.map(letter =>
+      bake(around(r * 1.3, 0, r * 0.25), ghostDensity, c => drawGhostFace(c, r, letter, font)),
+    ),
     ghostShadow: bake(around(r * 1.4), soft, c => drawGhostShadow(c, r)),
     ghostHalo: bake(around(r * 2.1, r * 0.1, r * 0.3), soft, c => drawGhostHalo(c, r)),
     ghostStreak: bake({ x: -r * 4.4, y: -r, width: r * 4.6, height: r * 2 }, soft, c => drawGhostStreak(c, r, r * 4)),
@@ -232,12 +240,20 @@ export function buildEggHatchSprites(font: SkFont | null, density: number, plan:
     ferns: FERNS.map(f => bake({ x: -170, y: -180, width: 340, height: 200 }, layerDensity, c => drawFernPlant(c, f.fronds), 0.6)),
     jungle: JUNGLE_SPRAYS.map(s => bake({ x: -220, y: -220, width: 440, height: 260 }, layerDensity, c => drawJungleLeafSpray(c, s.leaves), 1.8)),
     fireflyWarm: bake(around(8), density, c => {
-      c.drawCircle(0, 0, 6, blurred(fill(FIREFLY_LOOK.warm, FIREFLY_LOOK.glowAlpha), 2.4));
-      c.drawCircle(0, 0, 1.4, fill('#ffffff', 0.95));
+      const halo = fill(FIREFLY_LOOK.warm, FIREFLY_LOOK.glowAlpha * 0.9);
+      halo.setBlendMode(BlendMode.Plus);
+      c.drawCircle(0, 0, 6, blurred(halo, 2.4));
+      const core = fill('#ffffff', 0.95);
+      core.setBlendMode(BlendMode.Plus);
+      c.drawCircle(0, 0, 1.4, core);
     }),
     fireflyCool: bake(around(8), density, c => {
-      c.drawCircle(0, 0, 6, blurred(fill(FIREFLY_LOOK.cool, FIREFLY_LOOK.glowAlpha), 2.4));
-      c.drawCircle(0, 0, 1.4, fill('#ffffff', 0.95));
+      const halo = fill(FIREFLY_LOOK.cool, FIREFLY_LOOK.glowAlpha * 0.9);
+      halo.setBlendMode(BlendMode.Plus);
+      c.drawCircle(0, 0, 6, blurred(halo, 2.4));
+      const core = fill('#ffffff', 0.95);
+      core.setBlendMode(BlendMode.Plus);
+      c.drawCircle(0, 0, 1.4, core);
     }),
     finish: layer(c => drawPaperFinish(c, LAYER_BOUNDS, { x: SCENE.egg.x, y: SCENE.egg.y })),
   };
@@ -252,7 +268,7 @@ function ghostLetterFont(): SkFont | null {
     const face =
       mgr.matchFamilyStyle('Arial Rounded MT Bold', { weight: 700 }) ??
       mgr.matchFamilyStyle('System', { weight: 700 });
-    return Skia.Font(face, 15);
+    return Skia.Font(face, 22);
   } catch {
     return null;
   }

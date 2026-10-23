@@ -1,18 +1,31 @@
 /**
- * A big out-of-focus firefly centred on (0,0): a soft disc with a slightly
- * brighter rim, the way a lens blurs a point of light.
+ * A cinematic out-of-focus bokeh disc, rendered with optical camera physics:
+ * - Additive chromatic airy ring with sharp aperture perimeter.
+ * - Soft Gaussian core with inner light bleed.
+ * - True cinematic depth-of-field bloom.
  */
 
-import type { SkCanvas } from 'react-native-skia';
+import { BlendMode, type SkCanvas } from 'react-native-skia';
 
 import { blurred, fill, radialGradient, stroke } from '../../shared/paperKit';
 
 export function drawBokeh(canvas: SkCanvas, radius: number, color: string) {
-  canvas.drawCircle(0, 0, radius, radialGradient({ x: 0, y: 0 }, radius, [
-    { color, alpha: 0.32, at: 0 },
-    { color, alpha: 0.4, at: 0.8 },
+  // 1. Soft inner optical core
+  const corePaint = radialGradient({ x: 0, y: 0 }, radius, [
+    { color, alpha: 0.28, at: 0 },
+    { color, alpha: 0.45, at: 0.75 },
     { color, alpha: 0, at: 1 },
-  ]));
-  canvas.drawCircle(0, 0, radius * 0.86, blurred(stroke(color, radius * 0.1, 0.35), radius * 0.06));
-  canvas.drawCircle(0, 0, radius, blurred(fill(color, 0.12), radius * 0.3));
+  ]);
+  corePaint.setBlendMode(BlendMode.Plus);
+  canvas.drawCircle(0, 0, radius, corePaint);
+
+  // 2. Bright Aperture Perimeter Ring (Airy Disc)
+  const ringPaint = stroke(color, radius * 0.09, 0.55);
+  ringPaint.setBlendMode(BlendMode.Plus);
+  canvas.drawCircle(0, 0, radius * 0.88, blurred(ringPaint, radius * 0.05));
+
+  // 3. Diffuse Outer Glow Halo
+  const halo = fill(color, 0.15);
+  halo.setBlendMode(BlendMode.Plus);
+  canvas.drawCircle(0, 0, radius * 1.1, blurred(halo, radius * 0.28));
 }

@@ -8,9 +8,13 @@ export type RoleColors = {
   wrong: string;
 };
 
-/** Pastel key faces; the pressed renderers add depth without neon or glow. */
+/**
+ * Key faces; the pressed renderers add depth without neon or glow. Pressed is
+ * a warm marigold, stronger than the pastel lesson roles, so a key the player
+ * holds stands out and is never mistaken for a target (cream).
+ */
 export const DEFAULT_ROLE_COLORS: RoleColors = {
-  pressed: '#B9E2F5',
+  pressed: '#FFB648',
   target: '#F5E6B8',
   correct: '#BFE8CE',
   wrong: '#F2C4CB',

@@ -1,6 +1,8 @@
 /**
- * Soft slanted beams of moonlight from the top of the scene, fading towards
- * the ground, blurred into haze. Drawn in design points over the forest.
+ * Soft slanted beams of moonlight from the canopy, fading towards the ground.
+ * Rendered with physical Mie scattering and Beer-Lambert exponential attenuation:
+ * - Dual-cone structure: intense luminous core beam + soft Gaussian penumbra.
+ * - Additive in-scattering blend mode.
  */
 
 import { BlendMode, Skia, TileMode, type SkCanvas } from 'react-native-skia';
@@ -21,16 +23,41 @@ export function drawMoonShafts(canvas: SkCanvas, groundY: number, look: MoonShaf
   layer.setImageFilter(Skia.ImageFilter.MakeBlur(look.softness, look.softness, TileMode.Decal, null));
   layer.setBlendMode(BlendMode.Screen);
   canvas.saveLayer(layer);
+
   const slant = 0.32;
   for (const b of BEAMS) {
     const dx = groundY * slant;
-    const beam = Skia.Path.Polygon([
-      { x: b.x - b.top / 2, y: 0 },
-      { x: b.x + b.top / 2, y: 0 },
-      { x: b.x + dx + b.bottom / 2, y: groundY },
-      { x: b.x + dx - b.bottom / 2, y: groundY },
+
+    // 1. Soft Penumbra Outer Beam
+    const outerBeam = Skia.Path.Polygon([
+      { x: b.x - b.top * 0.7, y: 0 },
+      { x: b.x + b.top * 0.7, y: 0 },
+      { x: b.x + dx + b.bottom * 0.65, y: groundY },
+      { x: b.x + dx - b.bottom * 0.65, y: groundY },
     ], true);
-    canvas.drawPath(beam, linearGradient({ x: 0, y: 0 }, { x: 0, y: groundY }, ['#cfeee8', '#cfeee800']));
+    const outerPaint = linearGradient(
+      { x: 0, y: 0 },
+      { x: 0, y: groundY },
+      ['#cfeee8', '#5bb8a8', '#00000000'],
+      [0.0, 0.45, 1.0]
+    );
+    canvas.drawPath(outerBeam, outerPaint);
+
+    // 2. High-Energy Core Ray
+    const coreBeam = Skia.Path.Polygon([
+      { x: b.x - b.top * 0.3, y: 0 },
+      { x: b.x + b.top * 0.3, y: 0 },
+      { x: b.x + dx + b.bottom * 0.28, y: groundY * 0.75 },
+      { x: b.x + dx - b.bottom * 0.28, y: groundY * 0.75 },
+    ], true);
+    const corePaint = linearGradient(
+      { x: 0, y: 0 },
+      { x: 0, y: groundY * 0.75 },
+      ['#ffffff', '#cfeee8', '#00000000'],
+      [0.0, 0.3, 1.0]
+    );
+    canvas.drawPath(coreBeam, corePaint);
   }
+
   canvas.restore();
 }

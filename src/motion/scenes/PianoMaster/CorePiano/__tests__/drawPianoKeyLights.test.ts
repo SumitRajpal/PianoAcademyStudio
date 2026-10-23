@@ -114,16 +114,18 @@ function centre(box: Box): [number, number] {
 }
 
 describe('pressed piano key rendering', () => {
-  it('makes a mixed white/black chord visibly pastel while neighbours stay inactive', () => {
+  it('makes a mixed white/black chord visibly marigold while neighbours stay inactive', () => {
     const inactive = render();
     const active = render(light(['C4', 'C#4', 'E4', 'F#4']));
     for (const note of ['C4', 'C#4', 'E4', 'F#4']) {
       const point = centre(key(note));
       const [r, g, b] = active.pixel(...point);
       expect(active.pixel(...point)).not.toEqual(inactive.pixel(...point));
-      expect(b).toBeGreaterThan(g);
-      expect(g).toBeGreaterThan(r);
-      expect(r).toBeGreaterThan(160);
+      // Orange-yellow: red over green over blue, and clearly saturated.
+      expect(r).toBeGreaterThan(g);
+      expect(g).toBeGreaterThan(b);
+      expect(r).toBeGreaterThan(200);
+      expect(r - b).toBeGreaterThan(80);
     }
     for (const note of ['D4', 'D#4', 'G4', 'G#4', 'A4', 'B4']) {
       const point = centre(key(note));
@@ -155,7 +157,8 @@ describe('pressed piano key rendering', () => {
     const rail = active.pixel(rect.x + 0.5, y);
     const face = active.pixel(rect.x + rect.width / 2, y);
     expect(rail[0]).toBeLessThan(face[0] / 2);
-    expect(rail[2]).toBeGreaterThan(rail[0]);
+    // Dark, with a little of the face's warm colour.
+    expect(rail[0]).toBeGreaterThan(rail[2]);
   });
 
   it('does not paint a pressed white key over an inactive black key', () => {

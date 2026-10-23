@@ -1,13 +1,22 @@
-/** Colours of the pond, its bank, ripples and lily pads. */
+/**
+ * Colours of the pond, its bank, ripples and lily pads.
+ * Stylized 3D CGI cartoon aesthetic (The Incredibles 2 / Pixar standard).
+ */
 export const POND_LOOK = {
-  bank: '#24443d',
-  bankEdge: '#3a6458',
-  water: ['#0a1828', '#0f2438', '#163246'],
-  ripple: '#5aa3a8',
-  reflection: '#d8f2ec',
-  lilyPad: ['#1d5a4e', '#246b5a', '#2b7a64'],
-  lilyVein: '#7cc4a8',
-  bud: '#d6557a',
+  bank: '#19332d',
+  bankEdge: '#325c50',
+  bankHighlight: '#4e8777',
+  // Deep glossy liquid water gradient
+  water: ['#040a14', '#0a1a2b', '#122c3d'],
+  // Volumetric wave caustics & ripples
+  ripple: '#4de8d8',
+  rippleTrough: '#02060c',
+  reflection: '#e2faf5',
+  // Glossy 3D Lily Pads
+  lilyPad: ['#174d42', '#216353', '#2a7561'],
+  lilyPadHighlight: '#42a38a',
+  lilyVein: '#6ec7ab',
+  bud: '#e64573',
 };
 
 export type PondLook = typeof POND_LOOK;

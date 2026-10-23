@@ -46,6 +46,7 @@
         "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
         "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
         "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
         "src/motion/scenes/PianoMaster/shared"
       ]
     },
@@ -77,7 +78,9 @@
       "modules": [
         "App.tsx",
         "index.js",
-        "src/screens/LessonScreen"
+        "src/screens/CalibrationScreen",
+        "src/screens/LessonScreen",
+        "src/screens/game/EggHatch"
       ]
     }
   ],
@@ -88,12 +91,13 @@
       "kind": "entry",
       "plane": "app",
       "thread": "js",
-      "purpose": "Root component: safe-area provider, hidden status bar and the lesson screen, full screen in landscape.",
+      "purpose": "Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection.",
       "entry": "App.tsx",
       "files": [
         "App.tsx"
       ],
       "packages": [
+        "react",
         "react-native",
         "react-native-safe-area-context"
       ]
@@ -108,7 +112,10 @@
       "entry": null,
       "files": [
         "android/app/src/main/java/com/pianoacademystudio/MainActivity.kt",
-        "android/app/src/main/java/com/pianoacademystudio/MainApplication.kt"
+        "android/app/src/main/java/com/pianoacademystudio/MainApplication.kt",
+        "android/app/src/main/jni/OboeInput.cpp",
+        "android/app/src/main/jni/OboeInput.h",
+        "android/app/src/main/jni/OnLoad.cpp"
       ]
     },
     {
@@ -138,7 +145,11 @@
       "purpose": "iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code",
       "entry": null,
       "files": [
-        "ios/PianoAcademyStudio/AppDelegate.swift"
+        "ios/PianoAcademyStudio/AppDelegate.swift",
+        "ios/PianoAcademyStudio/IosAudioInput.h",
+        "ios/PianoAcademyStudio/IosAudioInput.mm",
+        "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
+        "ios/PianoAcademyStudio/NativePianoEngineProvider.mm"
       ]
     },
     {
@@ -147,7 +158,7 @@
       "kind": "scene",
       "plane": "motion",
       "thread": "ui",
-      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "entry": "src/motion/scenes/PianoMaster/index.ts",
       "files": [
         "src/motion/scenes/PianoMaster/index.ts"
@@ -560,6 +571,54 @@
       "hasWorklets": true
     },
     {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "name": "motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "kind": "module",
+      "plane": "motion",
+      "thread": "ui",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
+      "entry": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "files": [
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/benchmark.cpp",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/live_keys_test.cpp",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-worklets"
+      ],
+      "hasWorklets": true
+    },
+    {
       "id": "src/motion/scenes/PianoMaster/shared",
       "name": "motion/scenes/PianoMaster/shared",
       "kind": "module",
@@ -577,6 +636,7 @@
         "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
         "src/motion/scenes/PianoMaster/shared/pianoLookUnits.ts",
         "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+        "src/motion/scenes/PianoMaster/shared/pressedPianoKey.ts",
         "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
         "src/motion/scenes/PianoMaster/shared/staffPosition.ts"
       ],
@@ -586,6 +646,27 @@
         "react-native-skia"
       ],
       "hasWorklets": true
+    },
+    {
+      "id": "src/screens/CalibrationScreen",
+      "name": "screens/CalibrationScreen",
+      "kind": "screen",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson.",
+      "entry": "src/screens/CalibrationScreen/index.ts",
+      "files": [
+        "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+        "src/screens/CalibrationScreen/calibrationDesign.ts",
+        "src/screens/CalibrationScreen/calibrationView.ts",
+        "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
+        "src/screens/CalibrationScreen/index.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-skia"
+      ]
     },
     {
       "id": "src/screens/LessonScreen",
@@ -606,6 +687,92 @@
         "react-native",
         "react-native-skia"
       ]
+    },
+    {
+      "id": "src/screens/game/EggHatch",
+      "name": "screens/game/EggHatch",
+      "kind": "module",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4.",
+      "entry": "src/screens/game/EggHatch/index.ts",
+      "files": [
+        "src/screens/game/EggHatch/EggHatch.tsx",
+        "src/screens/game/EggHatch/eggHatchDesign.ts",
+        "src/screens/game/EggHatch/entities/Bird/birdLook.ts",
+        "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+        "src/screens/game/EggHatch/entities/Bokeh/bokehLook.ts",
+        "src/screens/game/EggHatch/entities/Bokeh/drawBokeh.ts",
+        "src/screens/game/EggHatch/entities/Chick/chickLook.ts",
+        "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+        "src/screens/game/EggHatch/entities/Confetti/confettiLook.ts",
+        "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
+        "src/screens/game/EggHatch/entities/Debris/debrisLook.ts",
+        "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
+        "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
+        "src/screens/game/EggHatch/entities/EggLight/eggLightLook.ts",
+        "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+        "src/screens/game/EggHatch/entities/FallingLeaf/fallingLeafLook.ts",
+        "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+        "src/screens/game/EggHatch/entities/FarForest/farForestLook.ts",
+        "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+        "src/screens/game/EggHatch/entities/Fern/fernLook.ts",
+        "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
+        "src/screens/game/EggHatch/entities/Firefly/fireflyLook.ts",
+        "src/screens/game/EggHatch/entities/Firefly/fireflyMotion.ts",
+        "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+        "src/screens/game/EggHatch/entities/ForestGround/forestGroundLook.ts",
+        "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+        "src/screens/game/EggHatch/entities/FrameTree/frameTreeLook.ts",
+        "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+        "src/screens/game/EggHatch/entities/Ghost/ghostLook.ts",
+        "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+        "src/screens/game/EggHatch/entities/GodLight/godLightLook.ts",
+        "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+        "src/screens/game/EggHatch/entities/JungleLeaf/jungleLeafLook.ts",
+        "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+        "src/screens/game/EggHatch/entities/Lotus/lotusLook.ts",
+        "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+        "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+        "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+        "src/screens/game/EggHatch/entities/MagicEgg/magicEggLook.ts",
+        "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+        "src/screens/game/EggHatch/entities/MidForest/midForestLook.ts",
+        "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
+        "src/screens/game/EggHatch/entities/Mist/mistLook.ts",
+        "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+        "src/screens/game/EggHatch/entities/Moon/moonLook.ts",
+        "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
+        "src/screens/game/EggHatch/entities/MoonShafts/moonShaftsLook.ts",
+        "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
+        "src/screens/game/EggHatch/entities/Mushroom/mushroomLook.ts",
+        "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
+        "src/screens/game/EggHatch/entities/NightSky/nightSkyLook.ts",
+        "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+        "src/screens/game/EggHatch/entities/Owl/owlLook.ts",
+        "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
+        "src/screens/game/EggHatch/entities/PaperFinish/paperFinishLook.ts",
+        "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+        "src/screens/game/EggHatch/entities/Pond/pondLook.ts",
+        "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+        "src/screens/game/EggHatch/entities/Stars/starsLook.ts",
+        "src/screens/game/EggHatch/index.ts",
+        "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+        "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+        "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+        "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+        "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+        "src/screens/game/EggHatch/shared/foliage.ts",
+        "src/screens/game/EggHatch/shared/paperKit.ts",
+        "src/screens/game/EggHatch/shared/paperShapes.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-skia"
+      ],
+      "hasWorklets": true
     },
     {
       "id": "src/shared/piano",
@@ -642,7 +809,7 @@
       "plane": "app",
       "thread": "js",
       "lang": "code",
-      "purpose": "Root component: safe-area provider, hidden status bar and the lesson screen, full screen in landscape.",
+      "purpose": "Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection.",
       "exports": [
         "default"
       ]
@@ -662,6 +829,27 @@
       "lang": "kotlin"
     },
     {
+      "id": "android/app/src/main/jni/OboeInput.cpp",
+      "module": "android",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
+      "id": "android/app/src/main/jni/OboeInput.h",
+      "module": "android",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
+      "id": "android/app/src/main/jni/OnLoad.cpp",
+      "module": "android",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
       "id": "index.js",
       "module": "index.js",
       "plane": "app",
@@ -675,6 +863,34 @@
       "plane": "platform",
       "thread": "native",
       "lang": "swift"
+    },
+    {
+      "id": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "module": "ios",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
+      "id": "ios/PianoAcademyStudio/IosAudioInput.mm",
+      "module": "ios",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
+      "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
+      "module": "ios",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
+    },
+    {
+      "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
+      "module": "ios",
+      "plane": "platform",
+      "thread": "native",
+      "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
@@ -1311,7 +1527,9 @@
       "thread": "ui",
       "lang": "code",
       "exports": [
-        "drawBlackPianoKeyLight"
+        "BlackPianoKeyLight",
+        "drawBlackPianoKeyLight",
+        "makeBlackPianoKeyLight"
       ],
       "hasWorklets": true
     },
@@ -1323,10 +1541,12 @@
       "lang": "code",
       "purpose": "The one black piano key: how it looks at rest and when lit. CorePiano draws it at every black key position.",
       "exports": [
+        "BlackPianoKeyLight",
         "BlackPianoKeyLook",
         "LESSON_BLACK_PIANO_KEY_LOOK",
         "drawBlackPianoKey",
-        "drawBlackPianoKeyLight"
+        "drawBlackPianoKeyLight",
+        "makeBlackPianoKeyLight"
       ]
     },
     {
@@ -1544,7 +1764,9 @@
       "thread": "ui",
       "lang": "code",
       "exports": [
-        "drawWhitePianoKeyLight"
+        "WhitePianoKeyLight",
+        "drawWhitePianoKeyLight",
+        "makeWhitePianoKeyLight"
       ],
       "hasWorklets": true
     },
@@ -1557,9 +1779,11 @@
       "purpose": "The one white piano key: how it looks at rest and when lit. CorePiano draws it at every white key position.",
       "exports": [
         "LESSON_WHITE_PIANO_KEY_LOOK",
+        "WhitePianoKeyLight",
         "WhitePianoKeyLook",
         "drawWhitePianoKey",
-        "drawWhitePianoKeyLight"
+        "drawWhitePianoKeyLight",
+        "makeWhitePianoKeyLight"
       ]
     },
     {
@@ -1603,6 +1827,7 @@
       "lang": "code",
       "purpose": "The piano keyboard at the bottom of PianoMaster: draws any range with Skia from one WhitePianoKey and one BlackPianoKey reused at every position, with the keybed, shadows, marker dots, note names and lit keys.",
       "exports": [
+        "BlackPianoKeyLight",
         "BlackPianoKeyLook",
         "BlackPianoKeyShadowsLook",
         "CorePiano",
@@ -1611,13 +1836,16 @@
         "CorePianoProps",
         "DrawPianoKeyLight",
         "LESSON_PIANO_LOOK",
+        "MakePianoKeyLight",
         "PianoFrameShadowLook",
         "PianoKeyLabelLayout",
         "PianoKeyLabelLook",
         "PianoKeyLabels",
         "PianoKeyLightLayer",
+        "PianoKeyLightSource",
         "PianoKeyMarkerLook",
         "PianoKeybedLook",
+        "WhitePianoKeyLight",
         "WhitePianoKeyLook",
         "drawBlackPianoKeyLight",
         "drawCorePianoBlackLayer",
@@ -1625,7 +1853,10 @@
         "drawPianoKeyLights",
         "drawWhitePianoKeyLight",
         "layoutCorePiano",
-        "layoutPianoKeyLabels"
+        "layoutPianoKeyLabels",
+        "makeBlackPianoKeyLight",
+        "makePianoKeyLights",
+        "makeWhitePianoKeyLight"
       ]
     },
     {
@@ -1647,11 +1878,365 @@
       "lang": "code",
       "exports": [
         "DrawPianoKeyLight",
+        "MakePianoKeyLight",
         "PianoKeyLightLayer",
+        "PianoKeyLightSource",
         "drawPianoKeyLights",
+        "makePianoKeyLights",
         "usePianoKeyLights"
       ],
       "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CorePianoNotesDetection",
+        "STATUS_MESSAGES"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CalibrationFeedback",
+        "CalibrationFlash",
+        "CalibrationPrompt",
+        "KEYBOARD_CHOICES",
+        "KeyboardChoice",
+        "calibrationKeys",
+        "calibrationPrompt",
+        "classifyPianoType",
+        "describeKey",
+        "describeProfile",
+        "keyboardChoiceFor"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CORE_PIANO_NOTES_DETECTION_LOOK",
+        "CorePianoNotesDetectionLook"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
+      "exports": [
+        "AudioEngineStatus",
+        "CALIBRATION_STATE",
+        "CORE_PIANO_NOTES_DETECTION_LOOK",
+        "CalibrationFeedback",
+        "CalibrationFlash",
+        "CalibrationListener",
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "CalibrationPrompt",
+        "CalibrationStepEvent",
+        "CorePianoNotesDetection",
+        "CorePianoNotesDetectionLook",
+        "CorePianoNotesDetectionProps",
+        "DetectedNoteEvent",
+        "DetectionStats",
+        "DetectionTelemetry",
+        "DetectorOptions",
+        "EngineStatus",
+        "KEYBOARD_CHOICES",
+        "KeyboardChoice",
+        "LiveKey",
+        "LiveKeys",
+        "LiveKeysReader",
+        "NoteEventListener",
+        "PianoProfile",
+        "STATUS_MESSAGES",
+        "StatsListener",
+        "StatusListener",
+        "UseCorePianoNotesDetectionOptions",
+        "calibrationKeys",
+        "calibrationPrompt",
+        "classifyPianoType",
+        "clearPianoCalibration",
+        "createLiveKeysReader",
+        "describeKey",
+        "describeProfile",
+        "detectedKeyLevel",
+        "getAudioStats",
+        "getLiveKeys",
+        "getPianoCalibrationProfile",
+        "isAudioMockActive",
+        "keyboardChoiceFor",
+        "mockAudioEngine",
+        "noteEventBus",
+        "readLiveKeys",
+        "savePianoCalibration",
+        "setAudioExpectedNotes",
+        "setAudioPolyphony",
+        "startAudioDetector",
+        "startPianoCalibration",
+        "stopAudioDetector",
+        "stopPianoCalibration",
+        "useCorePianoNotesDetection",
+        "useLiveKeys"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "LiveKeysReader",
+        "createLiveKeysReader",
+        "detectedKeyLevel",
+        "readLiveKeys",
+        "useLiveKeys"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "mockAudioEngine"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "noteEventBus"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "clearPianoCalibration",
+        "getAudioStats",
+        "getLiveKeys",
+        "getPianoCalibrationProfile",
+        "isAudioMockActive",
+        "mockAudioEngine",
+        "savePianoCalibration",
+        "setAudioExpectedNotes",
+        "setAudioPolyphony",
+        "startAudioDetector",
+        "startPianoCalibration",
+        "stopAudioDetector",
+        "stopPianoCalibration"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "EngineStats",
+        "EngineStatus",
+        "PianoNoteEvent",
+        "PianoProfile",
+        "Spec",
+        "default"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/benchmark.cpp",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/live_keys_test.cpp",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "c-family"
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "AudioEngineStatus",
+        "CALIBRATION_STATE",
+        "CalibrationListener",
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "CalibrationStepEvent",
+        "CorePianoNotesDetectionProps",
+        "DetectedNoteEvent",
+        "DetectionStats",
+        "DetectionTelemetry",
+        "DetectorOptions",
+        "EngineStatus",
+        "LiveKey",
+        "LiveKeys",
+        "NoteEventListener",
+        "PianoProfile",
+        "StatsListener",
+        "StatusListener"
+      ]
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "UseCorePianoNotesDetectionOptions",
+        "useCorePianoNotesDetection"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/index.ts",
@@ -1659,21 +2244,38 @@
       "plane": "motion",
       "thread": "ui",
       "lang": "code",
-      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "exports": [
+        "CALIBRATION_STATE",
+        "CORE_PIANO_NOTES_DETECTION_LOOK",
+        "CalibrationFeedback",
+        "CalibrationFlash",
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "CalibrationPrompt",
         "CoreNotesLook",
         "CorePiano",
         "CorePianoLook",
+        "CorePianoNotesDetection",
+        "CorePianoNotesDetectionLook",
+        "CorePianoNotesDetectionProps",
         "CorePianoProps",
         "DEFAULT_RANGE",
         "DEFAULT_ROLE_COLORS",
+        "DetectedNoteEvent",
+        "DetectionTelemetry",
+        "EngineStatus",
         "GlyphFit",
         "GradientStop",
+        "KEYBOARD_CHOICES",
         "KeyRole",
+        "KeyboardChoice",
         "KeyboardProportions",
         "KeyboardRange",
         "LESSON_NOTES_LOOK",
         "LESSON_PIANO_LOOK",
+        "LiveKey",
+        "LiveKeys",
         "MusicFont",
         "NotationTypefaces",
         "NoteInput",
@@ -1681,26 +2283,41 @@
         "PIANO_RANGES",
         "PianoKeyLabels",
         "PianoKeyLights",
+        "PianoProfile",
         "PianoState",
         "PlayheadPosition",
         "QuarterNotes",
         "QuarterNotesProps",
         "RoleColors",
+        "STATUS_MESSAGES",
         "Score",
         "ScoreItem",
         "StaffLayout",
+        "UseCorePianoNotesDetectionOptions",
         "beatX",
+        "calibrationKeys",
+        "calibrationPrompt",
         "createKeyLights",
+        "describeProfile",
         "diatonicStep",
         "drawCoreNotesNoteLayer",
         "drawCoreNotesStaffLayer",
         "drawPlayhead",
+        "isKeyPressed",
+        "keyboardChoiceFor",
         "ledgerLines",
         "lightKey",
+        "noteEventBus",
+        "pressKey",
         "recordPicture",
+        "releaseAllKeys",
+        "releaseKey",
+        "setPressedKeys",
+        "setPressedMidiKeys",
         "trebleY",
         "unlightAllKeys",
         "unlightKey",
+        "useCorePianoNotesDetection",
         "useNotationTypefaces",
         "usePianoState"
       ]
@@ -1717,12 +2334,16 @@
         "DEFAULT_ROLE_COLORS",
         "GlyphFit",
         "GradientStop",
+        "KeyBand",
         "KeyRole",
         "LESSON_NOTATION_INK",
         "MusicFont",
         "NotationTypefaces",
+        "PianoKeyLightStop",
         "PianoKeyLights",
         "PianoState",
+        "PressedPianoKeyFace",
+        "PressedPianoKeyFaceLook",
         "REFERENCE_PITCH",
         "RoleColors",
         "Size",
@@ -1730,14 +2351,24 @@
         "clipToBox",
         "createKeyLights",
         "drawMusicGlyph",
+        "drawPressedPianoKeyFace",
         "fillPaint",
         "fillRect",
+        "isKeyPressed",
         "lightKey",
+        "makePianoKeyLightGradient",
+        "makePressedPianoKeyFace",
         "pianoKeyShape",
+        "pressKey",
         "pt",
         "recordPicture",
+        "releaseAllKeys",
+        "releaseKey",
         "roleColors",
         "setLinearGradient",
+        "setPianoKeyLightShader",
+        "setPressedKeys",
+        "setPressedMidiKeys",
         "staffLineY",
         "unlightAllKeys",
         "unlightKey",
@@ -1836,10 +2467,34 @@
         "PianoKeyLights",
         "PianoState",
         "createKeyLights",
+        "isKeyPressed",
         "lightKey",
+        "pressKey",
+        "releaseAllKeys",
+        "releaseKey",
+        "setPressedKeys",
+        "setPressedMidiKeys",
         "unlightAllKeys",
         "unlightKey",
         "usePianoState"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/motion/scenes/PianoMaster/shared/pressedPianoKey.ts",
+      "module": "src/motion/scenes/PianoMaster/shared",
+      "plane": "motion",
+      "thread": "ui",
+      "lang": "code",
+      "exports": [
+        "KeyBand",
+        "PianoKeyLightStop",
+        "PressedPianoKeyFace",
+        "PressedPianoKeyFaceLook",
+        "drawPressedPianoKeyFace",
+        "makePianoKeyLightGradient",
+        "makePressedPianoKeyFace",
+        "setPianoKeyLightShader"
       ],
       "hasWorklets": true
     },
@@ -1866,13 +2521,88 @@
       ]
     },
     {
+      "id": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CalibrationScreen",
+        "CalibrationScreenProps"
+      ]
+    },
+    {
+      "id": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CALIBRATION_DESIGN",
+        "CalibrationText",
+        "DesignBox",
+        "calloutPlacement",
+        "choiceBox"
+      ]
+    },
+    {
+      "id": "src/screens/CalibrationScreen/calibrationView.ts",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CalibrationChoice",
+        "CalibrationStep",
+        "CalibrationView",
+        "CalibrationViewInput",
+        "calibrationView"
+      ]
+    },
+    {
+      "id": "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CalibrationBackdrop",
+        "drawCalibrationBackground"
+      ]
+    },
+    {
+      "id": "src/screens/CalibrationScreen/index.ts",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "purpose": "The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson.",
+      "exports": [
+        "CALIBRATION_DESIGN",
+        "CalibrationBackdrop",
+        "CalibrationChoice",
+        "CalibrationScreen",
+        "CalibrationScreenProps",
+        "CalibrationStep",
+        "CalibrationText",
+        "CalibrationView",
+        "CalibrationViewInput",
+        "DesignBox",
+        "calibrationView",
+        "calloutPlacement",
+        "choiceBox",
+        "drawCalibrationBackground"
+      ]
+    },
+    {
       "id": "src/screens/LessonScreen/LessonScreen.tsx",
       "module": "src/screens/LessonScreen",
       "plane": "app",
       "thread": "js",
       "lang": "code",
       "exports": [
-        "LessonScreen"
+        "LessonScreen",
+        "LessonScreenProps"
       ]
     },
     {
@@ -1896,6 +2626,7 @@
         "DESIGN_SIZE",
         "LESSON_DESIGN",
         "LessonScreen",
+        "LessonScreenProps",
         "RotatedTextRun",
         "TextRun",
         "drawLessonBackground"
@@ -1912,6 +2643,868 @@
         "LESSON_DESIGN",
         "RotatedTextRun",
         "TextRun"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/EggHatch.tsx",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EggHatch"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "BIRDS",
+        "BIRD_LOOP",
+        "CAMERA",
+        "CAMERA_SHAKE",
+        "CRACK_STAGES",
+        "DEPTH",
+        "DESIGN_SIZE",
+        "EggHatchProps",
+        "FERNS",
+        "GHOST_LETTERS",
+        "GHOST_ORBIT",
+        "GhostLetter",
+        "JUNGLE_SPRAYS",
+        "MUSHROOMS",
+        "OVERSCAN",
+        "OWLS",
+        "SCENE",
+        "TIMING"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Bird/birdLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "BIRD_LOOK",
+        "BirdLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawBirdBody",
+        "drawBirdWing"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Bokeh/bokehLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "BOKEH_LOOK",
+        "BokehLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Bokeh/drawBokeh.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawBokeh"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Chick/chickLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CHICK_LOOK",
+        "ChickLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CHICK_SHOULDER",
+        "drawChickBody",
+        "drawChickWing"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Confetti/confettiLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CONFETTI_LOOK",
+        "ConfettiLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CONFETTI_SHAPES",
+        "drawConfettiPiece"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Debris/debrisLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "DEBRIS_LOOK",
+        "DebrisLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "SHELL_CHIP_VARIANTS",
+        "drawShellChip",
+        "drawSpark"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawEggLightPool"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/EggLight/eggLightLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EGG_LIGHT_LOOK",
+        "EggLightLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawFallingLeaf"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FallingLeaf/fallingLeafLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FALLING_LEAF_LOOK",
+        "FallingLeafLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawFarForest"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FarForest/farForestLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FAR_FOREST_LOOK",
+        "FarForestLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "Frond",
+        "drawFernPlant"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Fern/fernLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FERN_LOOK",
+        "FernLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawFireflies"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Firefly/fireflyLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FIREFLY_LOOK",
+        "FireflyLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Firefly/fireflyMotion.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FIREFLY_HOMES",
+        "FireflyPose",
+        "fireflyPose"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawForestGround"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/ForestGround/forestGroundLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FOREST_GROUND_LOOK",
+        "ForestGroundLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawFrameTree"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/FrameTree/frameTreeLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FRAME_TREE_LOOK",
+        "FrameTreeLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawGhostBody",
+        "drawGhostFace",
+        "drawGhostHalo",
+        "drawGhostPoof",
+        "drawGhostShadow",
+        "drawGhostStreak"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Ghost/ghostLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "GHOST_LOOK",
+        "GhostLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawGodRays",
+        "drawLightBloom"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/GodLight/godLightLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "GOD_LIGHT_LOOK",
+        "GodLightLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "JungleLeaf",
+        "drawJungleLeafSpray"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/JungleLeaf/jungleLeafLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "JUNGLE_LEAF_LOOK",
+        "JungleLeafLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawLotusBack",
+        "drawLotusFront"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Lotus/lotusLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "LOTUS_LOOK",
+        "LotusLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EGG_GEM",
+        "EGG_SHARD_COUNT",
+        "EggPart",
+        "MAGIC_EGG_SIZE",
+        "drawEggAura",
+        "drawEggGold",
+        "drawMagicEgg",
+        "drawShimmerBand",
+        "eggPartCentre"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CrackHit",
+        "EggCrack",
+        "Fracture",
+        "SHATTER_LINES",
+        "drawEggCrack",
+        "drawEggCrackLight",
+        "generateEggCrack"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EGG_PIVOT_Y",
+        "MAGIC_EGG_SIZE",
+        "eggSurface"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MagicEgg/magicEggLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MAGIC_EGG_LOOK",
+        "MagicEggLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MID_FOREST_TREES",
+        "drawMidForest"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MidForest/midForestLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MID_FOREST_LOOK",
+        "MidForestLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawMist"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Mist/mistLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MIST_LOOK",
+        "MistLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawMoon",
+        "drawMoonHalo"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Moon/moonLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MOON_LOOK",
+        "MoonLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawMoonShafts"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/MoonShafts/moonShaftsLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MOON_SHAFTS_LOOK",
+        "MoonShaftsLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawMushroomCluster",
+        "drawMushroomGlow"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Mushroom/mushroomLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "MUSHROOM_LOOK",
+        "MushroomLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawNightSky"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/NightSky/nightSkyLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "NIGHT_SKY_LOOK",
+        "NightSkyLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "OWL_EYES",
+        "drawOwl",
+        "drawOwlEyelids"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Owl/owlLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "OWL_LOOK",
+        "OwlLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawPaperFinish"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/PaperFinish/paperFinishLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "PAPER_FINISH_LOOK",
+        "PaperFinishLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawMoonGlint",
+        "drawPond",
+        "drawPondRipple",
+        "pondWaterPath"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Pond/pondLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "POND_LOOK",
+        "PondLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "drawStars"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/entities/Stars/starsLook.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "STARS_LOOK",
+        "StarsLook"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/index.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "purpose": "The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4.",
+      "exports": [
+        "CRACK_STAGES",
+        "DEPTH",
+        "DESIGN_SIZE",
+        "EggHatch",
+        "EggHatchProps",
+        "GHOST_LETTERS",
+        "GHOST_ORBIT",
+        "GhostLetter",
+        "HitPlan",
+        "ScenePaints",
+        "TIMING",
+        "buildEggHatchSprites",
+        "defaultDiveTimes",
+        "drawEggHatchScene",
+        "planHits"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "ScenePaints",
+        "drawEggHatchScene"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "GhostHit",
+        "HitPlan",
+        "defaultDiveTimes",
+        "planHits"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "LAYER_BOUNDS",
+        "STATIC_LAYERS",
+        "StaticLayerName"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CHIPS_PER_HIT",
+        "CONFETTI_COUNT",
+        "GhostPose",
+        "HATCH_CHIPS",
+        "HatchPose",
+        "SPARKS_PER_HIT",
+        "birdPose",
+        "bokehPose",
+        "cameraOffset",
+        "cameraShake",
+        "chipPose",
+        "clamp01",
+        "clampUnit",
+        "confettiPose",
+        "crackLight",
+        "crackReach",
+        "crackStage",
+        "eggAura",
+        "eggKnock",
+        "eggLightPool",
+        "fallingLeafPose",
+        "gameTime",
+        "gemGlint",
+        "ghostPose",
+        "ghostTailFrame",
+        "hash01",
+        "hatchChipPose",
+        "hatchPose",
+        "impactFlash",
+        "latestHit",
+        "nextGhost",
+        "orbitPose",
+        "owlBlink",
+        "ripplePose",
+        "shardPose",
+        "shimmerAt",
+        "sparkPose",
+        "starTwinkle",
+        "swayAngle"
+      ],
+      "hasWorklets": true
+    },
+    {
+      "id": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EggHatchSprites",
+        "GHOST_TAIL_FRAMES",
+        "Sprite",
+        "buildEggHatchSprites",
+        "useEggHatchSprites"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/shared/foliage.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "FernOptions",
+        "LeafClusterOptions",
+        "drawFern",
+        "drawLeafCluster"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "Bounds",
+        "PaperShadow",
+        "Point",
+        "Random",
+        "blurred",
+        "drawGlow",
+        "drawPaperPiece",
+        "fill",
+        "linearGradient",
+        "paperSheet",
+        "radialGradient",
+        "rgba",
+        "seeded",
+        "stroke",
+        "twoPointConicalGradient",
+        "verticalGradient"
+      ]
+    },
+    {
+      "id": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "module": "src/screens/game/EggHatch",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "branchPath",
+        "crescentPath",
+        "eggPath",
+        "ghostArmPath",
+        "ghostBodyPath",
+        "leafPath",
+        "leafVeinPath",
+        "polar",
+        "quadAngle",
+        "quadPoint",
+        "sparklePath",
+        "trunkPath"
       ]
     },
     {
@@ -1991,6 +3584,38 @@
   ],
   "edges": [
     {
+      "from": "android/app/src/main/jni/OboeInput.cpp",
+      "to": "android/app/src/main/jni/OboeInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "android/app/src/main/jni/OnLoad.cpp",
+      "to": "android/app/src/main/jni/OboeInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/CalibrationScreen/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/CalibrationScreen/index.ts",
+      "kind": "renders"
+    },
+    {
       "from": "App.tsx",
       "to": "src/screens/LessonScreen/index.ts",
       "kind": "imports"
@@ -2009,6 +3634,24 @@
       "from": "index.js",
       "to": "App.tsx",
       "kind": "imports"
+    },
+    {
+      "from": "ios/PianoAcademyStudio/IosAudioInput.mm",
+      "to": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
+      "to": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
+      "to": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
+      "kind": "imports",
+      "approx": true
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
@@ -2976,6 +4619,329 @@
       "kind": "imports"
     },
     {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
       "from": "src/motion/scenes/PianoMaster/index.ts",
       "to": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "kind": "imports"
@@ -2983,6 +4949,11 @@
     {
       "from": "src/motion/scenes/PianoMaster/index.ts",
       "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "kind": "imports"
     },
     {
@@ -3037,6 +5008,11 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/shared/index.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pressedPianoKey.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/index.ts",
       "to": "src/motion/scenes/PianoMaster/shared/recordPicture.ts",
       "kind": "imports"
     },
@@ -3054,6 +5030,857 @@
       "from": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
       "to": "src/shared/piano/index.ts",
       "kind": "imports"
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/shared/pressedPianoKey.ts",
+      "to": "src/motion/scenes/PianoMaster/shared/pianoKeyShape.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "to": "src/screens/LessonScreen/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/screens/CalibrationScreen/calibrationView.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/screens/LessonScreen/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/shared/typography/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationView.ts",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationView.ts",
+      "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
+      "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/index.ts",
+      "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/index.ts",
+      "to": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/index.ts",
+      "to": "src/screens/CalibrationScreen/calibrationView.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/index.ts",
+      "to": "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/EggHatch.tsx",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/EggHatch.tsx",
+      "to": "src/screens/game/EggHatch/entities/NightSky/nightSkyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/EggHatch.tsx",
+      "to": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/EggHatch.tsx",
+      "to": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/EggHatch.tsx",
+      "to": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+      "to": "src/screens/game/EggHatch/entities/Bird/birdLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Bokeh/drawBokeh.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "to": "src/screens/game/EggHatch/entities/Chick/chickLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
+      "to": "src/screens/game/EggHatch/entities/Debris/debrisLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
+      "to": "src/screens/game/EggHatch/entities/EggLight/eggLightLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+      "to": "src/screens/game/EggHatch/entities/FallingLeaf/fallingLeafLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "to": "src/screens/game/EggHatch/entities/FarForest/farForestLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "to": "src/screens/game/EggHatch/shared/foliage.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "to": "src/screens/game/EggHatch/entities/Fern/fernLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "to": "src/screens/game/EggHatch/shared/foliage.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
+      "to": "src/screens/game/EggHatch/entities/Firefly/fireflyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
+      "to": "src/screens/game/EggHatch/entities/Firefly/fireflyMotion.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "to": "src/screens/game/EggHatch/entities/ForestGround/forestGroundLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "to": "src/screens/game/EggHatch/shared/foliage.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "to": "src/screens/game/EggHatch/entities/FrameTree/frameTreeLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "to": "src/screens/game/EggHatch/shared/foliage.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+      "to": "src/screens/game/EggHatch/entities/Ghost/ghostLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+      "to": "src/screens/game/EggHatch/entities/GodLight/godLightLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+      "to": "src/screens/game/EggHatch/entities/JungleLeaf/jungleLeafLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "to": "src/screens/game/EggHatch/entities/Lotus/lotusLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/magicEggLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/magicEggLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "to": "src/screens/game/EggHatch/entities/MidForest/midForestLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "to": "src/screens/game/EggHatch/shared/foliage.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
+      "to": "src/screens/game/EggHatch/entities/Mist/mistLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "to": "src/screens/game/EggHatch/entities/Moon/moonLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
+      "to": "src/screens/game/EggHatch/entities/MoonShafts/moonShaftsLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
+      "to": "src/screens/game/EggHatch/entities/Mushroom/mushroomLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
+      "to": "src/screens/game/EggHatch/entities/NightSky/nightSkyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "to": "src/screens/game/EggHatch/entities/Owl/owlLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
+      "to": "src/screens/game/EggHatch/entities/PaperFinish/paperFinishLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+      "to": "src/screens/game/EggHatch/entities/Pond/pondLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+      "to": "src/screens/game/EggHatch/entities/Stars/starsLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/index.ts",
+      "to": "src/screens/game/EggHatch/EggHatch.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/index.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/index.ts",
+      "to": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/index.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/index.ts",
+      "to": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/entities/Firefly/fireflyMotion.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
+      "to": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/eggHatchDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Bokeh/bokehLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Bokeh/drawBokeh.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Confetti/confettiLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/FallingLeaf/fallingLeafLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Firefly/fireflyLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/shared/foliage.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/shared/foliage.ts",
+      "to": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/game/EggHatch/shared/paperShapes.ts",
+      "to": "src/screens/game/EggHatch/shared/paperKit.ts",
+      "kind": "imports",
+      "typeOnly": true
     },
     {
       "from": "src/screens/LessonScreen/drawLessonBackground.ts",
@@ -3130,6 +5957,22 @@
   "moduleEdges": [
     {
       "from": "App.tsx",
+      "to": "src/motion/scenes/PianoMaster",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/CalibrationScreen",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "App.tsx",
       "to": "src/screens/LessonScreen",
       "kinds": [
         "imports",
@@ -3153,6 +5996,13 @@
     {
       "from": "src/motion/scenes/PianoMaster",
       "to": "src/motion/scenes/PianoMaster/CorePiano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -3523,8 +6373,58 @@
       ]
     },
     {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "to": "src/motion/scenes/PianoMaster/shared",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
       "from": "src/motion/scenes/PianoMaster/shared",
       "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/motion/scenes/PianoMaster",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/motion/scenes/PianoMaster/CorePiano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/screens/LessonScreen",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/shared/piano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/shared/typography",
       "kinds": [
         "imports"
       ]

@@ -43,5 +43,18 @@
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "codegenConfig": {
+    "name": "AppSpecs",
+    "type": "modules",
+    "jsSrcsDir": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs",
+    "android": {
+      "javaPackageName": "com.pianoacademystudio.specs"
+    },
+    "ios": {
+      "modulesProvider": {
+        "NativePianoEngine": "NativePianoEngineProvider"
+      }
+    }
   }
 }

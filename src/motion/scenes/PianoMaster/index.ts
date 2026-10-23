@@ -1,5 +1,5 @@
 /**
- * @purpose The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.
+ * @purpose The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.
  */
 
 export {
@@ -9,6 +9,34 @@ export {
   type CorePianoProps,
   type PianoKeyLabels,
 } from './CorePiano'; // Its drawing functions, for headless rendering, come from ./CorePiano.
+export {
+  CALIBRATION_STATE,
+  calibrationKeys,
+  calibrationPrompt,
+  CorePianoNotesDetection,
+  CORE_PIANO_NOTES_DETECTION_LOOK,
+  describeProfile,
+  KEYBOARD_CHOICES,
+  keyboardChoiceFor,
+  noteEventBus,
+  STATUS_MESSAGES,
+  useCorePianoNotesDetection,
+  type CalibrationFeedback,
+  type CalibrationFlash,
+  type CalibrationOptions,
+  type CalibrationProgressEvent,
+  type CalibrationPrompt,
+  type CorePianoNotesDetectionLook,
+  type CorePianoNotesDetectionProps,
+  type DetectedNoteEvent,
+  type DetectionTelemetry,
+  type EngineStatus,
+  type KeyboardChoice,
+  type LiveKey,
+  type LiveKeys,
+  type PianoProfile,
+  type UseCorePianoNotesDetectionOptions,
+} from './CorePianoNotesDetection';
 export {
   beatX,
   diatonicStep,

@@ -6,8 +6,9 @@
  *   from the top-left, shadow low on the right, a warm rim light from the
  *   egg's glow behind it and a soft highlight. Both tail sides keep the same light, so the
  *   scene turns a ghost by crossfading the two, never by mirroring.
- * - `drawGhostFace`: happy face with blush, and its note letter on a badge.
- *   The scene slides it across the head to show which way the ghost looks.
+ * - `drawGhostFace`: happy face with blush, and its note letter on an enameled badge
+ *   with high-contrast, crystal-clear typography. The scene slides it across the head to show
+ *   which way the ghost looks.
  * - `drawGhostShadow`: the soft shadow it casts on the ground.
  * - `drawGhostHalo`: the warm glow around the ghost about to strike.
  * - `drawGhostStreak`: the soft motion streak behind a dashing ghost,
@@ -28,10 +29,13 @@ export function drawGhostBody(canvas: SkCanvas, r: number, tailSide: 1 | -1, wav
   // Arms, a little darker: they sit slightly behind the body.
   for (const side of [-1, 1]) {
     const arm = ghostArmPath({ x: side * r * 0.9, y: r * 0.45 }, r, side < 0 ? 150 : 30);
-    canvas.drawPath(arm, radialGradient({ x: side * r * 0.9, y: r * 0.35 }, r * 0.7, [
-      { color: look.body[1], at: 0 },
-      { color: look.body[2], at: 1 },
-    ]));
+    canvas.drawPath(
+      arm,
+      radialGradient({ x: side * r * 0.9, y: r * 0.35 }, r * 0.7, [
+        { color: look.body[1], at: 0 },
+        { color: look.body[2], at: 1 },
+      ]),
+    );
   }
   // Base form: bright where the light hits (top-left), cream towards the edge.
   canvas.drawPath(
@@ -86,19 +90,38 @@ export function drawGhostFace(
     canvas.drawOval({ x: side * r * 0.56 - r * 0.13, y: r * 0.1, width: r * 0.26, height: r * 0.14 }, fill(look.blush, 0.7));
   }
   canvas.drawArc({ x: -r * 0.12, y: r * 0.02, width: r * 0.24, height: r * 0.16 }, 10, 160, false, stroke(look.eye, Math.max(1, r * 0.06)));
-  // Letter badge.
-  const badgeY = r * 0.72;
-  canvas.drawCircle(0, badgeY, r * 0.34, fill(look.letterBadge, 0.95));
-  canvas.drawCircle(0, badgeY, r * 0.34, stroke(look.letter, Math.max(0.8, r * 0.05), 0.5));
+
+  // Enhanced Letter Badge: Crystal clear, high contrast, readable from a distance
+  const badgeY = r * 0.68;
+  const badgeR = r * 0.42;
+
+  // Soft contact drop shadow under the badge
+  canvas.drawCircle(0, badgeY + 1.8, badgeR, blurred(fill(look.badgeShadow), 3.0));
+
+  // Polished Metallic Golden Rim
+  const goldPaint = linearGradient(
+    { x: -badgeR, y: badgeY - badgeR },
+    { x: badgeR, y: badgeY + badgeR },
+    [look.badgeGoldBevel, look.badgeGoldRim, '#8a6514'],
+    [0.0, 0.5, 1.0],
+  );
+  canvas.drawCircle(0, badgeY, badgeR, goldPaint);
+
+  // Pure White Enameled Core Plate for 100% Maximum Contrast
+  canvas.drawCircle(0, badgeY, badgeR * 0.82, fill(look.badgePlate));
+  canvas.drawCircle(0, badgeY, badgeR * 0.82, stroke('rgba(212, 175, 55, 0.35)', 1.0));
+
+  // Razor-Sharp Bold Note Letter
   if (font) {
+    try {
+      font.setSize(Math.round(r * 0.44));
+    } catch {
+      // ignore
+    }
     const bounds = font.measureText(letter);
-    canvas.drawText(
-      letter,
-      -bounds.width / 2 - bounds.x,
-      badgeY - bounds.y - bounds.height / 2,
-      fill(look.letter),
-      font,
-    );
+    const lx = -bounds.width / 2 - bounds.x;
+    const ly = badgeY - bounds.y - bounds.height / 2;
+    canvas.drawText(letter, lx, ly, fill(look.letter), font);
   }
 }
 

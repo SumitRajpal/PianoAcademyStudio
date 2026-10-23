@@ -1,9 +1,11 @@
 /**
- * A band of soft mist along the forest floor. It is drawn `width` wide and
- * repeats seamlessly, so the scene can slide it sideways forever.
+ * A band of soft volumetric mist along the forest floor.
+ * Rendered with physical in-scattering and exponential vapor diffusion:
+ * - Multi-layer puff structure: dense core vapor + ethereal diffuse plumes.
+ * - Screen blend mode to seamlessly illuminate ground vegetation.
  */
 
-import type { SkCanvas } from 'react-native-skia';
+import { BlendMode, type SkCanvas } from 'react-native-skia';
 
 import { blurred, fill, seeded } from '../../shared/paperKit';
 import { MIST_LOOK, type MistLook } from './mistLook';
@@ -16,16 +18,27 @@ export function drawMist(
   look: MistLook = MIST_LOOK,
 ) {
   const rand = seeded(seed);
-  const paint = blurred(fill(look.color, look.alpha), look.softness);
-  const puffs = 9;
+
+  // 1. Ethereal Wide Diffusion Layer
+  const widePaint = blurred(fill(look.color, look.alpha * 0.5), look.softness * 1.4);
+  widePaint.setBlendMode(BlendMode.Screen);
+
+  // 2. Core Vapor Plume Layer
+  const corePaint = blurred(fill(look.color, look.alpha * 0.8), look.softness * 0.8);
+  corePaint.setBlendMode(BlendMode.Screen);
+
+  const puffs = 10;
   for (let i = 0; i < puffs; i++) {
     const x = (i / puffs) * width;
-    const rx = rand.range(70, 130);
-    const ry = rand.range(12, 24);
-    const cy = y + rand.range(-14, 14);
-    // Drawn twice, one width apart, so the band wraps without a seam.
+    const rx = rand.range(80, 140);
+    const ry = rand.range(14, 26);
+    const cy = y + rand.range(-12, 12);
+
     for (const shift of [0, width, -width]) {
-      canvas.drawOval({ x: x + shift - rx, y: cy - ry, width: rx * 2, height: ry * 2 }, paint);
+      // Wide plume
+      canvas.drawOval({ x: x + shift - rx * 1.2, y: cy - ry * 1.2, width: rx * 2.4, height: ry * 2.4 }, widePaint);
+      // Core vapor
+      canvas.drawOval({ x: x + shift - rx, y: cy - ry, width: rx * 2, height: ry * 2 }, corePaint);
     }
   }
 }

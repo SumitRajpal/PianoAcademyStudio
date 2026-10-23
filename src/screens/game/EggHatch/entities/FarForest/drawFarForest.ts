@@ -1,13 +1,15 @@
 /**
- * The far forest: two sheets of slim trees and leafy canopies fading into the
- * night, framing an open window of sky around the moon. Each sheet casts a
- * soft shadow on the one behind it.
+ * The far forest: rendered in 3D CGI stylized cartoon aesthetic
+ * (Pixar / The Incredibles standard):
+ * - Volumetric cylindrical trunks fading into deep night atmosphere.
+ * - Soft layered canopies with natural depth falloff.
+ * - Horizon line with atmospheric distance fog.
  */
 
 import type { SkCanvas } from 'react-native-skia';
 
 import { drawLeafCluster } from '../../shared/foliage';
-import { fill, paperSheet, seeded, type Bounds } from '../../shared/paperKit';
+import { fill, linearGradient, seeded, type Bounds } from '../../shared/paperKit';
 import { trunkPath } from '../../shared/paperShapes';
 import { FAR_FOREST_LOOK, type FarForestLook } from './farForestLook';
 
@@ -25,15 +27,29 @@ function drawSheet(
 ) {
   const rand = seeded(seed);
   const top = bounds.y;
-  // Trunks.
+
+  // 1. Volumetric Cylindrical Trunks
   for (const x of trunks) {
     const w = rand.range(9, 16) * scale;
-    canvas.drawPath(
-      trunkPath({ x, y: horizonY + 8 }, { x: x + rand.range(-14, 14), y: top }, w, w * 0.55, rand.range(-10, 10)),
-      fill(look.trunk),
+    const trunkP = trunkPath(
+      { x, y: horizonY + 8 },
+      { x: x + rand.range(-14, 14), y: top },
+      w,
+      w * 0.55,
+      rand.range(-10, 10)
     );
+
+    // Cylindrical gradient across trunk width
+    const trunkGrad = linearGradient(
+      { x: x - w, y: 0 },
+      { x: x + w, y: 0 },
+      ['#071015', look.trunk, '#2a444a'],
+      [0.0, 0.45, 1.0]
+    );
+    canvas.drawPath(trunkP, trunkGrad);
   }
-  // Canopies hanging from the top, heavier at the sides.
+
+  // 2. Canopies hanging from top with depth
   const step = 34 * scale;
   for (let x = bounds.x; x < bounds.x + bounds.width; x += step) {
     const fromCentre = Math.abs(x - (bounds.x + bounds.width / 2)) / (bounds.width / 2);
@@ -43,14 +59,15 @@ function drawSheet(
       spread: 26 * scale,
       count: 14,
       length: [16 * scale, 30 * scale],
-      width: 9 * scale,
+      width: 10 * scale,
       angles: [0, 360],
       colors: look.leaves,
       vein: look.vein,
-      veinAlpha: 0.18,
+      veinAlpha: 0.22,
     });
   }
-  // A low bushy line on the horizon.
+
+  // 3. Low bushy line on horizon
   for (let x = bounds.x; x < bounds.x + bounds.width; x += 22 * scale) {
     drawLeafCluster(canvas, rand, {
       center: { x, y: horizonY + rand.range(-4, 6) },
@@ -70,10 +87,9 @@ export function drawFarForest(
   horizonY: number,
   look: FarForestLook = FAR_FOREST_LOOK,
 ) {
-  paperSheet(canvas, { dx: 0, dy: 3, blur: 5, alpha: 0.45 }, c =>
-    drawSheet(c, bounds, horizonY - 14, look.back, 31, [60, 128, 205, 288, 352, 590, 652, 728, 806, 880], 70, 0.85),
-  );
-  paperSheet(canvas, { dx: 1, dy: 4, blur: 6, alpha: 0.5 }, c =>
-    drawSheet(c, bounds, horizonY, look.front, 57, [20, 96, 172, 250, 318, 620, 690, 764, 846, 918], 92, 1),
-  );
+  // Back sheet (deeper atmosphere)
+  drawSheet(canvas, bounds, horizonY - 14, look.back, 31, [60, 128, 205, 288, 352, 590, 652, 728, 806, 880], 70, 0.85);
+
+  // Front sheet
+  drawSheet(canvas, bounds, horizonY, look.front, 57, [20, 96, 172, 250, 318, 620, 690, 764, 846, 918], 92, 1);
 }

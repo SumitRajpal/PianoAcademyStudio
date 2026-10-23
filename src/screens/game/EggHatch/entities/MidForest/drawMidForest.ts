@@ -1,14 +1,16 @@
 /**
- * The middle forest: a few curving trees on each side of the clearing, each
- * with branches reaching up into a canopy of teal and berry-red paper leaves,
- * and vines hanging down. The owls perch on the branches listed in
- * MID_FOREST_TREES (see eggHatchDesign SCENE.owls).
+ * The middle forest: rendered in 3D CGI stylized cartoon aesthetic
+ * (Pixar / The Incredibles standard):
+ * - Curving trees with volumetric cylindrical lighting.
+ * - Arching branches with contact shadows.
+ * - Layered teal and berry leaves with subsurface scattering.
+ * - Hanging vines with delicate dimensional leaves.
  */
 
 import type { SkCanvas } from 'react-native-skia';
 
 import { drawLeafCluster } from '../../shared/foliage';
-import { fill, paperSheet, seeded, stroke, type Bounds, type Point } from '../../shared/paperKit';
+import { fill, linearGradient, seeded, stroke, type Bounds, type Point } from '../../shared/paperKit';
 import { branchPath, quadPoint, trunkPath } from '../../shared/paperShapes';
 import { MID_FOREST_LOOK, type MidForestLook } from './midForestLook';
 
@@ -48,60 +50,94 @@ export function drawMidForest(
   look: MidForestLook = MID_FOREST_LOOK,
 ) {
   const rand = seeded(902);
-  paperSheet(canvas, { dx: 2, dy: 5, blur: 6, alpha: 0.55 }, c => {
-    for (const tree of MID_FOREST_TREES) {
-      const base = { x: tree.x, y: groundY };
-      const control = { x: (base.x + tree.top.x) / 2 + tree.lean, y: (base.y + tree.top.y) / 2 };
-      for (const br of tree.branches) {
-        const from = quadPoint(base, control, tree.top, br.from);
-        const mid = { x: (from.x + br.to.x) / 2, y: (from.y + br.to.y) / 2 + br.bend };
-        c.drawPath(branchPath(from, mid, br.to, br.width, br.width * 0.35), fill(look.trunk));
-      }
-      c.drawPath(trunkPath(base, tree.top, tree.width, tree.width * 0.5, tree.lean), fill(look.trunk));
-      // Bark grooves: a few pale strokes up the trunk.
-      for (let i = 0; i < 3; i++) {
-        const t0 = rand.range(0.1, 0.5);
-        const p0 = quadPoint(base, control, tree.top, t0);
-        const p1 = quadPoint(base, control, tree.top, t0 + rand.range(0.15, 0.3));
-        const dx = rand.range(-0.25, 0.25) * tree.width;
-        c.drawLine(p0.x + dx, p0.y, p1.x + dx, p1.y, stroke(look.bark, 1.4, 0.8));
-      }
+
+  // 1. Volumetric Trees & Branches
+  for (const tree of MID_FOREST_TREES) {
+    const base = { x: tree.x, y: groundY };
+    const control = { x: (base.x + tree.top.x) / 2 + tree.lean, y: (base.y + tree.top.y) / 2 };
+
+    // Branches
+    for (const br of tree.branches) {
+      const from = quadPoint(base, control, tree.top, br.from);
+      const mid = { x: (from.x + br.to.x) / 2, y: (from.y + br.to.y) / 2 + br.bend };
+      const brPath = branchPath(from, mid, br.to, br.width, br.width * 0.35);
+
+      // Branch contact shadow
+      canvas.save();
+      canvas.translate(0, 2);
+      canvas.drawPath(brPath, fill('rgba(1, 4, 8, 0.35)'));
+      canvas.restore();
+
+      // Branch gradient
+      const brGrad = linearGradient(
+        { x: from.x, y: from.y },
+        { x: br.to.x, y: br.to.y },
+        [look.trunk, '#2a454d'],
+        [0.0, 1.0]
+      );
+      canvas.drawPath(brPath, brGrad);
     }
-    // Canopy: dense leaf clusters along the top, thinning towards the centre.
-    for (let x = bounds.x; x < bounds.x + bounds.width; x += 26) {
-      const fromCentre = Math.abs(x - 466) / 466;
-      if (fromCentre < 0.22) continue;
-      const depth = 20 + fromCentre * 110;
-      for (let k = 0; k < 2; k++) {
-        drawLeafCluster(c, rand, {
-          center: { x: x + rand.range(-12, 12), y: rand.range(-10, depth) },
-          spread: 18,
-          count: 9,
-          length: [18, 34],
-          width: 11,
-          angles: [0, 360],
-          colors: look.leaves,
-          vein: look.vein,
-          veinAlpha: 0.22,
-        });
-      }
+
+    // Trunk
+    const trunkP = trunkPath(base, tree.top, tree.width, tree.width * 0.5, tree.lean);
+
+    // Cylindrical lighting across trunk
+    const trunkGrad = linearGradient(
+      { x: tree.x - tree.width * 0.6, y: 0 },
+      { x: tree.x + tree.width * 0.6, y: 0 },
+      ['#071116', look.trunk, '#31545c'],
+      [0.0, 0.5, 1.0]
+    );
+    canvas.drawPath(trunkP, trunkGrad);
+
+    // Bark grooves with depth
+    for (let i = 0; i < 3; i++) {
+      const t0 = rand.range(0.1, 0.5);
+      const p0 = quadPoint(base, control, tree.top, t0);
+      const p1 = quadPoint(base, control, tree.top, t0 + rand.range(0.15, 0.3));
+      const dx = rand.range(-0.25, 0.25) * tree.width;
+      // Shadow crevice
+      canvas.drawLine(p0.x + dx + 1, p0.y, p1.x + dx + 1, p1.y, stroke('rgba(2, 6, 10, 0.6)', 1.8));
+      // Highlight stroke
+      canvas.drawLine(p0.x + dx, p0.y, p1.x + dx, p1.y, stroke(look.bark, 1.2, 0.8));
     }
-    // Hanging vines with little leaves.
-    for (const x of [214, 338, 618, 742, 858]) {
-      const length = rand.range(60, 120);
-      const vine = stroke(look.vine, 1.3);
-      c.drawLine(x, 0, x + rand.range(-6, 6), length, vine);
-      for (let y = 14; y < length; y += 12) {
-        drawLeafCluster(c, rand, {
-          center: { x: x + (y / length) * 3, y },
-          spread: 1,
-          count: 2,
-          length: [6, 10],
-          width: 4,
-          angles: [y % 24 ? 20 : 160, y % 24 ? 60 : 200],
-          colors: [look.vine, look.leaves[2]],
-        });
-      }
+  }
+
+  // 2. Canopy: dense leaf clusters along top with SSS
+  for (let x = bounds.x; x < bounds.x + bounds.width; x += 26) {
+    const fromCentre = Math.abs(x - 466) / 466;
+    if (fromCentre < 0.22) continue;
+    const depth = 20 + fromCentre * 110;
+    for (let k = 0; k < 2; k++) {
+      drawLeafCluster(canvas, rand, {
+        center: { x: x + rand.range(-12, 12), y: rand.range(-10, depth) },
+        spread: 18,
+        count: 9,
+        length: [18, 34],
+        width: 12,
+        angles: [0, 360],
+        colors: look.leaves,
+        vein: look.vein,
+        veinAlpha: 0.25,
+      });
     }
-  });
+  }
+
+  // 3. Hanging vines with delicate dimensional leaves
+  for (const x of [214, 338, 618, 742, 858]) {
+    const length = rand.range(60, 120);
+    const vine = stroke(look.vine, 1.3);
+    canvas.drawLine(x, 0, x + rand.range(-6, 6), length, vine);
+    for (let y = 14; y < length; y += 12) {
+      drawLeafCluster(canvas, rand, {
+        center: { x: x + (y / length) * 3, y },
+        spread: 1,
+        count: 2,
+        length: [6, 10],
+        width: 4,
+        angles: [y % 24 ? 20 : 160, y % 24 ? 60 : 200],
+        colors: [look.vine, look.leaves[2]],
+      });
+    }
+  }
 }
