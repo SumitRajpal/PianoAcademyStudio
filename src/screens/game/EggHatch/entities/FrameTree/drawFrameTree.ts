@@ -7,16 +7,10 @@
  * - Lush canopy of leaves with subsurface scattering light transmittance.
  */
 
-import { BlendMode, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import type { SkCanvas } from 'react-native-skia';
 
 import { drawLeafCluster } from '../../shared/foliage';
-import {
-  fill,
-  linearGradient,
-  seeded,
-  stroke,
-  twoPointConicalGradient,
-} from '../../shared/paperKit';
+import { fill, linearGradient, seeded, stroke } from '../../shared/paperKit';
 import { branchPath, quadPoint, trunkPath } from '../../shared/paperShapes';
 import { FRAME_TREE_LOOK, type FrameTreeLook } from './frameTreeLook';
 
@@ -36,7 +30,13 @@ export function drawFrameTree(
 
   // 1. Branch arching in over the clearing with cylindrical lighting
   const from = quadPoint(base, control, top, 0.62);
-  const branchP = branchPath(from, { x: X(150), y: 70 }, { x: X(250), y: 40 }, 20, 6);
+  const branchP = branchPath(
+    from,
+    { x: X(150), y: 70 },
+    { x: X(250), y: 40 },
+    20,
+    6,
+  );
 
   // Branch contact AO at base
   canvas.save();
@@ -49,12 +49,18 @@ export function drawFrameTree(
     { x: X(150), y: 40 },
     { x: X(150), y: 90 },
     [look.trunkLight, look.trunk, '#0b1619'],
-    [0.0, 0.5, 1.0]
+    [0.0, 0.5, 1.0],
   );
   canvas.drawPath(branchP, branchPaint);
 
   // 2. Trunk with Volumetric Cylindrical Form Lighting
-  const trunkP = trunkPath(base, top, 78, 42, (control.x - (base.x + top.x) / 2) * 1.6);
+  const trunkP = trunkPath(
+    base,
+    top,
+    78,
+    42,
+    (control.x - (base.x + top.x) / 2) * 1.6,
+  );
 
   // Ground root contact shadow
   canvas.save();
@@ -64,19 +70,20 @@ export function drawFrameTree(
 
   // Cylindrical 3D gradient across trunk width:
   // Outer edge dark -> core wood -> inner edge rim highlight from moonlight in clearing
-  const trunkGrad = side < 0
-    ? linearGradient(
-        { x: X(0), y: 0 },
-        { x: X(120), y: 0 },
-        ['#081215', look.trunk, look.trunkLight, '#4a6b68'],
-        [0.0, 0.35, 0.75, 1.0]
-      )
-    : linearGradient(
-        { x: X(0), y: 0 },
-        { x: X(120), y: 0 },
-        ['#4a6b68', look.trunkLight, look.trunk, '#081215'],
-        [0.0, 0.25, 0.65, 1.0]
-      );
+  const trunkGrad =
+    side < 0
+      ? linearGradient(
+          { x: X(0), y: 0 },
+          { x: X(120), y: 0 },
+          ['#081215', look.trunk, look.trunkLight, '#4a6b68'],
+          [0.0, 0.35, 0.75, 1.0],
+        )
+      : linearGradient(
+          { x: X(0), y: 0 },
+          { x: X(120), y: 0 },
+          ['#4a6b68', look.trunkLight, look.trunk, '#081215'],
+          [0.0, 0.25, 0.65, 1.0],
+        );
   canvas.drawPath(trunkP, trunkGrad);
 
   // 3. Bark Grooves with 3D Depth (Shadow crevice + highlight ridge)
@@ -87,9 +94,21 @@ export function drawFrameTree(
     const p1 = quadPoint(base, control, top, t0 + rand.range(0.12, 0.3));
 
     // Shadow crevice
-    canvas.drawLine(p0.x + off + (side < 0 ? 1 : -1), p0.y, p1.x + off * 0.8 + (side < 0 ? 1 : -1), p1.y, stroke('rgba(2, 6, 10, 0.8)', 2.2));
+    canvas.drawLine(
+      p0.x + off + (side < 0 ? 1 : -1),
+      p0.y,
+      p1.x + off * 0.8 + (side < 0 ? 1 : -1),
+      p1.y,
+      stroke('rgba(2, 6, 10, 0.8)', 2.2),
+    );
     // Wood highlight ridge
-    canvas.drawLine(p0.x + off, p0.y, p1.x + off * 0.8, p1.y, stroke(look.trunkLight, 1.2, 0.45));
+    canvas.drawLine(
+      p0.x + off,
+      p0.y,
+      p1.x + off * 0.8,
+      p1.y,
+      stroke(look.trunkLight, 1.2, 0.45),
+    );
   }
 
   // 4. Canopy of 3D Stylized Foliage with SSS Translucency

@@ -19,7 +19,11 @@ export async function writeStatus(root, problems, extra = {}) {
   }
   await writeIfChanged(
     join(cacheDir(root), 'status.json'),
-    `${JSON.stringify({ problems: problems.length, counts, ...extra }, null, 2)}\n`,
+    `${JSON.stringify(
+      { problems: problems.length, counts, ...extra },
+      null,
+      2,
+    )}\n`,
   );
 }
 
@@ -37,7 +41,8 @@ export async function buildAndWrite({ root, write = true, overrides } = {}) {
     const existingDoc = await readText(join(root, DOC_PATH));
     const docText = renderArchitectureDoc(graph, flows, problems, existingDoc);
     const stale =
-      (await readText(join(root, GRAPH_PATH))) !== graphText || existingDoc !== docText;
+      (await readText(join(root, GRAPH_PATH))) !== graphText ||
+      existingDoc !== docText;
     let wrote = false;
     if (write) {
       const a = await writeIfChanged(join(root, GRAPH_PATH), graphText);
@@ -73,7 +78,11 @@ const violationKey = v =>
 export async function newViolationsForChange({ root, file, newText }) {
   const config = await loadConfig(root);
   const before = await buildGraph({ root, config });
-  const after = await buildGraph({ root, config, overrides: { [file]: newText } });
+  const after = await buildGraph({
+    root,
+    config,
+    overrides: { [file]: newText },
+  });
   const involves = v => v.file === file || (v.cycle || []).includes(file);
   const counts = new Map();
   for (const v of before.violations.filter(involves)) {

@@ -14,12 +14,15 @@ import { logChangedFiles } from './lib/state.mjs';
 
 const PRETTIER_EXT = /\.(?:[cm]?[jt]sx?|json)$/;
 const ESLINT_EXT = /\.(?:[cm]?[jt]sx?)$/;
-const GRAPH_INPUT = /\.(?:[cm]?[jt]sx?|swift|m|mm|h|hpp|hh|c|cc|cpp|cxx|kt|kts|java)$/;
+const GRAPH_INPUT =
+  /\.(?:[cm]?[jt]sx?|swift|m|mm|h|hpp|hh|c|cc|cpp|cxx|kt|kts|java)$/;
 
 const affectsGraph = rel =>
   rel === 'docs/architecture/flows.md' ||
   rel === 'scripts/architecture/config.mjs' ||
-  (GRAPH_INPUT.test(rel) && !rel.startsWith('scripts/') && !rel.startsWith('.claude/'));
+  (GRAPH_INPUT.test(rel) &&
+    !rel.startsWith('scripts/') &&
+    !rel.startsWith('.claude/'));
 
 async function rebuild(root) {
   const { buildAndWrite } = await archLib('pipeline.mjs');
@@ -57,9 +60,19 @@ runHook('post-tool-use', async (input, { root }) => {
     await runTool(root, 'prettier', ['--write', rel], { timeoutMs: 15000 });
   }
   if (ESLINT_EXT.test(rel)) {
-    const r = await runTool(root, 'eslint', ['--fix', '--format', 'unix', rel], { timeoutMs: 20000 });
+    const r = await runTool(
+      root,
+      'eslint',
+      ['--fix', '--format', 'unix', rel],
+      { timeoutMs: 20000 },
+    );
     if (r.code === 1 && r.stdout.trim()) {
-      notes.push(`ESLint found problems it couldn't fix automatically in ${rel}:\n${headLines(r.stdout, 20)}`);
+      notes.push(
+        `ESLint found problems it couldn't fix automatically in ${rel}:\n${headLines(
+          r.stdout,
+          20,
+        )}`,
+      );
     }
   }
   if (affectsGraph(rel)) {

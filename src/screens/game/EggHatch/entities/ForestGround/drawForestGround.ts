@@ -6,17 +6,37 @@
  * - Layered foreground bushes with subsurface scattering and contact AO.
  */
 
-import { BlendMode, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import { BlendMode, Skia, type SkCanvas } from 'react-native-skia';
 
 import { drawLeafCluster } from '../../shared/foliage';
-import { fill, linearGradient, seeded, stroke, verticalGradient, type Bounds } from '../../shared/paperKit';
+import {
+  fill,
+  seeded,
+  stroke,
+  verticalGradient,
+  type Bounds,
+} from '../../shared/paperKit';
 import { leafPath } from '../../shared/paperShapes';
 import { FOREST_GROUND_LOOK, type ForestGroundLook } from './forestGroundLook';
 
-function drawGrassTuft(canvas: SkCanvas, x: number, y: number, size: number, colors: readonly string[], rand: ReturnType<typeof seeded>) {
+function drawGrassTuft(
+  canvas: SkCanvas,
+  x: number,
+  y: number,
+  size: number,
+  colors: readonly string[],
+  rand: ReturnType<typeof seeded>,
+) {
   for (let i = 0; i < 5; i++) {
     const angle = -90 + (i - 2) * 16 + rand.range(-6, 6);
-    const blade = leafPath({ x, y }, size * rand.range(0.7, 1.1), size * 0.18, angle, rand.range(-0.6, 0.6), 0.3);
+    const blade = leafPath(
+      { x, y },
+      size * rand.range(0.7, 1.1),
+      size * 0.18,
+      angle,
+      rand.range(-0.6, 0.6),
+      0.3,
+    );
     canvas.drawPath(blade, fill(rand.pick(colors)));
     // Blade specular edge
     canvas.drawPath(blade, stroke('#5ce6c2', 0.6, 0.35));
@@ -92,6 +112,13 @@ export function drawForestGround(
   for (let i = 0; i < 28; i++) {
     const x = rand.range(left, right);
     if (Math.abs(x - 466) < 230) continue;
-    drawGrassTuft(canvas, x, rand.range(horizonY + 20, bottom - 30), rand.range(10, 18), look.grass, rand);
+    drawGrassTuft(
+      canvas,
+      x,
+      rand.range(horizonY + 20, bottom - 30),
+      rand.range(10, 18),
+      look.grass,
+      rand,
+    );
   }
 }

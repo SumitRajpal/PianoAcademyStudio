@@ -8,9 +8,15 @@
  * - Ambient occlusion shadowing between overlapping petal rows.
  */
 
-import { BlendMode, BlurStyle, PaintStyle, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import {
+  BlendMode,
+  BlurStyle,
+  Skia,
+  TileMode,
+  type SkCanvas,
+} from 'react-native-skia';
 
-import { fill, linearGradient, stroke, type Point } from '../../shared/paperKit';
+import { fill, stroke, type Point } from '../../shared/paperKit';
 import { leafPath, leafVeinPath, polar } from '../../shared/paperShapes';
 import { LOTUS_LOOK, type LotusLook } from './lotusLook';
 
@@ -40,11 +46,12 @@ function drawPetalRow(
     const petalPaint = Skia.Paint();
     petalPaint.setShader(
       Skia.Shader.MakeLinearGradient(
-        base, tip,
+        base,
+        tip,
         colors.map(c => Skia.Color(c)),
         colors.length === 3 ? [0.0, 0.5, 1.0] : null,
-        TileMode.Clamp
-      )
+        TileMode.Clamp,
+      ),
     );
     canvas.drawPath(petal, petalPaint);
 
@@ -52,11 +59,12 @@ function drawPetalRow(
     const sssPaint = Skia.Paint();
     sssPaint.setShader(
       Skia.Shader.MakeLinearGradient(
-        { x: (base.x + tip.x) / 2, y: (base.y + tip.y) / 2 }, tip,
+        { x: (base.x + tip.x) / 2, y: (base.y + tip.y) / 2 },
+        tip,
         [Skia.Color('transparent'), Skia.Color(look.sss)],
         [0.0, 1.0],
-        TileMode.Clamp
-      )
+        TileMode.Clamp,
+      ),
     );
     sssPaint.setAlphaf(look.sssAlpha);
     sssPaint.setBlendMode(BlendMode.Screen);
@@ -74,40 +82,104 @@ function drawPetalRow(
   }
 }
 
-export function drawLotusBack(canvas: SkCanvas, at: Point, size: number, look: LotusLook = LOTUS_LOOK) {
+export function drawLotusBack(
+  canvas: SkCanvas,
+  at: Point,
+  size: number,
+  look: LotusLook = LOTUS_LOOK,
+) {
   const base = { x: at.x, y: at.y };
 
   // 1. Pad & Sepals with Volumetric Contact Shadow
-  const padRect = { x: at.x - 92 * size, y: at.y - 6 * size, width: 184 * size, height: 30 * size };
+  const padRect = {
+    x: at.x - 92 * size,
+    y: at.y - 6 * size,
+    width: 184 * size,
+    height: 30 * size,
+  };
   const padPaint = fill(look.pad);
   const padRim = stroke(look.padRim, 1.8, 0.85);
 
   canvas.drawOval(
-    { x: padRect.x, y: padRect.y + 3, width: padRect.width, height: padRect.height },
-    fill(look.ao, 0.45)
+    {
+      x: padRect.x,
+      y: padRect.y + 3,
+      width: padRect.width,
+      height: padRect.height,
+    },
+    fill(look.ao, 0.45),
   );
   canvas.drawOval(padRect, padPaint);
   canvas.drawOval(padRect, padRim);
 
   // Teal sepals with 3D gradient
   for (const angle of [-172, -8, 172, 8]) {
-    const sepalPath = leafPath({ x: base.x, y: base.y + 4 }, 78 * size, 24 * size, angle, 0, 0.5);
-    canvas.drawPath(sepalPath, fill(look.sepal[angle > 0 && angle < 90 ? 1 : 0]));
+    const sepalPath = leafPath(
+      { x: base.x, y: base.y + 4 },
+      78 * size,
+      24 * size,
+      angle,
+      0,
+      0.5,
+    );
+    canvas.drawPath(
+      sepalPath,
+      fill(look.sepal[angle > 0 && angle < 90 ? 1 : 0]),
+    );
   }
 
   // 2. Back Petals
-  drawPetalRow(canvas, base, [-168, -146, -124, -56, -34, -12], 70 * size, 32 * size, look.back, look);
+  drawPetalRow(
+    canvas,
+    base,
+    [-168, -146, -124, -56, -34, -12],
+    70 * size,
+    32 * size,
+    look.back,
+    look,
+  );
 
   // 3. Middle Petals
-  drawPetalRow(canvas, base, [-156, -134, -112, -68, -46, -24], 64 * size, 32 * size, look.mid, look);
+  drawPetalRow(
+    canvas,
+    base,
+    [-156, -134, -112, -68, -46, -24],
+    64 * size,
+    32 * size,
+    look.mid,
+    look,
+  );
 }
 
-export function drawLotusFront(canvas: SkCanvas, at: Point, size: number, look: LotusLook = LOTUS_LOOK) {
+export function drawLotusFront(
+  canvas: SkCanvas,
+  at: Point,
+  size: number,
+  look: LotusLook = LOTUS_LOOK,
+) {
   const base = { x: at.x, y: at.y + 4 * size };
 
   // 1. Mid-Front Petals
-  drawPetalRow(canvas, base, [-150, -124, -56, -30], 44 * size, 28 * size, look.mid, look, true);
+  drawPetalRow(
+    canvas,
+    base,
+    [-150, -124, -56, -30],
+    44 * size,
+    28 * size,
+    look.mid,
+    look,
+    true,
+  );
 
   // 2. Foremost Petals (Right against viewer)
-  drawPetalRow(canvas, base, [-112, -90, -68], 38 * size, 28 * size, look.front, look, true);
+  drawPetalRow(
+    canvas,
+    base,
+    [-112, -90, -68],
+    38 * size,
+    28 * size,
+    look.front,
+    look,
+    true,
+  );
 }

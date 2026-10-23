@@ -68,7 +68,12 @@ function makeResolver(root, config, fileSet) {
   const aliases = Object.entries(config.aliases || {});
   return (fromFile, spec) => {
     let base = null;
-    if (spec.startsWith('./') || spec.startsWith('../') || spec === '.' || spec === '..') {
+    if (
+      spec.startsWith('./') ||
+      spec.startsWith('../') ||
+      spec === '.' ||
+      spec === '..'
+    ) {
       base = posix.normalize(posix.join(posix.dirname(fromFile), spec));
     } else {
       for (const [alias, target] of aliases) {
@@ -118,7 +123,11 @@ function makeResolver(root, config, fileSet) {
 function makeModuleMapper(config, files) {
   const moduleDirs = new Set(
     files
-      .filter(f => INDEX_FILE.test(f) && config.moduleRoots.some(r => f.startsWith(`${r}/`)))
+      .filter(
+        f =>
+          INDEX_FILE.test(f) &&
+          config.moduleRoots.some(r => f.startsWith(`${r}/`)),
+      )
       .map(f => posix.dirname(f)),
   );
   const folderModules = (config.folderModules || []).map(g => globToRegExp(g));
@@ -173,7 +182,10 @@ function kindFor(config, moduleId, isEntry, isPlatform) {
 let toolHashCache = null;
 async function toolHash(config) {
   if (!toolHashCache) {
-    const analyzer = await readFile(fileURLToPath(new URL('./analyze.mjs', import.meta.url)), 'utf8');
+    const analyzer = await readFile(
+      fileURLToPath(new URL('./analyze.mjs', import.meta.url)),
+      'utf8',
+    );
     toolHashCache = hash(analyzer + ts.version + SCHEMA);
   }
   return hash(toolHashCache + JSON.stringify(patternRulesFor(config)));
@@ -207,17 +219,28 @@ function patternHitsFor(config, file, text) {
  * @param {Record<string,string>} [opts.overrides]  file → text to use instead of disk (PreToolUse checks)
  * @param {boolean} [opts.useCache]
  */
-export async function buildGraph({ root, config, overrides = {}, useCache = true }) {
+export async function buildGraph({
+  root,
+  config,
+  overrides = {},
+  useCache = true,
+}) {
   const files = await collectFiles(root, config);
   for (const file of Object.keys(overrides)) {
-    if (isSource(file) && !files.includes(file) && !matches(file, config.exclude)) {
+    if (
+      isSource(file) &&
+      !files.includes(file) &&
+      !matches(file, config.exclude)
+    ) {
       files.push(file);
     }
   }
   files.sort();
 
   const th = await toolHash(config);
-  const cache = useCache ? await loadCache(root, th) : { toolHash: th, entries: {} };
+  const cache = useCache
+    ? await loadCache(root, th)
+    : { toolHash: th, entries: {} };
   const nextEntries = {};
   const analyses = new Map();
   const patternHits = new Map();
@@ -230,7 +253,11 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
     }
     const info = await stat(join(root, file));
     const cached = cache.entries[file];
-    if (cached && cached.mtimeMs === info.mtimeMs && cached.size === info.size) {
+    if (
+      cached &&
+      cached.mtimeMs === info.mtimeMs &&
+      cached.size === info.size
+    ) {
       nextEntries[file] = cached;
     } else {
       const text = await readFile(join(root, file), 'utf8');
@@ -253,7 +280,28 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
   const resolve = makeResolver(root, config, fileSet);
   const moduleOf = makeModuleMapper(config, files);
 
-  // Files
+  // Files. Thread: header tag, then barrel → any, then config.threads, then
+  // React component or hook → js, then the plane default.
+  const configThread = file =>
+    (config.threads || []).find(
+      t => matches(file, t.match) && !matches(file, t.except),
+    )?.thread;
+  const autoThread = (file, a) => {
+    if (a.lang !== 'code') {
+      return null;
+    }
+    if (a.isBarrel) {
+      return 'any';
+    }
+    return file.endsWith('.tsx') || a.exportsHooks ? 'js' : null;
+  };
+  const threadOf = (file, a, plane) =>
+    a.thread ||
+    (a.isBarrel ? 'any' : null) ||
+    configThread(file) ||
+    autoThread(file, a) ||
+    plane?.thread ||
+    'js';
   const fileNodes = new Map();
   for (const file of files) {
     const a = analyses.get(file);
@@ -262,9 +310,12 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
       id: file,
       module: moduleOf(file),
       plane: plane ? plane.id : null,
-      thread: a.thread || plane?.thread || 'js',
+      thread: threadOf(file, a, plane),
       lang: a.lang,
     };
+    if (a.isBarrel) {
+      node.barrel = true;
+    }
     if (a.purpose) {
       node.purpose = a.purpose;
     }
@@ -283,6 +334,7 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
   // Edges
   const edgeMap = new Map();
   const edgeLines = new Map();
+  const edgeNames = new Map();
   const assets = new Set();
   const unresolved = [];
   const packagesByFile = new Map();
@@ -349,6 +401,13 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
               { typeOnly: imp.typeOnly, dynamic: imp.kind === 'dynamic' },
               imp.line,
             );
+            const nameKey = `${file}\u0000${to}`;
+            if (!edgeNames.has(nameKey)) {
+              edgeNames.set(nameKey, new Set());
+            }
+            for (const n of imp.imported || []) {
+              edgeNames.get(nameKey).add(n);
+            }
             for (const name of imp.names) {
               if (!localByName.has(name)) {
                 localByName.set(name, []);
@@ -379,16 +438,24 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
         }
       }
     } else {
+      // #include "x.h": a path relative to the file first, then any native file whose path
+      // ends with it (header search paths), preferring the same top-level folder.
       const top = file.split('/')[0];
       for (const inc of a.includes || []) {
-        for (const other of files) {
-          if (
-            other !== file &&
-            other.split('/')[0] === top &&
-            (other === inc || other.endsWith(`/${inc}`))
-          ) {
-            addEdge(file, other, 'imports', { approx: true });
-          }
+        const relativePath = posix.normalize(
+          posix.join(posix.dirname(file), inc),
+        );
+        if (fileSet.has(relativePath) && relativePath !== file) {
+          addEdge(file, relativePath, 'imports', { approx: true });
+          continue;
+        }
+        const bySuffix = files.filter(
+          other =>
+            other !== file && (other === inc || other.endsWith(`/${inc}`)),
+        );
+        const sameTop = bySuffix.filter(other => other.split('/')[0] === top);
+        for (const other of sameTop.length ? sameTop : bySuffix) {
+          addEdge(file, other, 'imports', { approx: true });
         }
       }
       for (const imp of a.imports || []) {
@@ -397,6 +464,47 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
           addEdge(file, to, 'imports', { approx: true });
         }
       }
+    }
+  }
+
+  // JS-only exports (hooks, components), followed through re-exports so a barrel
+  // that re-exports a hook counts as exporting it.
+  const jsOnly = new Map();
+  const resolving = new Set();
+  const jsOnlyOf = file => {
+    if (jsOnly.has(file)) {
+      return jsOnly.get(file);
+    }
+    const a = analyses.get(file);
+    if (!a || a.lang !== 'code') {
+      return new Set();
+    }
+    if (resolving.has(file)) {
+      return new Set(a.jsOnlyExports || []);
+    }
+    resolving.add(file);
+    const out = new Set(a.jsOnlyExports || []);
+    for (const re of a.reexports || []) {
+      for (const target of resolve(file, re.spec).files || []) {
+        const theirs = jsOnlyOf(target);
+        if (re.star) {
+          theirs.forEach(n => out.add(n));
+        }
+        for (const { name, from } of re.names) {
+          if (theirs.has(from)) {
+            out.add(name);
+          }
+        }
+      }
+    }
+    resolving.delete(file);
+    jsOnly.set(file, out);
+    return out;
+  };
+  for (const file of files) {
+    const names = [...jsOnlyOf(file)].sort();
+    if (names.length) {
+      fileNodes.get(file).jsOnly = names;
     }
   }
 
@@ -424,8 +532,12 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
     }
     const mod = modules.get(id);
     mod.files.push(file);
-    const isEntryCandidate = file === id || (INDEX_FILE.test(file) && posix.dirname(file) === id);
-    if (isEntryCandidate && (!mod.entry || (!/\.tsx?$/.test(mod.entry) && /\.tsx?$/.test(file)))) {
+    const isEntryCandidate =
+      file === id || (INDEX_FILE.test(file) && posix.dirname(file) === id);
+    if (
+      isEntryCandidate &&
+      (!mod.entry || (!/\.tsx?$/.test(mod.entry) && /\.tsx?$/.test(file)))
+    ) {
       mod.entry = file;
     }
     for (const p of packagesByFile.get(file) || []) {
@@ -446,7 +558,26 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
     const anchorNode = fileNodes.get(anchor);
     const plane = planeFor(config, anchor);
     mod.plane = plane ? plane.id : null;
-    mod.thread = anchorNode?.thread || plane?.thread || 'js';
+    // A module whose entry is a barrel shows its plane's thread when any of its files run
+    // there (its React host component doesn't change what the module is); otherwise the
+    // thread most of its files run on.
+    if (anchorNode?.barrel) {
+      const counts = new Map();
+      for (const f of mod.files) {
+        const t = fileNodes.get(f).thread;
+        counts.set(t, (counts.get(t) || 0) + 1);
+      }
+      const [top] = [...counts.entries()].sort(
+        (x, y) => y[1] - x[1] || x[0].localeCompare(y[0]),
+      );
+      mod.thread = counts.has(plane?.thread)
+        ? plane.thread
+        : top
+        ? top[0]
+        : 'js';
+    } else {
+      mod.thread = anchorNode?.thread || plane?.thread || 'js';
+    }
     mod.purpose =
       (mod.entry && fileNodes.get(mod.entry)?.purpose) ||
       mod.files.map(f => fileNodes.get(f).purpose).find(Boolean) ||
@@ -474,7 +605,9 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
 
   const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const byEdge = (a, b) =>
-    a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || (a.kind || '').localeCompare(b.kind || '');
+    a.from.localeCompare(b.from) ||
+    a.to.localeCompare(b.to) ||
+    (a.kind || '').localeCompare(b.kind || '');
 
   const moduleList = [...modules.values()].sort(byId).map(m => {
     const out = {
@@ -516,11 +649,21 @@ export async function buildGraph({ root, config, overrides = {}, useCache = true
     moduleEdges: [...moduleEdgeMap.values()]
       .map(e => ({ from: e.from, to: e.to, kinds: [...e.kinds].sort() }))
       .sort(byEdge),
-    unresolved: unresolved.sort((a, b) => a.file.localeCompare(b.file) || a.spec.localeCompare(b.spec)),
-    rules: (config.rules || []).map(r => ({ id: r.id, type: r.type, description: r.description })),
+    unresolved: unresolved.sort(
+      (a, b) => a.file.localeCompare(b.file) || a.spec.localeCompare(b.spec),
+    ),
+    rules: (config.rules || []).map(r => ({
+      id: r.id,
+      type: r.type,
+      description: r.description,
+    })),
     violations: [],
   };
-  graph.violations = evaluateRules(graph, config, { patternHits, edgeLines });
+  graph.violations = evaluateRules(graph, config, {
+    patternHits,
+    edgeLines,
+    edgeNames,
+  });
   return graph;
 }
 

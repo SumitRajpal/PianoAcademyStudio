@@ -1,0 +1,2 @@
+# Conventional Commits: enforced for Claude's commits, a reminder for yours.
+node scripts/git/check-commit-msg.mjs "$1"

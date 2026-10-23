@@ -1,6 +1,8 @@
 # Claude Code setup — design
 
-**Status:** draft for approval · **Date:** 2026-10-15 · **Project:** Piano Academy Studio (React Native 0.87.1, bare CLI)
+**Status:** Phase 1 built and live-tested (2026-10-23) · **First written:** 2026-10-15 · **Project:** Piano Academy Studio (React Native 0.87.1, bare CLI)
+
+> **Since the first draft:** the app now has real code (PianoMaster, the C++ note engine, calibration, the lesson screen, EggHatch). Section 2 lists the decisions made since; section 3.6 shows how the planes map onto the real code; section 12 records what was built and verified.
 
 ## Summary
 
@@ -11,7 +13,7 @@ Piano Academy Studio has two equal pillars:
 
 The two pillars meet at one shared clock. This setup is built so Claude understands that shape, keeps it intact, and can check its own work in the two areas it can't perceive directly.
 
-- **Phase 1 (once this document is approved):** the machinery.
+- **Phase 1 (built 2026-10-23):** the machinery.
   - An architecture graph built by a script, loaded at every session start and re-checked after every change.
   - `CLAUDE.md` and rules that apply to specific folders.
   - Hooks across the whole session, plus permissions and safety blocks.
@@ -68,6 +70,24 @@ The owner accepted every recommendation from the setup questionnaire. Where two 
 | E3 | Spec → plan → approval → build, for anything that touches more than one module. |
 | E4 | Tests first for core logic (detection, timing, scoring, motion drivers); lighter tests for screens. |
 | F1, F3 | The audio test harness and the knowledge skills wait for app details. |
+
+Decisions made after the first draft:
+
+| Date | Ref | Decision |
+|---|---|---|
+| 10-15 | M1 | All four kinds of motion: moving music, live feedback, falling notes, celebrations and characters. |
+| 10-15 | M2 | 2D only. |
+| 10-15 | M3 | Who makes the designed animations: decide later. |
+| 10-15 | M4 | 120 fps. "Device lock" means three things: hold 120 Hz, keep the screen awake, and lock the orientation. All three wait for the owner's instructions. The orientation lock was later set to landscape only, full screen. |
+| 10-15 | M5 | Reference apps: Simply Piano and Piano Academy. |
+| 10-15 | M7 | Reduce Motion is "declarative settings": follow the phone's setting, add an in-app setting, and declare all of it in one config file. |
+| 10-15 | Libraries | Piano-related motion uses React Native Skia (`react-native-skia` v3), with Reanimated only when it moves. Non-piano animation uses Rive (`@rive-app/react-native`). All installed. Ordinary view transitions are still open. |
+| 10-15 | D4 | iOS only for now; Android is paused. Every build and run goes to the owner's iPhone, never a simulator (personal details in `CLAUDE.local.md`). |
+| 10-23 | Planes | Planes are assigned by role, not folder (section 3.6). |
+| 10-23 | Android | Dormant: the rule and build hints exist, but Android builds always ask first (one build downloads 3 GB or more on a tight disk). |
+| 10-23 | Lint | The 26 existing ESLint errors (unused imports in EggHatch) were fixed. Rendered EggHatch frames are byte-identical before and after. |
+| 10-23 | Art | Claude follows the game art rule shared with another tool (`.agents/rules/…`, `docs/art-style/…`) through `.claude/rules/game-art.md`. |
+| 10-23 | A3 | Answered by checking: the GitHub repo is public. Handoff notes, local settings and `CLAUDE.local.md` stay out of git. |
 
 Found while checking the machine:
 
@@ -163,27 +183,32 @@ assets/         motion/ (Rive, Lottie, shaders) · audio/ (samples) · fonts/
 
 `audio/` is the audio plane, `sync/` the sync core, `motion/` the motion plane. Everything else under `src/` is the app plane.
 
-### 3.4 Connection rules (enforced once the folders exist)
+### 3.4 Connection rules
 
-1. Screens may use features, ui and motion scenes. They never touch audio internals or native modules.
-2. A feature may import another feature only through its public `index.ts`.
-3. Motion code may not import features or state stores; it reads only `sync/` and `motion/tokens/`.
-4. Audio code has no UI imports. Only `src/audio/` talks to native audio modules.
-5. Code that runs every frame in motion never hands work back to the JS thread.
-6. Motion code takes durations and easing from tokens, not hard-coded numbers.
-7. No circular imports anywhere.
+As built in `scripts/architecture/config.mjs` (2026-10-23). Rules with no matching files do nothing.
+
+1. Screens never touch audio internals or native modules. They use PianoMaster, or the engine's `index.ts`.
+2. Features and the note engine are imported only through their public `index.ts`.
+3. Motion code under `src/motion/` may not import features, screens, state stores or audio; it uses other motion code, `sync/` and `shared/`.
+4. Audio code has no UI imports.
+5. Code that runs every frame in motion, including the game scenes, never hands work back to the JS thread (`runOnJS`, `scheduleOnRN`).
+6. Motion code takes durations and easing from its look or design file (`xLook.ts`, `*Design.ts`), not hard-coded numbers.
+7. **Thread boundary, judged by symbol.** UI- or audio-thread code may not import a hook or a React component (found through barrels too), or a file that is plain JS-thread code, such as the TurboModule wrapper. Importing constants, types or worklets from a file that also exports a hook is fine.
+8. No circular imports (runtime imports only; type-only imports don't count).
+
+Native `#include` links are approximate, so the rules judge only JS/TS imports.
 
 ### 3.5 What the architecture must allow for motion
 
-- **Kinds of motion** the layout supports: visuals reacting to what's played; visuals synced to playback, such as falling notes or a scrolling score; designed character or UI animations; transitions; particles, shaders and possibly 3D. Question M1 asks which are needed.
-- **Library candidates**, to be chosen in Phase 2 decision records, not now:
-  - Reanimated 4 with worklets (small functions that run on the UI thread)
-  - React Native Skia (GPU 2D drawing and shaders)
-  - Rive and Lottie for designer-made animations triggered by app state
-  - react-native-filament or WebGPU, only if 3D is needed
+- **Kinds of motion (decided, M1):** all four. Moving music, live feedback on keys and notes, falling notes, and celebrations and characters. 2D only (M2).
+- **Libraries (decided 2026-10-15, installed):**
+  - Piano-related motion uses React Native Skia v3 (`react-native-skia`), plus Reanimated 4 only when it moves.
+  - Non-piano animation (mascots, celebrations, flourishes) uses Rive.
+  - Ordinary view transitions are still open.
+  - The ADR for this rule is due when Phase 2 starts.
 - **Frame budget:** 16.7 ms per frame at 60 Hz, or 8.3 ms at 120 Hz. Everything on the UI thread shares it.
 - **Long practice sessions:** mic, DSP and GPU work together heat the phone, and the phone then slows itself down. Scenes need quality tiers, such as fewer particles or a lower frame rate, that switch on when frames start dropping.
-- **Reduce Motion:** every scene has a calmer variant for when the system setting is on.
+- **Reduce Motion (decided, M7):** every scene has a calmer variant. One motion settings file declares the behaviour. It follows the phone's setting, and an in-app setting can override it.
 - **Motion specs:** each scene gets a short spec in `docs/motion/` covering:
   - what triggers it
   - timing and easing tokens
@@ -191,6 +216,34 @@ assets/         motion/ (Rive, Lottie, shaders) · audio/ (samples) · fonts/
   - the reduced-motion variant
   - its frame budget
   - the moments to check as golden frames (section 9.3)
+
+### 3.6 The real layout, and planes by role (2026-10-23)
+
+The code grew differently from the proposal in 3.3, and the owner chose to keep the folders and assign planes by role:
+
+| Plane | Real code |
+|---|---|
+| SYNC | `CorePianoNotesDetection/liveKeys.ts` and `noteEventBus.ts`, and `shared/LiveKeys.h`: the lock-free key table the UI thread reads every frame, and the JS event bus |
+| AUDIO | the rest of `src/motion/scenes/PianoMaster/CorePianoNotesDetection/` (the C++ engine and its TypeScript side), `ios/…/IosAudioInput`, `NativePianoEngineProvider`, `android/app/src/main/jni/` |
+| MOTION | `src/motion/**` (PianoMaster: CorePiano, CoreNotes, shared key state) and the game scenes' `scene/`, `entities/`, `shared/` and `*Design.ts` |
+| SHARED | `src/shared/` (the piano model, typography) |
+| PLATFORM | `ios/`, `android/` |
+| APP | `App.tsx`, `index.js`, the screens |
+
+Threads follow role too, in this order:
+
+1. The file's own `@thread` tag.
+2. A barrel → any.
+3. The config's `threads` list: looks, designs and types are any; the engine's TypeScript side is js.
+4. React components and hooks → js.
+5. The plane's default.
+
+The graph links the iOS and Android native code to the engine through `#include` paths, and the TurboModule spec to the C++ module through its `kModuleName`.
+
+Real flows, written in `docs/architecture/flows.md` and checked against the code:
+
+- **key-lights:** mic → ios → CorePianoNotesDetection → PianoMaster/shared → CorePiano → screen. No JS on the way.
+- **calibration (js ok):** mic → ios → CorePianoNotesDetection → PianoMaster → CalibrationScreen → CorePiano → screen. This flow crosses the JS thread on purpose; its 700 ms flashes aren't frame-critical.
 
 ## 4. Architecture graph (Phase 1)
 
@@ -481,16 +534,18 @@ Candidates from the official plugin marketplace:
 ## 11. What Phase 1 adds
 
 ```
-CLAUDE.md
+CLAUDE.md               public project instructions
+CLAUDE.local.md         gitignored: device, team and Mac details
 .claude/
   settings.json         permissions, hooks, status line (shared)
   hooks/                one script per event + lib/ + __tests__/
-  rules/                ios.md, android.md, tests.md
-  skills/               arch/, handoff/, adr/, spec/
+  rules/                ios.md, android.md, tests.md, game-art.md
+  skills/               arch/, handoff/, adr/, spec/ (+ react-native-skia, added earlier)
   statusline.mjs
   state/                gitignored: changed files, caches, hook errors
-  handoff/              gitignored until A3: session handoff notes
+  handoff/              gitignored (the repo is public): session handoff notes
 scripts/architecture/   config, build, check, query, summary + __tests__/
+scripts/git/            check-commit-msg.mjs
 docs/
   claude-setup/DESIGN.md  this document
   architecture/         graph.json, ARCHITECTURE.md, flows.md
@@ -503,66 +558,63 @@ docs/
 
 Also in the repo:
 
-- `package.json` gets the scripts `typecheck`, `test:tooling`, `arch:build`, `arch:check` and `arch:query`, and the dev dependencies `husky` and `lint-staged`.
+- `package.json` gets the scripts `typecheck`, `test:tooling`, `test:engine`, `arch:build`, `arch:check`, `arch:query` and `prepare`, a lint-staged config, and the dev dependencies `husky` and `lint-staged`.
 - `.gitignore` gets the local Claude files.
+- `.eslintrc.js` gets an override so ESLint parses the `.mjs` tooling as modern ESM.
 
-Outside the repo:
+Outside the repo (not done yet; section 13):
 
 - Move `FEArchitecture` into the mooKIT repo, after confirming where the owner launches Claude for mooKIT.
 - Install `gh`.
-- Optionally, set `ANDROID_HOME` and add the Android tools to the PATH in the shell profile.
+- `ANDROID_HOME` waits until Android comes back.
 
-## 12. Build order and how we'll know it works
+## 12. What was built, and how it was verified (2026-10-23)
 
-Phase 1 is built on a `chore/claude-setup` branch, in this order:
+Phase 1 was built on the `chore/claude-setup` branch.
 
-1. graph scripts and their tests
-2. `CLAUDE.md`, rules and docs
-3. hooks and their tests
-4. settings and status line
-5. skills
-6. git hooks
-7. CI
+| Check | Result |
+|---|---|
+| Architecture scripts | 20 tests pass. On the real code (35 modules, 207 files) a build takes about 0.2 s. |
+| Hooks | 11 tests pass, covering all ten hook events and the status line. They run each hook the way Claude Code does. |
+| Whole project | Lint clean, typecheck clean, Jest 125/125, architecture check in CI mode clean. |
+| Live, in a real session | <ul><li>A hand edit to `graph.json` was refused.</li><li>A rule-breaking write was blocked before it landed, with both rules named.</li><li>After an edit: prettier, a graph rebuild and the change log.</li><li>A deletion made from the shell was tracked.</li><li>`.env` and the keystore were unreadable.</li><li>No hook errors.</li></ul> |
+| Commit messages | Conventional Commits is enforced for Claude's commits. The owner's own commits get only a reminder (their style differs). |
 
-Then these checks run in a live session:
+Some hooks can't be triggered from inside the session that installs them: the map at session start and after `/clear` or compaction, the notification, and the handoff note at session end. Their hook tests pass; the owner sees them from the next session on.
 
-1. A new session shows the map.
-2. A test edit updates the graph.
-3. An edit that breaks a rule is blocked with a clear reason.
-4. A new module without a purpose stops Claude from finishing until it's described.
-5. `/clear` and compaction bring the map back.
-6. A commit includes the updated graph.
-7. Editing `graph.json` or reading `.env` is blocked.
-8. A failed build gets a hint.
-9. A notification appears.
-10. Closing the session writes a handoff note.
+What checking the installed Claude Code (2.1.287) and its docs showed:
 
-These details get checked against the installed Claude Code (2.1.287) during the build, and the design adjusts if needed:
+- Permission rules use `Bash(cmd *)`. A `Read` deny also blocks edits and shell reads such as `cat`.
+- A failed shell command fires PostToolUseFailure, with the text in `error`.
+- SubagentStart can add context.
+- The status line receives `context_window.used_percentage`.
+- Hook settings reload live, so `settings.json` was written last.
+- ESLint takes about 1.5 s per file, so it stays in the edit hook.
 
-- the exact permission-rule syntax
-- whether a failed shell command fires PostToolUseFailure; if not, PostToolUse on Bash handles build hints
-- whether SubagentStart can add context to helper agents
-- what the status-line input includes about context use
-- whether eslint after every edit stays under 2 s; if not, it moves to the end of the turn
+Beyond the first design:
+
+- **Engine regression gate in the Stop hook:**
+  - Any change to the C++ engine or the native mic input runs `run.sh scenarios` (18 s).
+  - Threading changes also run ThreadSanitizer (48 s).
+  - CI runs both.
+- **Ramster rule in the PreToolUse hook:** simulator starts and `run-ios` without `--device` are blocked, with the device commands as the fix.
+- **`.mjs` linting:** ESLint now parses the `.mjs` tooling as modern ESM.
 
 ## 13. Open questions
 
-None of these block Phase 1. The right-hand column says what happens until each one is answered.
+Answered since the first draft: A3 (public), D4 (iOS first, on the owner's iPhone), M1, M2, M4, M5 and M7 (section 2).
 
 | Ref | Question | Until answered |
 |---|---|---|
-| A2 | Solo or team? Will other AI tools work in this repo? | no `AGENTS.md` |
-| A3 | Is the GitHub repo public or private? | handoff notes stay out of git |
+| A2 | Solo or team? Another AI tool already works here (`.agents/rules`); should there be an `AGENTS.md`? | no `AGENTS.md`; the shared art rule is linked |
 | D2 | Which plugins and MCP servers? Which task tracker? | tasks live in `docs/roadmap.md` |
-| D4 | iOS, Android or both? Are physical test devices available? | hooks support both platforms |
 | E1 | Experience level in React Native, Swift, Kotlin, audio/DSP and music theory? | Claude briefly explains audio and motion decisions that aren't obvious |
 | E2 | Claude subscription or API billing? Monthly cost limit? | needed before Phase 2 agents |
 | E5 | Docs and code comments in English? | English |
-| F2 | Can piano samples be recorded: acoustic, digital, or both? Are public datasets OK? | needed for Phase 2 |
-| M1 | Which kinds of motion: reacting to playing; synced to playback (falling notes, a scrolling score); character animation; transitions; particles, shaders or 3D? | the layout supports all of them |
-| M2 | 2D only, or 3D too? | needed for Phase 2 |
-| M3 | Who designs the motion, and in what tool: Figma, After Effects (Lottie), Rive, or Claude in code? | needed for Phase 2 |
-| M4 | 60 fps everywhere, or 120 fps where the screen supports it? | needed for Phase 2 |
-| M5 | Which existing apps are closest to the idea, for listening and for motion? | needed for Phase 2 |
-| M6 | What are the oldest iPhone and the lowest-end Android that must run smoothly? | needed for Phase 2 |
-| M7 | Follow the system Reduce Motion setting? | recommended: yes |
+| F2 | Can piano samples be recorded: acoustic, digital, or both? Are public datasets OK? | the synthetic piano in `test/PianoSynth.h` |
+| M3 | Who makes the designed (Rive) animations? | decide later |
+| M6 | What are the oldest iPhone and lowest-end Android that must run smoothly? | needed for performance budgets |
+| Motion | Ordinary view transitions (screens, lists): Reanimated? | ask before building one |
+| Device | Hold 120 Hz and keep the screen awake: how, and when? | waiting for the owner's instructions |
+| Repo | The reference screenshot of another app and the engine spec PDF/DOCX are committed to this public repo. Keep or untrack them? | unchanged |
+| Outside | Move FEArchitecture into mooKIT: where does the owner launch Claude for mooKIT? (`gh` is installed and logged in.) | FEArchitecture still loads in this project |

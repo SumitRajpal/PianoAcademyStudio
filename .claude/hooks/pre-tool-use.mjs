@@ -21,7 +21,9 @@ function applyEdit(text, oldStr, newStr, all) {
   if (!text.includes(oldStr)) {
     return null;
   }
-  return all ? text.split(oldStr).join(newStr) : text.replace(oldStr, () => newStr);
+  return all
+    ? text.split(oldStr).join(newStr)
+    : text.replace(oldStr, () => newStr);
 }
 
 /** The file's text after the tool runs, or null when it can't be worked out. */
@@ -89,8 +91,14 @@ runHook('pre-tool-use', async (input, { root }) => {
   if (rel === 'docs/architecture/ARCHITECTURE.md') {
     const { extractGenerated } = await archLib('render.mjs');
     const next = proposedText(root, rel, tool, ti);
-    const current = existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : null;
-    if (next !== null && current !== null && extractGenerated(next) !== extractGenerated(current)) {
+    const current = existsSync(join(root, rel))
+      ? readFileSync(join(root, rel), 'utf8')
+      : null;
+    if (
+      next !== null &&
+      current !== null &&
+      extractGenerated(next) !== extractGenerated(current)
+    ) {
       return deny(
         'Sections 1–6 of ARCHITECTURE.md are generated from the code (`npm run arch:build`). Edit only the Conventions section, or change the code, flows.md or the config.',
       );

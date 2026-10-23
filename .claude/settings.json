@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck *)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)",
+      "Bash(npm run test:tooling *)",
+      "Bash(npm run test:engine *)",
+      "Bash(npm run arch:build *)",
+      "Bash(npm run arch:check *)",
+      "Bash(npm run arch:query *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npx jest *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(node --test *)",
+      "Bash(node scripts/architecture/build.mjs *)",
+      "Bash(node scripts/architecture/check.mjs *)",
+      "Bash(node scripts/architecture/query.mjs *)",
+      "Bash(node scripts/architecture/summary.mjs *)",
+      "Bash(node scripts/design/compare.mjs *)",
+      "Bash(bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh *)",
+      "Bash(src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh *)",
+      "Bash(pod install *)",
+      "Bash(bundle exec pod install *)",
+      "Bash(xcodebuild -workspace ios/PianoAcademyStudio.xcworkspace *)",
+      "Bash(xcrun devicectl list devices *)",
+      "Bash(xcrun devicectl device install app *)",
+      "Bash(xcrun devicectl device process launch *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm ci *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(npm run android *)",
+      "Bash(npx react-native run-android *)",
+      "Bash(./gradlew *)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(*.keystore)",
+      "Read(*.jks)",
+      "Read(*.p12)",
+      "Read(*.cer)",
+      "Read(*.mobileprovision)",
+      "Edit(/ios/Pods/**)",
+      "Edit(/ios/build/**)",
+      "Edit(/android/build/**)",
+      "Edit(/android/app/build/**)",
+      "Edit(/android/.gradle/**)",
+      "Edit(/docs/architecture/graph.json)",
+      "Edit(/package-lock.json)",
+      "Edit(/ios/Podfile.lock)",
+      "Edit(/Gemfile.lock)",
+      "Bash(git push *--force*)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git push *--delete*)",
+      "Bash(git branch -d *)",
+      "Bash(git branch -D *)",
+      "Bash(git branch --delete *)",
+      "Bash(xcrun simctl boot *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.mjs\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/user-prompt-submit.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-tool-use.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-tool-use.mjs\"",
+            "timeout": 40
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/build-failure.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/stop.mjs\"",
+            "timeout": 150
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/subagent-start.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-compact.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-end.mjs\"",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/notification.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/statusline.mjs\""
+  }
+}

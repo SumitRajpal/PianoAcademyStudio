@@ -4,9 +4,15 @@
  * Rendered in 3D CGI stylized cartoon aesthetic (Pixar / The Incredibles standard).
  */
 
-import { BlendMode, BlurStyle, PaintStyle, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import {
+  BlendMode,
+  BlurStyle,
+  Skia,
+  TileMode,
+  type SkCanvas,
+} from 'react-native-skia';
 
-import { drawGlow, fill, linearGradient, stroke, type Point } from '../../shared/paperKit';
+import { drawGlow, fill, stroke, type Point } from '../../shared/paperKit';
 import { crescentPath, sparklePath } from '../../shared/paperShapes';
 import { MOON_LOOK, type MoonLook } from './moonLook';
 
@@ -17,9 +23,23 @@ export function drawMoonHalo(
   look: MoonLook = MOON_LOOK,
 ) {
   // 1. Wide Atmospheric Corona Bloom (Additive)
-  drawGlow(canvas, center, radius * 5.0, look.halo, look.haloAlpha * 0.7, BlendMode.Plus);
+  drawGlow(
+    canvas,
+    center,
+    radius * 5.0,
+    look.halo,
+    look.haloAlpha * 0.7,
+    BlendMode.Plus,
+  );
   // 2. Focused Core Bloom
-  drawGlow(canvas, center, radius * 2.2, look.halo, look.haloAlpha * 0.95, BlendMode.Plus);
+  drawGlow(
+    canvas,
+    center,
+    radius * 2.2,
+    look.halo,
+    look.haloAlpha * 0.95,
+    BlendMode.Plus,
+  );
 }
 
 export function drawMoon(
@@ -28,7 +48,10 @@ export function drawMoon(
   radius: number,
   look: MoonLook = MOON_LOOK,
 ) {
-  const path = crescentPath(center, radius, { x: radius * 0.42, y: -radius * 0.22 });
+  const path = crescentPath(center, radius, {
+    x: radius * 0.42,
+    y: -radius * 0.22,
+  });
 
   // 1. Soft Luminous Outer Edge Glow
   const outerGlow = Skia.Paint();
@@ -46,8 +69,8 @@ export function drawMoon(
       { x: center.x + radius * 0.5, y: center.y + radius * 0.5 },
       [Skia.Color(look.face), Skia.Color(look.shade)],
       [0.0, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   canvas.drawPath(path, moonPaint);
 

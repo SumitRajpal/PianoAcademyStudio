@@ -30,7 +30,10 @@ function translate(glob) {
         re += '\\{';
         continue;
       }
-      const parts = glob.slice(i + 1, end).split(',').map(translate);
+      const parts = glob
+        .slice(i + 1, end)
+        .split(',')
+        .map(translate);
       re += `(?:${parts.join('|')})`;
       i = end;
     } else if (c === '[') {

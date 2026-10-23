@@ -1,6 +1,5 @@
 /**
  * @purpose Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.
- * @thread ui
  */
 
 export {

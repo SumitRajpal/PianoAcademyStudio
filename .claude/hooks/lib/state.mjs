@@ -18,11 +18,16 @@ import {
 import { join } from 'node:path';
 
 const sessionsDir = root => join(root, '.claude/state/sessions');
-export const safeId = id => String(id || 'unknown').replace(/[^\w-]/g, '').slice(0, 80) || 'unknown';
+export const safeId = id =>
+  String(id || 'unknown')
+    .replace(/[^\w-]/g, '')
+    .slice(0, 80) || 'unknown';
 
 export function readSession(root, id) {
   try {
-    return JSON.parse(readFileSync(join(sessionsDir(root), `${safeId(id)}.json`), 'utf8'));
+    return JSON.parse(
+      readFileSync(join(sessionsDir(root), `${safeId(id)}.json`), 'utf8'),
+    );
   } catch {
     return {};
   }
@@ -55,7 +60,10 @@ export function logChangedFiles(root, id, files) {
 export function changedFiles(root, id, sinceMs = 0) {
   let text = '';
   try {
-    text = readFileSync(join(sessionsDir(root), `${safeId(id)}.files.log`), 'utf8');
+    text = readFileSync(
+      join(sessionsDir(root), `${safeId(id)}.files.log`),
+      'utf8',
+    );
   } catch {
     return [];
   }
@@ -85,7 +93,10 @@ export function pruneSessions(root, keep = 40) {
     const mtime = statSync(join(dir, name)).mtimeMs;
     byId.set(id, Math.max(byId.get(id) || 0, mtime));
   }
-  const old = [...byId.entries()].sort((a, b) => b[1] - a[1]).slice(keep).map(([id]) => id);
+  const old = [...byId.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(keep)
+    .map(([id]) => id);
   for (const name of readdirSync(dir)) {
     if (old.includes(name.split('.')[0])) {
       rmSync(join(dir, name), { force: true });

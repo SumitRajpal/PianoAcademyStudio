@@ -10,12 +10,21 @@ export function makeProject(files, { config } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'arch-test-'));
   mkdirSync(join(root, 'scripts/architecture'), { recursive: true });
   if (config) {
-    writeFileSync(join(root, 'scripts/architecture/config.mjs'), `export default ${JSON.stringify(config, null, 2)};\n`);
+    writeFileSync(
+      join(root, 'scripts/architecture/config.mjs'),
+      `export default ${JSON.stringify(config, null, 2)};\n`,
+    );
   } else {
-    cpSync(join(REPO_ROOT, 'scripts/architecture/config.mjs'), join(root, 'scripts/architecture/config.mjs'));
+    cpSync(
+      join(REPO_ROOT, 'scripts/architecture/config.mjs'),
+      join(root, 'scripts/architecture/config.mjs'),
+    );
   }
   writeFiles(root, files);
-  return { root, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+  return {
+    root,
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+  };
 }
 
 export function writeFiles(root, files) {

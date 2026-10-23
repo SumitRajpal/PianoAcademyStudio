@@ -1,0 +1,5 @@
+# Runs on every commit, yours and Claude's (docs/claude-setup/DESIGN.md 6.5).
+npx lint-staged
+node scripts/architecture/build.mjs --quiet
+git add docs/architecture/graph.json docs/architecture/ARCHITECTURE.md
+node scripts/architecture/check.mjs --rules-only

@@ -3,24 +3,26 @@
   "generator": "scripts/architecture/build.mjs",
   "planes": [
     {
-      "id": "audio",
-      "label": "AUDIO",
-      "thread": "audio",
-      "description": "mic capture, playback, DSP, onset and pitch detection (native audio thread)",
-      "modules": []
-    },
-    {
       "id": "sync",
       "label": "SYNC",
       "thread": "any",
-      "description": "shared clock, latency compensation, event stream (lock-free)",
+      "description": "note events between threads: the lock-free live-key table the UI thread reads every frame, and the JS event bus",
       "modules": []
+    },
+    {
+      "id": "audio",
+      "label": "AUDIO",
+      "thread": "audio",
+      "description": "mic capture and the C++ note engine: onset, pitch and chord detection, calibration",
+      "modules": [
+        "src/motion/scenes/PianoMaster/CorePianoNotesDetection"
+      ]
     },
     {
       "id": "motion",
       "label": "MOTION",
       "thread": "ui",
-      "description": "animation drivers, scenes and rendering (UI thread + GPU)",
+      "description": "piano visuals and game scenes drawn with Skia (UI thread + GPU)",
       "modules": [
         "src/motion/scenes/PianoMaster",
         "src/motion/scenes/PianoMaster/CoreNotes",
@@ -46,7 +48,6 @@
         "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
         "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
         "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
         "src/motion/scenes/PianoMaster/shared"
       ]
     },
@@ -157,7 +158,7 @@
       "name": "motion/scenes/PianoMaster",
       "kind": "scene",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "entry": "src/motion/scenes/PianoMaster/index.ts",
       "files": [
@@ -245,7 +246,7 @@
       "name": "motion/scenes/PianoMaster/CoreNotes/symbols",
       "kind": "module",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "purpose": "The music notation symbols, one folder each and named as in music: Staff (the 5 lines), SystemicBarline, Barline, TrebleClef, TimeSignature, Notehead, Stem, LedgerLine, QuarterNote (notehead + stem) and QuarterRest. Each draws on its own, to be reused by any component.",
       "entry": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
       "files": [
@@ -573,9 +574,9 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "name": "motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "kind": "module",
-      "plane": "motion",
-      "thread": "ui",
+      "kind": "engine",
+      "plane": "audio",
+      "thread": "audio",
       "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
       "entry": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "files": [
@@ -602,11 +603,6 @@
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/benchmark.cpp",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/live_keys_test.cpp",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts"
       ],
@@ -691,7 +687,7 @@
     {
       "id": "src/screens/game/EggHatch",
       "name": "screens/game/EggHatch",
-      "kind": "module",
+      "kind": "screen",
       "plane": "app",
       "thread": "js",
       "purpose": "The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4.",
@@ -812,6 +808,9 @@
       "purpose": "Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection.",
       "exports": [
         "default"
+      ],
+      "jsOnly": [
+        "default"
       ]
     },
     {
@@ -831,22 +830,22 @@
     {
       "id": "android/app/src/main/jni/OboeInput.cpp",
       "module": "android",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "android/app/src/main/jni/OboeInput.h",
       "module": "android",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "android/app/src/main/jni/OnLoad.cpp",
       "module": "android",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
@@ -867,29 +866,29 @@
     {
       "id": "ios/PianoAcademyStudio/IosAudioInput.h",
       "module": "ios",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "ios/PianoAcademyStudio/IosAudioInput.mm",
       "module": "ios",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
       "module": "ios",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
       "module": "ios",
-      "plane": "platform",
-      "thread": "native",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
@@ -908,7 +907,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/durationBarLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "DurationBarLook",
@@ -919,8 +918,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol.",
       "exports": [
         "DurationBarFade",
@@ -945,8 +945,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The playhead: the big see-through vertical line marking where the music is now. Part of the lesson design, not a music symbol.",
       "exports": [
         "LESSON_PLAYHEAD_LOOK",
@@ -959,7 +960,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/Playhead/playheadLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/Playhead",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_PLAYHEAD_LOOK",
@@ -970,11 +971,14 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/QuarterNotes.tsx",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "QuarterNotes",
         "QuarterNotesProps"
+      ],
+      "jsOnly": [
+        "QuarterNotes"
       ]
     },
     {
@@ -991,8 +995,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The white paper strip behind the staff, with its soft shadow: part of the lesson design, not a music symbol.",
       "exports": [
         "LESSON_STAFF_PAPER_LOOK",
@@ -1004,7 +1009,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper/staffPaperLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/StaffPaper",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_STAFF_PAPER_LOOK",
@@ -1015,7 +1020,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CoreNotesLook",
@@ -1037,8 +1042,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead).",
       "exports": [
         "CoreNotesLook",
@@ -1059,6 +1065,10 @@
         "drawPlayhead",
         "ledgerLines",
         "trebleY",
+        "useNotationTypefaces"
+      ],
+      "jsOnly": [
+        "QuarterNotes",
         "useNotationTypefaces"
       ]
     },
@@ -1083,7 +1093,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/barlineLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BarlineLook",
@@ -1104,8 +1114,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Barline",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The single barline: the vertical line that separates two measures.",
       "exports": [
         "BarlineLook",
@@ -1127,8 +1138,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The ledger line: the short line through or under a notehead above or below the staff, such as middle C on a treble staff.",
       "exports": [
         "LESSON_LEDGER_LINE_LOOK",
@@ -1140,7 +1152,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine/ledgerLineLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_LEDGER_LINE_LOOK",
@@ -1163,8 +1175,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The notehead: the filled oval of a note, centred on the note's line or space, and where a stem meets it.",
       "exports": [
         "LESSON_NOTEHEAD_LOOK",
@@ -1178,7 +1191,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead/noteheadLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Notehead",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_NOTEHEAD_LOOK",
@@ -1203,8 +1216,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The quarter note: a notehead and a stem, with ledger lines when it sits above or below the staff; drawn in ink, or see-through red when it is the note to play now.",
       "exports": [
         "LESSON_QUARTER_NOTE_LOOK",
@@ -1220,7 +1234,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote/quarterNoteLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_QUARTER_NOTE_LOOK",
@@ -1241,8 +1255,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The quarter rest: one beat of silence, on the middle line of the staff.",
       "exports": [
         "LESSON_QUARTER_REST_LOOK",
@@ -1254,7 +1269,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest/quarterRestLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_QUARTER_REST_LOOK",
@@ -1277,8 +1292,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The staff: the 5 horizontal lines music is written on, and how far they reach.",
       "exports": [
         "LESSON_STAFF_LOOK",
@@ -1292,7 +1308,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff/staffLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Staff",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_STAFF_LOOK",
@@ -1314,8 +1330,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The stem: the vertical line attached to a notehead.",
       "exports": [
         "LESSON_STEM_LOOK",
@@ -1328,7 +1345,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem/stemLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/Stem",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_STEM_LOOK",
@@ -1349,8 +1366,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The systemic barline: the vertical line at the very start of the staff.",
       "exports": [
         "LESSON_SYSTEMIC_BARLINE_LOOK",
@@ -1362,7 +1380,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline/systemicBarlineLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_SYSTEMIC_BARLINE_LOOK",
@@ -1384,8 +1402,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The time signature: the two stacked numbers at the start of the staff, beats per measure over the beat's note value (as in 4/4).",
       "exports": [
         "LESSON_TIME_SIGNATURE_LOOK",
@@ -1398,7 +1417,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature/timeSignatureLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_TIME_SIGNATURE_LOOK",
@@ -1419,8 +1438,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The treble clef (G clef): the sign at the start of the staff that fixes line 2 as G4.",
       "exports": [
         "LESSON_TREBLE_CLEF_LOOK",
@@ -1432,7 +1452,7 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef/trebleClefLook.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_TREBLE_CLEF_LOOK",
@@ -1443,8 +1463,9 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/symbols/index.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes/symbols",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The music notation symbols, one folder each and named as in music: Staff (the 5 lines), SystemicBarline, Barline, TrebleClef, TimeSignature, Notehead, Stem, LedgerLine, QuarterNote (notehead + stem) and QuarterRest. Each draws on its own, to be reused by any component.",
       "exports": [
         "BarlineLook",
@@ -1493,9 +1514,12 @@
       "id": "src/motion/scenes/PianoMaster/CoreNotes/useNotationTypefaces.ts",
       "module": "src/motion/scenes/PianoMaster/CoreNotes",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
+        "useNotationTypefaces"
+      ],
+      "jsOnly": [
         "useNotationTypefaces"
       ]
     },
@@ -1503,7 +1527,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/blackPianoKeyLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BlackPianoKeyLook",
@@ -1537,8 +1561,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKey",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The one black piano key: how it looks at rest and when lit. CorePiano draws it at every black key position.",
       "exports": [
         "BlackPianoKeyLight",
@@ -1553,7 +1578,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/blackPianoKeyShadowsLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BlackPianoKeyShadowsLook",
@@ -1574,8 +1599,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The shadows the black piano keys cast on the white keys, drawn for all black keys in one blurred layer.",
       "exports": [
         "BlackPianoKeyShadowsLook",
@@ -1587,11 +1613,14 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/CorePiano.tsx",
       "module": "src/motion/scenes/PianoMaster/CorePiano",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "CorePiano",
         "CorePianoProps"
+      ],
+      "jsOnly": [
+        "CorePiano"
       ]
     },
     {
@@ -1608,8 +1637,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The shadow the keyboard frame casts across the top of the white piano keys.",
       "exports": [
         "LESSON_PIANO_FRAME_SHADOW_LOOK",
@@ -1621,7 +1651,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow/pianoFrameShadowLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoFrameShadow",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_PIANO_FRAME_SHADOW_LOOK",
@@ -1632,19 +1662,23 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/PianoKeyLabel.tsx",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "PianoKeyLabel",
         "PianoKeyLabelProps"
+      ],
+      "jsOnly": [
+        "PianoKeyLabel"
       ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "Note names on the piano keys: which keys show one and where (pure), and the system text that draws each name.",
       "exports": [
         "LESSON_PIANO_KEY_LABEL_LOOK",
@@ -1654,6 +1688,9 @@
         "PianoKeyLabelProps",
         "PianoKeyLabels",
         "layoutPianoKeyLabels"
+      ],
+      "jsOnly": [
+        "PianoKeyLabel"
       ]
     },
     {
@@ -1672,7 +1709,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel/pianoKeyLabelLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyLabel",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_PIANO_KEY_LABEL_LOOK",
@@ -1693,8 +1730,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The dot under a marked piano key, such as middle C.",
       "exports": [
         "LESSON_PIANO_KEY_MARKER_LOOK",
@@ -1706,7 +1744,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker/pianoKeyMarkerLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeyMarker",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_PIANO_KEY_MARKER_LOOK",
@@ -1727,8 +1765,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The keybed under the piano keys: the colour that shows through the gaps between the keys and the frame around them.",
       "exports": [
         "LESSON_PIANO_KEYBED_LOOK",
@@ -1740,7 +1779,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed/pianoKeybedLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/PianoKeybed",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_PIANO_KEYBED_LOOK",
@@ -1774,8 +1813,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The one white piano key: how it looks at rest and when lit. CorePiano draws it at every white key position.",
       "exports": [
         "LESSON_WHITE_PIANO_KEY_LOOK",
@@ -1790,7 +1830,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey/whitePianoKeyLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano/WhitePianoKey",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LESSON_WHITE_PIANO_KEY_LOOK",
@@ -1801,7 +1841,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/corePianoLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CorePianoLook",
@@ -1823,8 +1863,9 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The piano keyboard at the bottom of PianoMaster: draws any range with Skia from one WhitePianoKey and one BlackPianoKey reused at every position, with the keybed, shadows, marker dots, note names and lit keys.",
       "exports": [
         "BlackPianoKeyLight",
@@ -1857,6 +1898,9 @@
         "makeBlackPianoKeyLight",
         "makePianoKeyLights",
         "makeWhitePianoKeyLight"
+      ],
+      "jsOnly": [
+        "CorePiano"
       ]
     },
     {
@@ -1874,7 +1918,7 @@
       "id": "src/motion/scenes/PianoMaster/CorePiano/usePianoKeyLights.ts",
       "module": "src/motion/scenes/PianoMaster/CorePiano",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "DrawPianoKeyLight",
@@ -1885,24 +1929,30 @@
         "makePianoKeyLights",
         "usePianoKeyLights"
       ],
-      "hasWorklets": true
+      "hasWorklets": true,
+      "jsOnly": [
+        "usePianoKeyLights"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "CorePianoNotesDetection",
         "STATUS_MESSAGES"
+      ],
+      "jsOnly": [
+        "CorePianoNotesDetection"
       ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "CalibrationFeedback",
@@ -1921,8 +1971,8 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CORE_PIANO_NOTES_DETECTION_LOOK",
@@ -1932,9 +1982,10 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
       "exports": [
         "AudioEngineStatus",
@@ -1991,13 +2042,18 @@
         "stopPianoCalibration",
         "useCorePianoNotesDetection",
         "useLiveKeys"
+      ],
+      "jsOnly": [
+        "CorePianoNotesDetection",
+        "useCorePianoNotesDetection",
+        "useLiveKeys"
       ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "sync",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "LiveKeysReader",
@@ -2006,13 +2062,16 @@
         "readLiveKeys",
         "useLiveKeys"
       ],
-      "hasWorklets": true
+      "hasWorklets": true,
+      "jsOnly": [
+        "useLiveKeys"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "mockAudioEngine"
@@ -2021,8 +2080,8 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "sync",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "noteEventBus"
@@ -2031,8 +2090,8 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "clearPianoCalibration",
@@ -2053,106 +2112,109 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "sync",
+      "thread": "any",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family",
+      "nativeModules": [
+        "NativePianoEngine"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "audio",
       "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "CalibrationOptions",
@@ -2166,45 +2228,10 @@
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/benchmark.cpp",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/live_keys_test.cpp",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
-      "lang": "c-family"
-    },
-    {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "AudioEngineStatus",
@@ -2230,11 +2257,14 @@
     {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "motion",
-      "thread": "ui",
+      "plane": "audio",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "UseCorePianoNotesDetectionOptions",
+        "useCorePianoNotesDetection"
+      ],
+      "jsOnly": [
         "useCorePianoNotesDetection"
       ]
     },
@@ -2242,8 +2272,9 @@
       "id": "src/motion/scenes/PianoMaster/index.ts",
       "module": "src/motion/scenes/PianoMaster",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
       "exports": [
         "CALIBRATION_STATE",
@@ -2320,14 +2351,23 @@
         "useCorePianoNotesDetection",
         "useNotationTypefaces",
         "usePianoState"
+      ],
+      "jsOnly": [
+        "CorePiano",
+        "CorePianoNotesDetection",
+        "QuarterNotes",
+        "useCorePianoNotesDetection",
+        "useNotationTypefaces",
+        "usePianoState"
       ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/shared/index.ts",
       "module": "src/motion/scenes/PianoMaster/shared",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, paint helpers, picture recording and the look units; and for the music symbols, SMuFL glyph drawing, staff line positions and the notation ink.",
       "exports": [
         "Box",
@@ -2372,6 +2412,9 @@
         "staffLineY",
         "unlightAllKeys",
         "unlightKey",
+        "usePianoState"
+      ],
+      "jsOnly": [
         "usePianoState"
       ]
     },
@@ -2460,7 +2503,7 @@
       "id": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
       "module": "src/motion/scenes/PianoMaster/shared",
       "plane": "motion",
-      "thread": "ui",
+      "thread": "js",
       "lang": "code",
       "exports": [
         "KeyRole",
@@ -2478,7 +2521,10 @@
         "unlightKey",
         "usePianoState"
       ],
-      "hasWorklets": true
+      "hasWorklets": true,
+      "jsOnly": [
+        "usePianoState"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/shared/pressedPianoKey.ts",
@@ -2529,13 +2575,16 @@
       "exports": [
         "CalibrationScreen",
         "CalibrationScreenProps"
+      ],
+      "jsOnly": [
+        "CalibrationScreen"
       ]
     },
     {
       "id": "src/screens/CalibrationScreen/calibrationDesign.ts",
       "module": "src/screens/CalibrationScreen",
       "plane": "app",
-      "thread": "js",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CALIBRATION_DESIGN",
@@ -2574,8 +2623,9 @@
       "id": "src/screens/CalibrationScreen/index.ts",
       "module": "src/screens/CalibrationScreen",
       "plane": "app",
-      "thread": "js",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson.",
       "exports": [
         "CALIBRATION_DESIGN",
@@ -2592,6 +2642,9 @@
         "calloutPlacement",
         "choiceBox",
         "drawCalibrationBackground"
+      ],
+      "jsOnly": [
+        "CalibrationScreen"
       ]
     },
     {
@@ -2603,6 +2656,9 @@
       "exports": [
         "LessonScreen",
         "LessonScreenProps"
+      ],
+      "jsOnly": [
+        "LessonScreen"
       ]
     },
     {
@@ -2619,8 +2675,9 @@
       "id": "src/screens/LessonScreen/index.ts",
       "module": "src/screens/LessonScreen",
       "plane": "app",
-      "thread": "js",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape.",
       "exports": [
         "DESIGN_SIZE",
@@ -2630,13 +2687,16 @@
         "RotatedTextRun",
         "TextRun",
         "drawLessonBackground"
+      ],
+      "jsOnly": [
+        "LessonScreen"
       ]
     },
     {
       "id": "src/screens/LessonScreen/lessonDesign.ts",
       "module": "src/screens/LessonScreen",
       "plane": "app",
-      "thread": "js",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "DESIGN_SIZE",
@@ -2654,13 +2714,16 @@
       "exports": [
         "EggHatch"
       ],
-      "hasWorklets": true
+      "hasWorklets": true,
+      "jsOnly": [
+        "EggHatch"
+      ]
     },
     {
       "id": "src/screens/game/EggHatch/eggHatchDesign.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BIRDS",
@@ -2686,8 +2749,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Bird/birdLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BIRD_LOOK",
@@ -2697,8 +2760,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Bird/drawBird.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawBirdBody",
@@ -2708,8 +2771,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Bokeh/bokehLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "BOKEH_LOOK",
@@ -2719,8 +2782,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Bokeh/drawBokeh.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawBokeh"
@@ -2729,8 +2792,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Chick/chickLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CHICK_LOOK",
@@ -2740,8 +2803,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Chick/drawChick.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "CHICK_SHOULDER",
@@ -2752,8 +2815,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Confetti/confettiLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "CONFETTI_LOOK",
@@ -2763,8 +2826,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Confetti/drawConfetti.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "CONFETTI_SHAPES",
@@ -2774,8 +2837,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Debris/debrisLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "DEBRIS_LOOK",
@@ -2785,8 +2848,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Debris/drawDebris.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "SHELL_CHIP_VARIANTS",
@@ -2797,8 +2860,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/EggLight/drawEggLight.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawEggLightPool"
@@ -2807,8 +2870,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/EggLight/eggLightLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "EGG_LIGHT_LOOK",
@@ -2818,8 +2881,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FallingLeaf/drawFallingLeaf.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawFallingLeaf"
@@ -2828,8 +2891,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FallingLeaf/fallingLeafLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FALLING_LEAF_LOOK",
@@ -2839,8 +2902,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FarForest/drawFarForest.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawFarForest"
@@ -2849,8 +2912,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FarForest/farForestLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FAR_FOREST_LOOK",
@@ -2860,8 +2923,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Fern/drawFernPlant.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "Frond",
@@ -2871,8 +2934,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Fern/fernLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FERN_LOOK",
@@ -2882,8 +2945,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Firefly/drawFireflies.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawFireflies"
@@ -2892,8 +2955,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Firefly/fireflyLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FIREFLY_LOOK",
@@ -2903,8 +2966,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Firefly/fireflyMotion.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "FIREFLY_HOMES",
@@ -2916,8 +2979,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/ForestGround/drawForestGround.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawForestGround"
@@ -2926,8 +2989,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/ForestGround/forestGroundLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FOREST_GROUND_LOOK",
@@ -2937,8 +3000,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FrameTree/drawFrameTree.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawFrameTree"
@@ -2947,8 +3010,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/FrameTree/frameTreeLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "FRAME_TREE_LOOK",
@@ -2958,8 +3021,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Ghost/drawGhost.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawGhostBody",
@@ -2973,8 +3036,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Ghost/ghostLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "GHOST_LOOK",
@@ -2984,8 +3047,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/GodLight/drawGodLight.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawGodRays",
@@ -2995,8 +3058,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/GodLight/godLightLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "GOD_LIGHT_LOOK",
@@ -3006,8 +3069,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/JungleLeaf/drawJungleLeaf.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "JungleLeaf",
@@ -3017,8 +3080,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/JungleLeaf/jungleLeafLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "JUNGLE_LEAF_LOOK",
@@ -3028,8 +3091,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Lotus/drawLotus.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawLotusBack",
@@ -3039,8 +3102,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Lotus/lotusLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "LOTUS_LOOK",
@@ -3050,8 +3113,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MagicEgg/drawMagicEgg.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "EGG_GEM",
@@ -3068,8 +3131,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MagicEgg/eggCracks.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "CrackHit",
@@ -3084,8 +3147,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MagicEgg/eggGeometry.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "EGG_PIVOT_Y",
@@ -3097,8 +3160,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MagicEgg/magicEggLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MAGIC_EGG_LOOK",
@@ -3108,8 +3171,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MidForest/drawMidForest.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "MID_FOREST_TREES",
@@ -3119,8 +3182,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MidForest/midForestLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MID_FOREST_LOOK",
@@ -3130,8 +3193,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Mist/drawMist.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawMist"
@@ -3140,8 +3203,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Mist/mistLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MIST_LOOK",
@@ -3151,8 +3214,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Moon/drawMoon.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawMoon",
@@ -3162,8 +3225,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Moon/moonLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MOON_LOOK",
@@ -3173,8 +3236,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MoonShafts/drawMoonShafts.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawMoonShafts"
@@ -3183,8 +3246,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/MoonShafts/moonShaftsLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MOON_SHAFTS_LOOK",
@@ -3194,8 +3257,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Mushroom/drawMushroom.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawMushroomCluster",
@@ -3205,8 +3268,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Mushroom/mushroomLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "MUSHROOM_LOOK",
@@ -3216,8 +3279,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/NightSky/drawNightSky.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawNightSky"
@@ -3226,8 +3289,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/NightSky/nightSkyLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "NIGHT_SKY_LOOK",
@@ -3237,8 +3300,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Owl/drawOwl.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "OWL_EYES",
@@ -3249,8 +3312,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Owl/owlLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "OWL_LOOK",
@@ -3260,8 +3323,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/PaperFinish/drawPaperFinish.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawPaperFinish"
@@ -3270,8 +3333,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/PaperFinish/paperFinishLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "PAPER_FINISH_LOOK",
@@ -3281,8 +3344,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Pond/drawPond.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawMoonGlint",
@@ -3294,8 +3357,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Pond/pondLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "POND_LOOK",
@@ -3305,8 +3368,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Stars/drawStars.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "drawStars"
@@ -3315,8 +3378,8 @@
     {
       "id": "src/screens/game/EggHatch/entities/Stars/starsLook.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "any",
       "lang": "code",
       "exports": [
         "STARS_LOOK",
@@ -3327,8 +3390,9 @@
       "id": "src/screens/game/EggHatch/index.ts",
       "module": "src/screens/game/EggHatch",
       "plane": "app",
-      "thread": "js",
+      "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4.",
       "exports": [
         "CRACK_STAGES",
@@ -3346,13 +3410,16 @@
         "defaultDiveTimes",
         "drawEggHatchScene",
         "planHits"
+      ],
+      "jsOnly": [
+        "EggHatch"
       ]
     },
     {
       "id": "src/screens/game/EggHatch/scene/drawEggHatchScene.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "ScenePaints",
@@ -3363,8 +3430,8 @@
     {
       "id": "src/screens/game/EggHatch/scene/eggHatchHits.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "GhostHit",
@@ -3376,8 +3443,8 @@
     {
       "id": "src/screens/game/EggHatch/scene/eggHatchLayers.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "LAYER_BOUNDS",
@@ -3388,8 +3455,8 @@
     {
       "id": "src/screens/game/EggHatch/scene/eggHatchMotion.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "CHIPS_PER_HIT",
@@ -3437,7 +3504,7 @@
     {
       "id": "src/screens/game/EggHatch/scene/useEggHatchSprites.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
+      "plane": "motion",
       "thread": "js",
       "lang": "code",
       "exports": [
@@ -3446,13 +3513,16 @@
         "Sprite",
         "buildEggHatchSprites",
         "useEggHatchSprites"
+      ],
+      "jsOnly": [
+        "useEggHatchSprites"
       ]
     },
     {
       "id": "src/screens/game/EggHatch/shared/foliage.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "FernOptions",
@@ -3464,8 +3534,8 @@
     {
       "id": "src/screens/game/EggHatch/shared/paperKit.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "Bounds",
@@ -3489,8 +3559,8 @@
     {
       "id": "src/screens/game/EggHatch/shared/paperShapes.ts",
       "module": "src/screens/game/EggHatch",
-      "plane": "app",
-      "thread": "js",
+      "plane": "motion",
+      "thread": "ui",
       "lang": "code",
       "exports": [
         "branchPath",
@@ -3513,6 +3583,7 @@
       "plane": "shared",
       "thread": "any",
       "lang": "code",
+      "barrel": true,
       "purpose": "The piano model: notes, MIDI numbers, frequencies, keyboards of any size and key positions. Pure code, usable from any thread.",
       "exports": [
         "*"
@@ -3590,8 +3661,26 @@
       "approx": true
     },
     {
+      "from": "android/app/src/main/jni/OboeInput.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "android/app/src/main/jni/OboeInput.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
       "from": "android/app/src/main/jni/OnLoad.cpp",
       "to": "android/app/src/main/jni/OboeInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "android/app/src/main/jni/OnLoad.cpp",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
       "kind": "imports",
       "approx": true
     },
@@ -3636,6 +3725,18 @@
       "kind": "imports"
     },
     {
+      "from": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
       "from": "ios/PianoAcademyStudio/IosAudioInput.mm",
       "to": "ios/PianoAcademyStudio/IosAudioInput.h",
       "kind": "imports",
@@ -3650,6 +3751,12 @@
     {
       "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
       "to": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
       "kind": "imports",
       "approx": true
     },
@@ -4739,6 +4846,12 @@
     },
     {
       "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "kind": "calls-native",
+      "approx": true
+    },
+    {
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
       "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
       "kind": "imports",
       "typeOnly": true
@@ -4888,15 +5001,9 @@
       "approx": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/engine_test.cpp",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/scenarios.cpp",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/PianoSynth.h",
-      "kind": "imports",
+      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "kind": "calls-native",
       "approx": true
     },
     {
@@ -5956,6 +6063,13 @@
   ],
   "moduleEdges": [
     {
+      "from": "android",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
       "from": "App.tsx",
       "to": "src/motion/scenes/PianoMaster",
       "kinds": [
@@ -5982,6 +6096,13 @@
     {
       "from": "index.js",
       "to": "App.tsx",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "ios",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -6462,7 +6583,7 @@
     {
       "id": "public-api-only",
       "type": "public-api",
-      "description": "Features and audio are imported only through their public index.ts."
+      "description": "Features and the note engine are imported only through their public index.ts."
     },
     {
       "id": "motion-isolation",
@@ -6482,7 +6603,7 @@
     {
       "id": "motion-tokens",
       "type": "forbid-pattern",
-      "description": "Motion code takes durations and easing from tokens, not hard-coded numbers."
+      "description": "Motion code takes durations and easing from its look or design file (xLook.ts, *Design.ts), not hard-coded numbers."
     },
     {
       "id": "thread-boundary",

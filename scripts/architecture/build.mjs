@@ -11,7 +11,11 @@ const { flags, root } = parseArgs();
 const { graph, problems, wrote } = await buildAndWrite({ root });
 if (!flags.has('quiet')) {
   console.log(
-    `architecture: ${graph.modules.length} modules, ${graph.files.length} files, ${graph.edges.length} connections, ${problems.length} problem${problems.length === 1 ? '' : 's'} · ${wrote ? 'updated' : 'unchanged'} docs/architecture/graph.json`,
+    `architecture: ${graph.modules.length} modules, ${
+      graph.files.length
+    } files, ${graph.edges.length} connections, ${problems.length} problem${
+      problems.length === 1 ? '' : 's'
+    } · ${wrote ? 'updated' : 'unchanged'} docs/architecture/graph.json`,
   );
   if (problems.length) {
     console.log('run `npm run arch:check` for details');

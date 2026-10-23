@@ -9,7 +9,7 @@
 import type { SkCanvas } from 'react-native-skia';
 
 import { drawLeafCluster } from '../../shared/foliage';
-import { fill, linearGradient, seeded, type Bounds } from '../../shared/paperKit';
+import { linearGradient, seeded, type Bounds } from '../../shared/paperKit';
 import { trunkPath } from '../../shared/paperShapes';
 import { FAR_FOREST_LOOK, type FarForestLook } from './farForestLook';
 
@@ -36,7 +36,7 @@ function drawSheet(
       { x: x + rand.range(-14, 14), y: top },
       w,
       w * 0.55,
-      rand.range(-10, 10)
+      rand.range(-10, 10),
     );
 
     // Cylindrical gradient across trunk width
@@ -44,7 +44,7 @@ function drawSheet(
       { x: x - w, y: 0 },
       { x: x + w, y: 0 },
       ['#071015', look.trunk, '#2a444a'],
-      [0.0, 0.45, 1.0]
+      [0.0, 0.45, 1.0],
     );
     canvas.drawPath(trunkP, trunkGrad);
   }
@@ -52,7 +52,8 @@ function drawSheet(
   // 2. Canopies hanging from top with depth
   const step = 34 * scale;
   for (let x = bounds.x; x < bounds.x + bounds.width; x += step) {
-    const fromCentre = Math.abs(x - (bounds.x + bounds.width / 2)) / (bounds.width / 2);
+    const fromCentre =
+      Math.abs(x - (bounds.x + bounds.width / 2)) / (bounds.width / 2);
     const y = top + canopyY * (0.35 + fromCentre * 0.9) + rand.range(-14, 14);
     drawLeafCluster(canvas, rand, {
       center: { x: x + rand.range(-10, 10), y },
@@ -88,8 +89,26 @@ export function drawFarForest(
   look: FarForestLook = FAR_FOREST_LOOK,
 ) {
   // Back sheet (deeper atmosphere)
-  drawSheet(canvas, bounds, horizonY - 14, look.back, 31, [60, 128, 205, 288, 352, 590, 652, 728, 806, 880], 70, 0.85);
+  drawSheet(
+    canvas,
+    bounds,
+    horizonY - 14,
+    look.back,
+    31,
+    [60, 128, 205, 288, 352, 590, 652, 728, 806, 880],
+    70,
+    0.85,
+  );
 
   // Front sheet
-  drawSheet(canvas, bounds, horizonY, look.front, 57, [20, 96, 172, 250, 318, 620, 690, 764, 846, 918], 92, 1);
+  drawSheet(
+    canvas,
+    bounds,
+    horizonY,
+    look.front,
+    57,
+    [20, 96, 172, 250, 318, 620, 690, 764, 846, 918],
+    92,
+    1,
+  );
 }

@@ -6,14 +6,25 @@
  * - `drawSpark`: high-energy glowing streak with core plasma and radial bloom.
  */
 
-import { BlendMode, BlurStyle, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import { BlendMode, Skia, type SkCanvas } from 'react-native-skia';
 
-import { blurred, fill, linearGradient, seeded, stroke } from '../../shared/paperKit';
+import {
+  blurred,
+  fill,
+  linearGradient,
+  seeded,
+  stroke,
+} from '../../shared/paperKit';
 import { DEBRIS_LOOK, type DebrisLook } from './debrisLook';
 
 export const SHELL_CHIP_VARIANTS = 3;
 
-export function drawShellChip(canvas: SkCanvas, size: number, variant: number, look: DebrisLook = DEBRIS_LOOK) {
+export function drawShellChip(
+  canvas: SkCanvas,
+  size: number,
+  variant: number,
+  look: DebrisLook = DEBRIS_LOOK,
+) {
   const rand = seeded(77 + variant * 13);
   const corners = 4 + variant;
   const pts = Array.from({ length: corners }, (_, k) => {
@@ -28,7 +39,7 @@ export function drawShellChip(canvas: SkCanvas, size: number, variant: number, l
     { x: -size * 0.5, y: -size * 0.5 },
     { x: size * 0.5, y: size * 0.5 },
     ['#ff4d88', look.chip[variant % look.chip.length], '#5e0b2b'],
-    [0.0, 0.5, 1.0]
+    [0.0, 0.5, 1.0],
   );
   canvas.drawPath(chip, chipPaint);
 
@@ -49,22 +60,38 @@ export function drawShellChip(canvas: SkCanvas, size: number, variant: number, l
   canvas.drawCircle(-size * 0.2, -size * 0.2, Math.max(1, size * 0.15), glint);
 }
 
-export function drawSpark(canvas: SkCanvas, length: number, look: DebrisLook = DEBRIS_LOOK) {
+export function drawSpark(
+  canvas: SkCanvas,
+  length: number,
+  look: DebrisLook = DEBRIS_LOOK,
+) {
   // Luminous bloom halo
   canvas.drawRRect(
-    { rect: { x: -length * 1.1, y: -2.5, width: length * 1.4, height: 5.0 }, rx: 2.5, ry: 2.5 },
-    blurred(fill(look.spark, 0.85), 2.5)
+    {
+      rect: { x: -length * 1.1, y: -2.5, width: length * 1.4, height: 5.0 },
+      rx: 2.5,
+      ry: 2.5,
+    },
+    blurred(fill(look.spark, 0.85), 2.5),
   );
 
   // Vibrant core streak
   canvas.drawRRect(
-    { rect: { x: -length, y: -1.4, width: length * 1.2, height: 2.8 }, rx: 1.4, ry: 1.4 },
-    fill(look.spark)
+    {
+      rect: { x: -length, y: -1.4, width: length * 1.2, height: 2.8 },
+      rx: 1.4,
+      ry: 1.4,
+    },
+    fill(look.spark),
   );
 
   // Incandescent white hot center
   canvas.drawRRect(
-    { rect: { x: -length * 0.5, y: -0.6, width: length * 0.7, height: 1.2 }, rx: 0.6, ry: 0.6 },
-    fill(look.sparkCore)
+    {
+      rect: { x: -length * 0.5, y: -0.6, width: length * 0.7, height: 1.2 },
+      rx: 0.6,
+      ry: 0.6,
+    },
+    fill(look.sparkCore),
   );
 }

@@ -2,7 +2,8 @@
 
 import { spawn } from 'node:child_process';
 
-const esc = text => String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"').slice(0, 220);
+const esc = text =>
+  String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"').slice(0, 220);
 
 export function notify(title, message) {
   if (process.platform !== 'darwin' || process.env.CLAUDE_HOOKS_NO_NOTIFY) {

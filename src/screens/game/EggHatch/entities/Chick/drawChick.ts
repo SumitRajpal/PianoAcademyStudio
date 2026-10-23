@@ -9,17 +9,41 @@
  * - Luminous Fresnel rim kicker light carving the chick from the egg cup.
  */
 
-import { BlendMode, BlurStyle, ClipOp, PaintStyle, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import {
+  BlendMode,
+  BlurStyle,
+  ClipOp,
+  PaintStyle,
+  Skia,
+  TileMode,
+  type SkCanvas,
+} from 'react-native-skia';
 
-import { blurred, fill, linearGradient, stroke, twoPointConicalGradient } from '../../shared/paperKit';
+import {
+  blurred,
+  fill,
+  stroke,
+  twoPointConicalGradient,
+} from '../../shared/paperKit';
 import { leafPath } from '../../shared/paperShapes';
 import { CHICK_LOOK, type ChickLook } from './chickLook';
 
 /** Where each wing hinges, as fractions of the body radius. */
 export const CHICK_SHOULDER = { x: 0.78, y: 0.06 };
 
-export function drawChickWing(canvas: SkCanvas, r: number, side: -1 | 1, look: ChickLook = CHICK_LOOK) {
-  const wingPath = leafPath({ x: 0, y: 0 }, r * 0.72, r * 0.44, side < 0 ? -150 : -30, side * 0.4);
+export function drawChickWing(
+  canvas: SkCanvas,
+  r: number,
+  side: -1 | 1,
+  look: ChickLook = CHICK_LOOK,
+) {
+  const wingPath = leafPath(
+    { x: 0, y: 0 },
+    r * 0.72,
+    r * 0.44,
+    side < 0 ? -150 : -30,
+    side * 0.4,
+  );
 
   // 1. Volumetric Wing Gradient
   const wingPaint = Skia.Paint();
@@ -28,10 +52,14 @@ export function drawChickWing(canvas: SkCanvas, r: number, side: -1 | 1, look: C
     Skia.Shader.MakeLinearGradient(
       { x: 0, y: -r * 0.2 },
       { x: side * r * 0.5, y: r * 0.35 },
-      [Skia.Color(look.wingHighlight), Skia.Color(look.wing), Skia.Color(look.wingShadow)],
+      [
+        Skia.Color(look.wingHighlight),
+        Skia.Color(look.wing),
+        Skia.Color(look.wingShadow),
+      ],
       [0.0, 0.45, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   canvas.drawPath(wingPath, wingPaint);
 
@@ -40,16 +68,22 @@ export function drawChickWing(canvas: SkCanvas, r: number, side: -1 | 1, look: C
   sssPaint.setStyle(PaintStyle.Stroke);
   sssPaint.setStrokeWidth(Math.max(1.2, r * 0.06));
   sssPaint.setColor(Skia.Color(look.sss));
-  sssPaint.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.08, true));
+  sssPaint.setMaskFilter(
+    Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.08, true),
+  );
   sssPaint.setBlendMode(BlendMode.Plus);
   canvas.drawPath(wingPath, sssPaint);
 }
 
-export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHICK_LOOK) {
+export function drawChickBody(
+  canvas: SkCanvas,
+  r: number,
+  look: ChickLook = CHICK_LOOK,
+) {
   // 1. Soft Ambient Contact Shadow Under Chick
   canvas.drawOval(
     { x: -r * 0.9, y: r * 0.6, width: r * 1.8, height: r * 0.45 },
-    blurred(fill(look.ao, look.aoAlpha), r * 0.22)
+    blurred(fill(look.ao, look.aoAlpha), r * 0.22),
   );
 
   // 2. Head Tufts with 3D Volumetric Volume & SSS
@@ -62,8 +96,8 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
         { x: 0, y: -r * 0.9 },
         [Skia.Color(look.tuftHighlight), Skia.Color(look.tuft)],
         [0.0, 1.0],
-        TileMode.Clamp
-      )
+        TileMode.Clamp,
+      ),
     );
     canvas.drawPath(tuft, tuftGrad);
 
@@ -78,10 +112,12 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
   const bodyPath = Skia.Path.Oval(bodyOval);
 
   const bodyPaint = twoPointConicalGradient(
-    { x: -r * 0.32, y: -r * 0.38 }, 0,
-    { x: 0, y: r * 0.2 }, r * 1.95,
+    { x: -r * 0.32, y: -r * 0.38 },
+    0,
+    { x: 0, y: r * 0.2 },
+    r * 1.95,
     look.body,
-    [0.0, 0.35, 0.75, 1.0]
+    [0.0, 0.35, 0.75, 1.0],
   );
   canvas.drawPath(bodyPath, bodyPaint);
 
@@ -89,11 +125,12 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
   const sssPaint = Skia.Paint();
   sssPaint.setShader(
     Skia.Shader.MakeRadialGradient(
-      { x: r * 0.3, y: r * 0.4 }, r * 1.4,
+      { x: r * 0.3, y: r * 0.4 },
+      r * 1.4,
       [Skia.Color(look.sss), Skia.Color('transparent')],
       [0.0, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   sssPaint.setAlphaf(look.sssAlpha);
   sssPaint.setBlendMode(BlendMode.Screen);
@@ -103,14 +140,18 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
   const bellyPaint = Skia.Paint();
   bellyPaint.setShader(
     Skia.Shader.MakeRadialGradient(
-      { x: 0, y: r * 0.3 }, r * 0.65,
+      { x: 0, y: r * 0.3 },
+      r * 0.65,
       [Skia.Color(look.belly), Skia.Color(look.bellyShadow)],
       [0.2, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   bellyPaint.setAlphaf(0.85);
-  canvas.drawOval({ x: -r * 0.52, y: r * 0.16, width: r * 1.04, height: r * 0.7 }, bellyPaint);
+  canvas.drawOval(
+    { x: -r * 0.52, y: r * 0.16, width: r * 1.04, height: r * 0.7 },
+    bellyPaint,
+  );
 
   // 6. Form Shadow & Ambient Occlusion inside body
   canvas.save();
@@ -123,20 +164,28 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
       { x: r * 0.8, y: r * 0.9 },
       [Skia.Color('transparent'), Skia.Color(look.ao)],
       [0.3, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   shadowPaint.setAlphaf(look.aoAlpha);
   shadowPaint.setBlendMode(BlendMode.Multiply);
-  canvas.drawRect({ x: -r * 2, y: -r * 2, width: r * 4, height: r * 4 }, shadowPaint);
+  canvas.drawRect(
+    { x: -r * 2, y: -r * 2, width: r * 4, height: r * 4 },
+    shadowPaint,
+  );
 
   // Specular sheen on head
   const specPaint = Skia.Paint();
   specPaint.setColor(Skia.Color('#ffffff'));
-  specPaint.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.16, true));
+  specPaint.setMaskFilter(
+    Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.16, true),
+  );
   specPaint.setBlendMode(BlendMode.Plus);
   specPaint.setAlphaf(0.65);
-  canvas.drawOval({ x: -r * 0.55, y: -r * 0.72, width: r * 0.55, height: r * 0.38 }, specPaint);
+  canvas.drawOval(
+    { x: -r * 0.55, y: -r * 0.72, width: r * 0.55, height: r * 0.38 },
+    specPaint,
+  );
 
   canvas.restore();
 
@@ -154,7 +203,12 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     const eyeCy = -r * 0.18;
     const eyeRx = r * 0.11;
     const eyeRy = r * 0.15;
-    const eyeRect = { x: eyeCx - eyeRx, y: eyeCy - eyeRy, width: eyeRx * 2, height: eyeRy * 2 };
+    const eyeRect = {
+      x: eyeCx - eyeRx,
+      y: eyeCy - eyeRy,
+      width: eyeRx * 2,
+      height: eyeRy * 2,
+    };
 
     const eyePath = Skia.Path.Oval(eyeRect);
 
@@ -165,11 +219,12 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     const scleraPaint = Skia.Paint();
     scleraPaint.setShader(
       Skia.Shader.MakeRadialGradient(
-        { x: eyeCx, y: eyeCy }, eyeRy,
+        { x: eyeCx, y: eyeCy },
+        eyeRy,
         [Skia.Color(look.eyeSclera), Skia.Color('#e0e4ee')],
         [0.5, 1.0],
-        TileMode.Clamp
-      )
+        TileMode.Clamp,
+      ),
     );
     canvas.drawPath(eyePath, scleraPaint);
 
@@ -177,18 +232,31 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     const lidShadow = Skia.Paint();
     lidShadow.setColor(Skia.Color(look.eyeShadow));
     lidShadow.setBlendMode(BlendMode.Multiply);
-    canvas.drawRect({ x: eyeCx - eyeRx, y: eyeCy - eyeRy, width: eyeRx * 2, height: eyeRy * 0.5 }, lidShadow);
+    canvas.drawRect(
+      {
+        x: eyeCx - eyeRx,
+        y: eyeCy - eyeRy,
+        width: eyeRx * 2,
+        height: eyeRy * 0.5,
+      },
+      lidShadow,
+    );
 
     // Deep Iris with Warm Amber Radiance
     const irisR = eyeRy * 0.88;
     const irisPaint = Skia.Paint();
     irisPaint.setShader(
       Skia.Shader.MakeRadialGradient(
-        { x: eyeCx, y: eyeCy + eyeRy * 0.1 }, irisR,
-        [Skia.Color(look.eyeIrisLight), Skia.Color(look.eyeIris), Skia.Color(look.eyePupil)],
+        { x: eyeCx, y: eyeCy + eyeRy * 0.1 },
+        irisR,
+        [
+          Skia.Color(look.eyeIrisLight),
+          Skia.Color(look.eyeIris),
+          Skia.Color(look.eyePupil),
+        ],
         [0.0, 0.65, 1.0],
-        TileMode.Clamp
-      )
+        TileMode.Clamp,
+      ),
     );
     canvas.drawCircle(eyeCx, eyeCy, irisR, irisPaint);
 
@@ -199,12 +267,22 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     const specPrimary = Skia.Paint();
     specPrimary.setColor(Skia.Color(look.eyeSpecular));
     specPrimary.setBlendMode(BlendMode.Plus);
-    canvas.drawCircle(eyeCx - irisR * 0.35, eyeCy - irisR * 0.35, irisR * 0.32, specPrimary);
+    canvas.drawCircle(
+      eyeCx - irisR * 0.35,
+      eyeCy - irisR * 0.35,
+      irisR * 0.32,
+      specPrimary,
+    );
 
     const specBounce = Skia.Paint();
     specBounce.setColor(Skia.Color('rgba(255, 255, 255, 0.5)'));
     specBounce.setBlendMode(BlendMode.Plus);
-    canvas.drawCircle(eyeCx + irisR * 0.32, eyeCy + irisR * 0.32, irisR * 0.16, specBounce);
+    canvas.drawCircle(
+      eyeCx + irisR * 0.32,
+      eyeCy + irisR * 0.32,
+      irisR * 0.16,
+      specBounce,
+    );
 
     canvas.restore();
 
@@ -212,14 +290,31 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     const blushPaint = Skia.Paint();
     blushPaint.setColor(Skia.Color(look.cheek));
     blushPaint.setAlphaf(0.72);
-    blushPaint.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.08, true));
-    canvas.drawOval({ x: side * r * 0.58 - r * 0.14, y: -r * 0.02, width: r * 0.28, height: r * 0.16 }, blushPaint);
+    blushPaint.setMaskFilter(
+      Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.08, true),
+    );
+    canvas.drawOval(
+      {
+        x: side * r * 0.58 - r * 0.14,
+        y: -r * 0.02,
+        width: r * 0.28,
+        height: r * 0.16,
+      },
+      blushPaint,
+    );
   }
 
   // 9. 3D Glossy Rounded Beak
   const beakW = r * 0.3;
   const beakH = r * 0.22;
-  const beakPath = leafPath({ x: -beakW * 0.48, y: -r * 0.06 }, beakW, beakH, 0, 0, 0.5);
+  const beakPath = leafPath(
+    { x: -beakW * 0.48, y: -r * 0.06 },
+    beakW,
+    beakH,
+    0,
+    0,
+    0.5,
+  );
 
   // Beak shadow under lip
   canvas.drawPath(beakPath, blurred(fill(look.ao, 0.45), 2));
@@ -230,10 +325,14 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
     Skia.Shader.MakeLinearGradient(
       { x: 0, y: -r * 0.12 },
       { x: 0, y: r * 0.06 },
-      [Skia.Color(look.beakHighlight), Skia.Color(look.beak), Skia.Color(look.beakShadow)],
+      [
+        Skia.Color(look.beakHighlight),
+        Skia.Color(look.beak),
+        Skia.Color(look.beakShadow),
+      ],
       [0.0, 0.5, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   canvas.drawPath(beakPath, beakGrad);
 
@@ -242,5 +341,8 @@ export function drawChickBody(canvas: SkCanvas, r: number, look: ChickLook = CHI
   beakGlint.setColor(Skia.Color('#ffffff'));
   beakGlint.setAlphaf(0.7);
   beakGlint.setBlendMode(BlendMode.Plus);
-  canvas.drawOval({ x: -beakW * 0.32, y: -r * 0.08, width: beakW * 0.5, height: beakH * 0.3 }, beakGlint);
+  canvas.drawOval(
+    { x: -beakW * 0.32, y: -r * 0.08, width: beakW * 0.5, height: beakH * 0.3 },
+    beakGlint,
+  );
 }

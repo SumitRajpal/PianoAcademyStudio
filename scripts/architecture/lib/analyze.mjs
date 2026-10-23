@@ -54,14 +54,22 @@ export function parseHeader(text) {
     )
     .join('\n');
   const purposeMatch = /@purpose\s+([\s\S]*?)(?=\n\s*@\w|$)/.exec(clean);
-  const purpose = purposeMatch ? purposeMatch[1].replace(/\s+/g, ' ').trim() : '';
-  const threadMatch = new RegExp(`@thread\\s+(${THREADS.join('|')})\\b`).exec(clean);
-  return { purpose: purpose || null, thread: threadMatch ? threadMatch[1] : null };
+  const purpose = purposeMatch
+    ? purposeMatch[1].replace(/\s+/g, ' ').trim()
+    : '';
+  const threadMatch = new RegExp(`@thread\\s+(${THREADS.join('|')})\\b`).exec(
+    clean,
+  );
+  return {
+    purpose: purpose || null,
+    thread: threadMatch ? threadMatch[1] : null,
+  };
 }
 
 function hasModifier(node, kind) {
   return Boolean(
-    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(m => m.kind === kind),
+    ts.canHaveModifiers(node) &&
+      ts.getModifiers(node)?.some(m => m.kind === kind),
   );
 }
 
@@ -102,11 +110,14 @@ export function analyzeCode(path, text) {
   const imports = [];
   const jsxTags = new Set();
   const exportNames = new Set();
+  const typeExports = new Set();
+  const reexports = [];
   const nativeSpecs = new Set();
   const nativeUses = new Set();
   let hasWorklets = false;
 
-  const lineOf = node => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+  const lineOf = node =>
+    sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
 
   const collectDeclarationExport = node => {
     if (node.parent !== sf || !hasModifier(node, ts.SyntaxKind.ExportKeyword)) {
@@ -115,6 +126,9 @@ export function analyzeCode(path, text) {
     if (hasModifier(node, ts.SyntaxKind.DefaultKeyword)) {
       exportNames.add('default');
       return;
+    }
+    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+      typeExports.add(node.name.text);
     }
     if (ts.isVariableStatement(node)) {
       for (const decl of node.declarationList.declarations) {
@@ -128,20 +142,31 @@ export function analyzeCode(path, text) {
   };
 
   const visit = node => {
-    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       const clause = node.importClause;
       const names = [];
+      const imported = [];
       let typeOnly = Boolean(clause?.isTypeOnly);
       if (clause?.name) {
         names.push(clause.name.text);
+        imported.push('default');
       }
       const bindings = clause?.namedBindings;
       if (bindings && ts.isNamespaceImport(bindings)) {
         names.push(bindings.name.text);
+        imported.push('*');
       }
       if (bindings && ts.isNamedImports(bindings)) {
         for (const el of bindings.elements) {
           names.push(el.name.text);
+          if (!el.isTypeOnly) {
+            imported.push(
+              el.propertyName ? el.propertyName.text : el.name.text,
+            );
+          }
         }
         if (
           !clause.name &&
@@ -156,32 +181,61 @@ export function analyzeCode(path, text) {
         kind: 'import',
         typeOnly,
         names,
+        imported: typeOnly ? [] : imported,
         line: lineOf(node),
       });
     } else if (ts.isExportDeclaration(node)) {
-      if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-        imports.push({
-          spec: node.moduleSpecifier.text,
-          kind: 'export',
-          typeOnly: Boolean(node.isTypeOnly),
-          names: [],
-          line: lineOf(node),
-        });
-      }
+      const fromSpec =
+        node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)
+          ? node.moduleSpecifier.text
+          : null;
+      const reexported = [];
       if (node.exportClause && ts.isNamedExports(node.exportClause)) {
         for (const el of node.exportClause.elements) {
           exportNames.add(el.name.text);
+          if (node.isTypeOnly || el.isTypeOnly) {
+            typeExports.add(el.name.text);
+          } else if (fromSpec) {
+            reexported.push({
+              name: el.name.text,
+              from: el.propertyName ? el.propertyName.text : el.name.text,
+            });
+          }
         }
+      } else if (node.exportClause && ts.isNamespaceExport(node.exportClause)) {
+        exportNames.add(node.exportClause.name.text);
       } else if (!node.exportClause) {
         exportNames.add('*');
+      }
+      if (fromSpec) {
+        imports.push({
+          spec: fromSpec,
+          kind: 'export',
+          typeOnly: Boolean(node.isTypeOnly),
+          names: [],
+          imported: reexported
+            .map(r => r.from)
+            .concat(node.exportClause ? [] : ['*']),
+          line: lineOf(node),
+        });
+        reexports.push({
+          spec: fromSpec,
+          star: !node.exportClause,
+          names: reexported,
+        });
       }
     } else if (ts.isExportAssignment(node)) {
       exportNames.add('default');
     } else if (ts.isCallExpression(node)) {
       const callee = node.expression;
       const arg0 = node.arguments[0];
-      const literalArg = arg0 && ts.isStringLiteralLike(arg0) ? arg0.text : null;
-      if (ts.isIdentifier(callee) && callee.text === 'require' && literalArg !== null) {
+      const literalArg =
+        arg0 && ts.isStringLiteralLike(arg0) ? arg0.text : null;
+      if (
+        ts.isIdentifier(callee) &&
+        callee.text === 'require' &&
+        literalArg !== null
+      ) {
         imports.push({
           spec: literalArg,
           kind: 'require',
@@ -189,7 +243,10 @@ export function analyzeCode(path, text) {
           names: requireBindingNames(node),
           line: lineOf(node),
         });
-      } else if (callee.kind === ts.SyntaxKind.ImportKeyword && literalArg !== null) {
+      } else if (
+        callee.kind === ts.SyntaxKind.ImportKeyword &&
+        literalArg !== null
+      ) {
         imports.push({
           spec: literalArg,
           kind: 'dynamic',
@@ -214,7 +271,10 @@ export function analyzeCode(path, text) {
       node.expression.text === 'NativeModules'
     ) {
       nativeUses.add(node.name.text);
-    } else if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+    } else if (
+      ts.isJsxOpeningElement(node) ||
+      ts.isJsxSelfClosingElement(node)
+    ) {
       const base = jsxBase(node.tagName);
       if (base) {
         jsxTags.add(base);
@@ -232,10 +292,34 @@ export function analyzeCode(path, text) {
   visit(sf);
 
   const header = parseHeader(text);
+  // A barrel only re-exports, so it runs no code of its own on any thread.
+  const isBarrel =
+    sf.statements.length > 0 &&
+    sf.statements.every(
+      s => ts.isExportDeclaration(s) || ts.isImportDeclaration(s),
+    );
+  const exportsHooks = [...exportNames].some(name => /^use[A-Z]/.test(name));
+  // Exports that only work on the JS thread: React hooks, and components in .tsx files.
+  const isTsx = path.endsWith('.tsx');
+  const reexportedNames = new Set(
+    reexports.flatMap(r => r.names.map(n => n.name)),
+  );
+  const jsOnlyExports = [...exportNames]
+    .filter(n => !typeExports.has(n) && !reexportedNames.has(n))
+    .filter(
+      n =>
+        /^use[A-Z]/.test(n) ||
+        (isTsx && (/^[A-Z][a-z0-9]/.test(n) || n === 'default')),
+    )
+    .sort();
   return {
     lang: 'code',
     purpose: header.purpose,
     thread: header.thread,
+    isBarrel,
+    exportsHooks,
+    jsOnlyExports,
+    reexports,
     imports,
     jsxTags: [...jsxTags].sort(),
     exports: [...exportNames].sort(),
@@ -273,7 +357,13 @@ export function analyzeNative(path, text) {
     for (const m of text.matchAll(/RCT_EXPORT_MODULE\(\s*(\w+)\s*\)/g)) {
       moduleNames.add(m[1]);
     }
-    for (const m of text.matchAll(/\+\s*\(NSString\s*\*\)\s*moduleName\s*\{\s*return\s*@"(\w+)"/g)) {
+    for (const m of text.matchAll(
+      /\+\s*\(NSString\s*\*\)\s*moduleName\s*\{\s*return\s*@"(\w+)"/g,
+    )) {
+      moduleNames.add(m[1]);
+    }
+    // C++ TurboModules: static constexpr auto kModuleName = "Name";
+    for (const m of text.matchAll(/\bkModuleName\s*=\s*"(\w+)"/g)) {
       moduleNames.add(m[1]);
     }
   } else if (lang === 'kotlin' || lang === 'java') {

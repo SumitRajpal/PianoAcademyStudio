@@ -15,8 +15,14 @@ function gitDir(root) {
     if (statSync(dotGit).isDirectory()) {
       return dotGit;
     }
-    const pointer = /^gitdir:\s*(.+)$/m.exec(readFileSync(dotGit, 'utf8'))?.[1]?.trim();
-    return pointer ? (isAbsolute(pointer) ? pointer : join(root, pointer)) : null;
+    const pointer = /^gitdir:\s*(.+)$/m
+      .exec(readFileSync(dotGit, 'utf8'))?.[1]
+      ?.trim();
+    return pointer
+      ? isAbsolute(pointer)
+        ? pointer
+        : join(root, pointer)
+      : null;
   } catch {
     return null;
   }
@@ -30,7 +36,9 @@ export function branch(root) {
   }
   try {
     const head = readFileSync(join(dir, 'HEAD'), 'utf8').trim();
-    return head.startsWith('ref: refs/heads/') ? head.slice(16) : head.slice(0, 7);
+    return head.startsWith('ref: refs/heads/')
+      ? head.slice(16)
+      : head.slice(0, 7);
   } catch {
     return null;
   }
@@ -45,5 +53,8 @@ export function uncommitted(root) {
   return out
     .split('\n')
     .filter(Boolean)
-    .map(line => ({ status: line.slice(0, 2).trim(), path: line.slice(3).replace(/^"|"$/g, '') }));
+    .map(line => ({
+      status: line.slice(0, 2).trim(),
+      path: line.slice(3).replace(/^"|"$/g, ''),
+    }));
 }

@@ -6,9 +6,21 @@
  * - Ethereal additive bloom spots and ground light pools.
  */
 
-import { BlendMode, BlurStyle, PaintStyle, Skia, TileMode, type SkCanvas } from 'react-native-skia';
+import {
+  BlendMode,
+  BlurStyle,
+  Skia,
+  TileMode,
+  type SkCanvas,
+} from 'react-native-skia';
 
-import { blurred, drawGlow, fill, linearGradient, radialGradient, stroke, twoPointConicalGradient } from '../../shared/paperKit';
+import {
+  blurred,
+  drawGlow,
+  fill,
+  stroke,
+  twoPointConicalGradient,
+} from '../../shared/paperKit';
 import { MUSHROOM_LOOK, type MushroomLook } from './mushroomLook';
 
 /** One mushroom: height, cap width, x offset and lean (degrees). */
@@ -19,7 +31,14 @@ const CLUSTER = [
   { x: -2, h: 16, cap: 14, lean: -4 },
 ];
 
-function drawMushroom(canvas: SkCanvas, x: number, h: number, capW: number, lean: number, look: MushroomLook) {
+function drawMushroom(
+  canvas: SkCanvas,
+  x: number,
+  h: number,
+  capW: number,
+  lean: number,
+  look: MushroomLook,
+) {
   canvas.save();
   canvas.translate(x, 0);
   canvas.rotate(lean, 0, 0);
@@ -39,27 +58,40 @@ function drawMushroom(canvas: SkCanvas, x: number, h: number, capW: number, lean
     Skia.Shader.MakeLinearGradient(
       { x: -sw, y: 0 },
       { x: sw, y: 0 },
-      [Skia.Color(look.stem), Skia.Color('#ffffff'), Skia.Color(look.stemShade)],
+      [
+        Skia.Color(look.stem),
+        Skia.Color('#ffffff'),
+        Skia.Color(look.stemShade),
+      ],
       [0.0, 0.35, 1.0],
-      TileMode.Clamp
-    )
+      TileMode.Clamp,
+    ),
   );
   canvas.drawPath(stem, stemPaint);
 
   // 2. Bioluminescent Cap: Volumetric Curved Dome with Internal Translucency
   const cap = Skia.PathBuilder.Make()
     .moveTo(-capW / 2, -h + 2)
-    .cubicTo(-capW / 2, -h - capW * 0.65, capW / 2, -h - capW * 0.65, capW / 2, -h + 2)
+    .cubicTo(
+      -capW / 2,
+      -h - capW * 0.65,
+      capW / 2,
+      -h - capW * 0.65,
+      capW / 2,
+      -h + 2,
+    )
     .quadTo(0, -h - capW * 0.08, -capW / 2, -h + 2)
     .close()
     .build();
 
   // Cap base 3D radial gradient
   const capPaint = twoPointConicalGradient(
-    { x: -capW * 0.15, y: -h - capW * 0.35 }, 0,
-    { x: 0, y: -h - capW * 0.2 }, capW * 0.75,
+    { x: -capW * 0.15, y: -h - capW * 0.35 },
+    0,
+    { x: 0, y: -h - capW * 0.2 },
+    capW * 0.75,
     look.cap,
-    [0.0, 0.45, 1.0]
+    [0.0, 0.45, 1.0],
   );
   canvas.drawPath(cap, capPaint);
 
@@ -67,7 +99,9 @@ function drawMushroom(canvas: SkCanvas, x: number, h: number, capW: number, lean
   const capGlow = Skia.Paint();
   capGlow.setColor(Skia.Color(look.cap[0]));
   capGlow.setAlphaf(0.5);
-  capGlow.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, capW * 0.18, true));
+  capGlow.setMaskFilter(
+    Skia.MaskFilter.MakeBlur(BlurStyle.Normal, capW * 0.18, true),
+  );
   capGlow.setBlendMode(BlendMode.Plus);
   canvas.drawPath(cap, capGlow);
 
@@ -95,11 +129,15 @@ function drawMushroom(canvas: SkCanvas, x: number, h: number, capW: number, lean
   canvas.restore();
 }
 
-export function drawMushroomCluster(canvas: SkCanvas, scale: number, look: MushroomLook = MUSHROOM_LOOK) {
+export function drawMushroomCluster(
+  canvas: SkCanvas,
+  scale: number,
+  look: MushroomLook = MUSHROOM_LOOK,
+) {
   // Ground contact shadow under cluster
   canvas.drawOval(
     { x: -25 * scale, y: -2 * scale, width: 65 * scale, height: 12 * scale },
-    blurred(fill('rgba(2, 6, 12, 0.45)'), 4 * scale)
+    blurred(fill('rgba(2, 6, 12, 0.45)'), 4 * scale),
   );
 
   for (const m of CLUSTER) {
@@ -108,7 +146,25 @@ export function drawMushroomCluster(canvas: SkCanvas, scale: number, look: Mushr
 }
 
 /** The soft light pool the mushrooms cast on the ground around them. */
-export function drawMushroomGlow(canvas: SkCanvas, radius: number, look: MushroomLook = MUSHROOM_LOOK) {
-  drawGlow(canvas, { x: 0, y: -8 }, radius * 1.2, look.glow, look.glowAlpha * 0.65, BlendMode.Plus);
-  drawGlow(canvas, { x: 0, y: -8 }, radius * 0.6, look.glow, look.glowAlpha, BlendMode.Plus);
+export function drawMushroomGlow(
+  canvas: SkCanvas,
+  radius: number,
+  look: MushroomLook = MUSHROOM_LOOK,
+) {
+  drawGlow(
+    canvas,
+    { x: 0, y: -8 },
+    radius * 1.2,
+    look.glow,
+    look.glowAlpha * 0.65,
+    BlendMode.Plus,
+  );
+  drawGlow(
+    canvas,
+    { x: 0, y: -8 },
+    radius * 0.6,
+    look.glow,
+    look.glowAlpha,
+    BlendMode.Plus,
+  );
 }

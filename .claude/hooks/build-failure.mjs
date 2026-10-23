@@ -66,10 +66,14 @@ runHook('build-failure', async (input, { root }) => {
   } catch {
     // No troubleshooting file yet.
   }
-  const error = String(input.error || JSON.stringify(input.tool_response || ''));
+  const error = String(
+    input.error || JSON.stringify(input.tool_response || ''),
+  );
   const hits = parseTroubleshooting(doc).filter(e => e.re.test(error));
   const text = hits.length
-    ? `Known fixes for this build error (docs/troubleshooting.md):\n${hits.map(h => `- ${h.title}: ${h.fix}`).join('\n')}`
+    ? `Known fixes for this build error (docs/troubleshooting.md):\n${hits
+        .map(h => `- ${h.title}: ${h.fix}`)
+        .join('\n')}`
     : 'No known fix in docs/troubleshooting.md matches this build error. Once you solve it, add an entry there (### title, a Signature regex and the Fix) so the next failure gets a hint.';
   return addContext('PostToolUseFailure', text);
 });

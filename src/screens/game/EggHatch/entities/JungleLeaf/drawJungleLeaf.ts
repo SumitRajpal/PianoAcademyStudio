@@ -8,23 +8,40 @@
 
 import { BlendMode, type SkCanvas } from 'react-native-skia';
 
-import { fill, stroke, twoPointConicalGradient } from '../../shared/paperKit';
+import { fill, stroke } from '../../shared/paperKit';
 import { leafPath, leafVeinPath, polar } from '../../shared/paperShapes';
 import { JUNGLE_LEAF_LOOK, type JungleLeafLook } from './jungleLeafLook';
 
-export type JungleLeaf = { angle: number; length: number; width: number; bend: number; color: number };
+export type JungleLeaf = {
+  angle: number;
+  length: number;
+  width: number;
+  bend: number;
+  color: number;
+};
 
-export function drawJungleLeafSpray(canvas: SkCanvas, leaves: JungleLeaf[], look: JungleLeafLook = JUNGLE_LEAF_LOOK) {
+export function drawJungleLeafSpray(
+  canvas: SkCanvas,
+  leaves: JungleLeaf[],
+  look: JungleLeafLook = JUNGLE_LEAF_LOOK,
+) {
   const base = { x: 0, y: 0 };
 
   // Base contact AO shadow
   canvas.drawOval(
     { x: -20, y: -6, width: 40, height: 14 },
-    fill('rgba(1, 3, 6, 0.5)')
+    fill('rgba(1, 3, 6, 0.5)'),
   );
 
   for (const leaf of leaves) {
-    const leafP = leafPath(base, leaf.length, leaf.width, leaf.angle, leaf.bend, 0.45);
+    const leafP = leafPath(
+      base,
+      leaf.length,
+      leaf.width,
+      leaf.angle,
+      leaf.bend,
+      0.45,
+    );
     const leafColor = look.leaves[leaf.color];
 
     // Leaf base fill
@@ -43,10 +60,17 @@ export function drawJungleLeafSpray(canvas: SkCanvas, leaves: JungleLeaf[], look
     // Side veins angling out from the midrib with subtle highlight
     for (let t = 0.2; t < 0.85; t += 0.11) {
       const p = polar(base, leaf.length * t, leaf.angle + leaf.bend * t * 12);
-      const half = leaf.width * 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15));
+      const half =
+        leaf.width * 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15));
       for (const side of [-1, 1]) {
         const q = polar(p, half, leaf.angle + side * 55);
-        canvas.drawLine(p.x, p.y, q.x, q.y, stroke(look.vein, 0.7, look.veinAlpha * 0.8));
+        canvas.drawLine(
+          p.x,
+          p.y,
+          q.x,
+          q.y,
+          stroke(look.vein, 0.7, look.veinAlpha * 0.8),
+        );
       }
     }
   }

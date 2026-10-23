@@ -8,11 +8,16 @@
 
 import { BlendMode, type SkCanvas } from 'react-native-skia';
 
-import { fill, linearGradient, stroke } from '../../shared/paperKit';
+import { linearGradient, stroke } from '../../shared/paperKit';
 import { leafPath, leafVeinPath } from '../../shared/paperShapes';
 import { FALLING_LEAF_LOOK, type FallingLeafLook } from './fallingLeafLook';
 
-export function drawFallingLeaf(canvas: SkCanvas, size: number, variant: number, look: FallingLeafLook = FALLING_LEAF_LOOK) {
+export function drawFallingLeaf(
+  canvas: SkCanvas,
+  size: number,
+  variant: number,
+  look: FallingLeafLook = FALLING_LEAF_LOOK,
+) {
   const base = { x: 0, y: size / 2 };
   const leafP = leafPath(base, size, size * 0.42, -90, 0.3);
   const color = look.leaves[variant % look.leaves.length];
@@ -22,7 +27,7 @@ export function drawFallingLeaf(canvas: SkCanvas, size: number, variant: number,
     { x: 0, y: size / 2 },
     { x: 0, y: -size / 2 },
     [color, '#5ce6c2', color],
-    [0.0, 0.5, 1.0]
+    [0.0, 0.5, 1.0],
   );
   canvas.drawPath(leafP, leafPaint);
 

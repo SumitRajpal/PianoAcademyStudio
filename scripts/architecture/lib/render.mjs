@@ -17,7 +17,10 @@ _Claude keeps this list current: decisions that aren't obvious from file names a
 - \`graph.json\` and the generated sections of this file are rebuilt automatically. Never edit them by hand.
 - Data flows live in [flows.md](flows.md) and are checked against the code.`;
 
-const cell = text => String(text ?? '—').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const cell = text =>
+  String(text ?? '—')
+    .replace(/\|/g, '\\|')
+    .replace(/\n/g, ' ');
 const code = text => `\`${text}\``;
 
 export function extractConventions(doc) {
@@ -39,7 +42,9 @@ export function extractGenerated(doc) {
   }
   const start = doc.indexOf(GEN_START);
   const end = doc.indexOf(GEN_END);
-  return start === -1 || end === -1 ? null : doc.slice(start, end + GEN_END.length);
+  return start === -1 || end === -1
+    ? null
+    : doc.slice(start, end + GEN_END.length);
 }
 
 function listNames(ids, nameOf, max = 6) {
@@ -71,7 +76,10 @@ function fileTree(files) {
         lines.push(`${indent}${label}`);
         continue;
       }
-      while (Object.keys(child).length === 1 && Object.keys(Object.values(child)[0]).length > 0) {
+      while (
+        Object.keys(child).length === 1 &&
+        Object.keys(Object.values(child)[0]).length > 0
+      ) {
         const only = Object.keys(child)[0];
         label = `${label}/${only}`;
         child = child[only];
@@ -92,7 +100,9 @@ function mermaid(graph) {
     if (!mods.length) {
       continue;
     }
-    lines.push(`  subgraph plane_${plane.id}["${plane.label} · ${plane.thread}"]`);
+    lines.push(
+      `  subgraph plane_${plane.id}["${plane.label} · ${plane.thread}"]`,
+    );
     for (const m of mods) {
       lines.push(`    ${ids.get(m.id)}["${m.name.replace(/"/g, "'")}"]`);
     }
@@ -105,7 +115,11 @@ function mermaid(graph) {
       continue;
     }
     const approxOnly = e.kinds.every(k => k === 'calls-native');
-    const label = e.kinds.includes('renders') ? '|renders|' : e.kinds.includes('calls-native') ? '|native|' : '';
+    const label = e.kinds.includes('renders')
+      ? '|renders|'
+      : e.kinds.includes('calls-native')
+      ? '|native|'
+      : '';
     lines.push(`  ${from} ${approxOnly ? '-.->' : '-->'}${label} ${to}`);
   }
   return lines.join('\n');
@@ -141,27 +155,44 @@ export function renderArchitectureDoc(graph, flows, problems, existingDoc) {
   out.push('## 1. Overview', '');
   out.push('| Plane | Thread | Modules | Holds |', '|---|---|---|---|');
   for (const p of graph.planes) {
-    out.push(`| ${p.label} | ${p.thread} | ${p.modules.length} | ${cell(p.description)} |`);
+    out.push(
+      `| ${p.label} | ${p.thread} | ${p.modules.length} | ${cell(
+        p.description,
+      )} |`,
+    );
   }
   out.push('');
   out.push(
     problems.length
-      ? `**${problems.length} problem${problems.length === 1 ? '' : 's'}** — see section 5, or run \`npm run arch:check\`.`
+      ? `**${problems.length} problem${
+          problems.length === 1 ? '' : 's'
+        }** — see section 5, or run \`npm run arch:check\`.`
       : '**No problems.** Every rule passes, every module has a purpose, and every flow matches the code.',
     '',
   );
 
   out.push('## 2. Modules', '');
-  out.push('| Module | Kind | Plane | Thread | Purpose | Uses | Used by |', '|---|---|---|---|---|---|---|');
+  out.push(
+    '| Module | Kind | Plane | Thread | Purpose | Uses | Used by |',
+    '|---|---|---|---|---|---|---|',
+  );
   for (const m of graph.modules) {
     out.push(
-      `| ${code(m.name)} | ${m.kind} | ${m.plane ?? '—'} | ${m.thread} | ${cell(m.purpose || '_missing_')} | ${listNames(uses.get(m.id) || [], nameOf)} | ${listNames(usedBy.get(m.id) || [], nameOf)} |`,
+      `| ${code(m.name)} | ${m.kind} | ${m.plane ?? '—'} | ${m.thread} | ${cell(
+        m.purpose || '_missing_',
+      )} | ${listNames(uses.get(m.id) || [], nameOf)} | ${listNames(
+        usedBy.get(m.id) || [],
+        nameOf,
+      )} |`,
     );
   }
   out.push('');
 
   out.push('## 3. Connections', '');
-  out.push('Solid arrows are imports (labelled when a component is rendered); dashed arrows are JS → native calls.', '');
+  out.push(
+    'Solid arrows are imports (labelled when a component is rendered); dashed arrows are JS → native calls.',
+    '',
+  );
   out.push('```mermaid', mermaid(graph), '```', '');
 
   out.push('## 4. Flows', '');

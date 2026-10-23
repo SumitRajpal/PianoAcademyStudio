@@ -10,4 +10,8 @@ import { renderSummary } from './lib/summary.mjs';
 
 const { values, root } = parseArgs();
 const { graph, flows, problems } = await buildAndWrite({ root });
-console.log(renderSummary(graph, flows, problems, { budget: Number(values.budget) || 6000 }));
+console.log(
+  renderSummary(graph, flows, problems, {
+    budget: Number(values.budget) || 6000,
+  }),
+);

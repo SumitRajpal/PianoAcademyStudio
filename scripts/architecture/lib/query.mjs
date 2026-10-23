@@ -38,14 +38,23 @@ export function resolveTarget(idx, query) {
   const lower = q.toLowerCase();
   const byName = [...idx.modules.values()].filter(m => {
     const name = m.name.toLowerCase();
-    return name === lower || name.replace(CODE_EXT, '') === lower || name.endsWith(`/${lower}`);
+    return (
+      name === lower ||
+      name.replace(CODE_EXT, '') === lower ||
+      name.endsWith(`/${lower}`)
+    );
   });
   if (byName.length) {
     return { modules: byName };
   }
   const byExport = idx.graph.files.filter(f => (f.exports || []).includes(q));
   if (byExport.length) {
-    return { modules: [...new Set(byExport.map(f => f.module))].map(id => idx.modules.get(id)), exportOf: q };
+    return {
+      modules: [...new Set(byExport.map(f => f.module))].map(id =>
+        idx.modules.get(id),
+      ),
+      exportOf: q,
+    };
   }
   return { modules: [] };
 }
@@ -53,8 +62,12 @@ export function resolveTarget(idx, query) {
 const label = m => `${m.name} [${m.kind} · ${m.plane ?? '—'} · ${m.thread}]`;
 
 export function describeModule(idx, m) {
-  const uses = (idx.out.get(m.id) || []).map(e => `${idx.modules.get(e.to)?.name ?? e.to} (${e.kinds.join(', ')})`);
-  const usedBy = (idx.inc.get(m.id) || []).map(e => `${idx.modules.get(e.from)?.name ?? e.from} (${e.kinds.join(', ')})`);
+  const uses = (idx.out.get(m.id) || []).map(
+    e => `${idx.modules.get(e.to)?.name ?? e.to} (${e.kinds.join(', ')})`,
+  );
+  const usedBy = (idx.inc.get(m.id) || []).map(
+    e => `${idx.modules.get(e.from)?.name ?? e.from} (${e.kinds.join(', ')})`,
+  );
   const lines = [`${label(m)}`, `  purpose: ${m.purpose || '(missing)'}`];
   lines.push(`  uses: ${uses.length ? uses.join('; ') : '—'}`);
   lines.push(`  used by: ${usedBy.length ? usedBy.join('; ') : '—'}`);
@@ -83,7 +96,9 @@ export function impact(idx, startId) {
   seen.delete(startId);
   return [...seen.entries()]
     .map(([id, depth]) => ({ module: idx.modules.get(id), depth }))
-    .sort((a, b) => a.depth - b.depth || a.module.id.localeCompare(b.module.id));
+    .sort(
+      (a, b) => a.depth - b.depth || a.module.id.localeCompare(b.module.id),
+    );
 }
 
 export function shortestPath(idx, fromId, toId, { directed = true } = {}) {
@@ -96,7 +111,9 @@ export function shortestPath(idx, fromId, toId, { directed = true } = {}) {
     }
     const next = (idx.out.get(id) || []).map(e => ({ id: e.to, e, dir: '→' }));
     if (!directed) {
-      next.push(...(idx.inc.get(id) || []).map(e => ({ id: e.from, e, dir: '←' })));
+      next.push(
+        ...(idx.inc.get(id) || []).map(e => ({ id: e.from, e, dir: '←' })),
+      );
     }
     for (const n of next) {
       if (!prev.has(n.id)) {
@@ -120,20 +137,29 @@ export function shortestPath(idx, fromId, toId, { directed = true } = {}) {
 export function hotPath(idx, flows, config) {
   const resolveStep = makeStepResolver(idx.graph, config);
   const audioFlows = flows.filter(f =>
-    f.steps.some(s => ['mic', 'speaker', 'headphones', 'midi'].includes(s.toLowerCase())),
+    f.steps.some(s =>
+      ['mic', 'speaker', 'headphones', 'midi'].includes(s.toLowerCase()),
+    ),
   );
   if (!audioFlows.length) {
     return 'No flow starts at the mic or playback yet. Describe it in docs/architecture/flows.md, e.g.\n## note-feedback\n```flow\nmic -> audio/capture -> audio/detection -> sync/events -> motion/drivers/keyGlow -> motion/scenes/Keyboard -> screen\n```';
   }
   const lines = [];
   for (const f of audioFlows) {
-    lines.push(`Flow ${f.name}:`);
+    lines.push(
+      `Flow ${f.name}:${f.jsOk ? ' (crosses the JS thread on purpose)' : ''}`,
+    );
     let sawAudio = false;
     for (const step of f.steps) {
       const r = resolveStep(step);
       if (r.module) {
         const m = idx.modules.get(r.module);
-        const warn = sawAudio && m.thread === 'js' ? '   ⚠ JS thread inside the hot path' : '';
+        const onJs = sawAudio && m.thread === 'js';
+        const warn = onJs
+          ? f.jsOk
+            ? '   (JS thread, on purpose)'
+            : '   ⚠ JS thread inside the hot path'
+          : '';
         if (m.thread === 'audio') {
           sawAudio = true;
         }

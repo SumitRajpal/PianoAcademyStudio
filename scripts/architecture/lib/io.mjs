@@ -1,7 +1,15 @@
 /** File helpers: atomic writes, a simple lock, and the analysis cache. */
 
 import { createHash } from 'node:crypto';
-import { mkdir, open, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  open,
+  readFile,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 export async function readText(path) {
@@ -18,7 +26,9 @@ export async function writeIfChanged(path, content) {
     return false;
   }
   await mkdir(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp-${process.pid}-${Math.random().toString(36).slice(2)}`;
+  const tmp = `${path}.tmp-${process.pid}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
   await writeFile(tmp, content);
   await rename(tmp, path);
   return true;
@@ -81,5 +91,8 @@ export async function loadCache(root, toolHash) {
 }
 
 export async function saveCache(root, cache) {
-  await writeIfChanged(join(cacheDir(root), 'analysis.json'), JSON.stringify(cache));
+  await writeIfChanged(
+    join(cacheDir(root), 'analysis.json'),
+    JSON.stringify(cache),
+  );
 }

@@ -15,19 +15,35 @@ import { parseArgs } from './lib/cli.mjs';
 const { flags, root } = parseArgs();
 const ci = flags.has('ci');
 const { problems, stale } = await buildAndWrite({ root, write: !ci });
-const failing = flags.has('rules-only') ? problems.filter(p => p.type === 'violation') : problems;
+const failing = flags.has('rules-only')
+  ? problems.filter(p => p.type === 'violation')
+  : problems;
 const staleFail = ci && stale;
 
 if (flags.has('json')) {
-  console.log(JSON.stringify({ ok: !failing.length && !staleFail, stale, problems }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ok: !failing.length && !staleFail, stale, problems },
+      null,
+      2,
+    ),
+  );
 } else {
   if (staleFail) {
-    console.log('✗ docs/architecture is out of date. Run `npm run arch:build` and commit the result.');
+    console.log(
+      '✗ docs/architecture is out of date. Run `npm run arch:build` and commit the result.',
+    );
   }
   if (!problems.length) {
-    console.log('✓ architecture: every rule passes, every module has a purpose, every flow matches the code');
+    console.log(
+      '✓ architecture: every rule passes, every module has a purpose, every flow matches the code',
+    );
   } else {
-    console.log(`architecture: ${problems.length} problem${problems.length === 1 ? '' : 's'}`);
+    console.log(
+      `architecture: ${problems.length} problem${
+        problems.length === 1 ? '' : 's'
+      }`,
+    );
     for (const p of problems) {
       console.log(`- [${p.type}] ${p.message}`);
     }

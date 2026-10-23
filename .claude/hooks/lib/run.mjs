@@ -20,30 +20,52 @@ function fake(name) {
   }
   try {
     const all = JSON.parse(process.env.CLAUDE_HOOKS_FAKE);
-    return all[name] ? { code: 0, stdout: '', stderr: '', timedOut: false, ...all[name] } : null;
+    return all[name]
+      ? { code: 0, stdout: '', stderr: '', timedOut: false, ...all[name] }
+      : null;
   } catch {
     return null;
   }
 }
 
-export function runTool(root, name, args, { timeoutMs = 30000 } = {}) {
+/**
+ * name: a known tool (prettier, eslint, tsc, jest, node-test), or any label together
+ * with opts.command (e.g. "bash") to run a project script.
+ */
+export function runTool(
+  root,
+  name,
+  args,
+  { timeoutMs = 30000, command: custom } = {},
+) {
   const faked = fake(name);
   if (faked) {
     return Promise.resolve(faked);
   }
   let command;
   let fullArgs = args;
-  if (name === 'node-test') {
+  if (custom) {
+    command = custom;
+  } else if (name === 'node-test') {
     command = process.execPath;
     fullArgs = ['--test', ...args];
   } else {
     command = join(root, BINARIES[name]);
     if (!existsSync(command)) {
-      return Promise.resolve({ code: 0, stdout: '', stderr: `${name} not installed`, timedOut: false, missing: true });
+      return Promise.resolve({
+        code: 0,
+        stdout: '',
+        stderr: `${name} not installed`,
+        timedOut: false,
+        missing: true,
+      });
     }
   }
   return new Promise(resolve => {
-    const child = spawn(command, fullArgs, { cwd: root, env: { ...process.env, FORCE_COLOR: '0', CI: '1' } });
+    const child = spawn(command, fullArgs, {
+      cwd: root,
+      env: { ...process.env, FORCE_COLOR: '0', CI: '1' },
+    });
     let stdout = '';
     let stderr = '';
     let timedOut = false;

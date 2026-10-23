@@ -8,7 +8,11 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
 
 export function projectDir(input) {
-  return (process.env.CLAUDE_PROJECT_DIR || input?.cwd || process.cwd()).replace(/\/+$/, '');
+  return (
+    process.env.CLAUDE_PROJECT_DIR ||
+    input?.cwd ||
+    process.cwd()
+  ).replace(/\/+$/, '');
 }
 
 /** Repo-relative POSIX path, or null when the path is outside the project. */
@@ -46,7 +50,8 @@ async function readStdin() {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-const write = (stream, text) => new Promise(resolve => (text ? stream.write(text, resolve) : resolve()));
+const write = (stream, text) =>
+  new Promise(resolve => (text ? stream.write(text, resolve) : resolve()));
 
 /**
  * Handler results:
@@ -82,7 +87,9 @@ export async function runHook(name, handler) {
 }
 
 export const addContext = (event, text) => ({
-  json: { hookSpecificOutput: { hookEventName: event, additionalContext: text } },
+  json: {
+    hookSpecificOutput: { hookEventName: event, additionalContext: text },
+  },
 });
 
 export const deny = reason => ({
@@ -112,11 +119,17 @@ export const truncate = (text, max) =>
 
 /** Keeps the first `max` lines of command output. */
 export function headLines(text, max = 20) {
-  const lines = String(text || '').trim().split('\n');
-  return lines.length > max ? [...lines.slice(0, max), `… +${lines.length - max} more lines`].join('\n') : lines.join('\n');
+  const lines = String(text || '')
+    .trim()
+    .split('\n');
+  return lines.length > max
+    ? [...lines.slice(0, max), `… +${lines.length - max} more lines`].join('\n')
+    : lines.join('\n');
 }
 
 /** Lazily imports a module from scripts/architecture/lib (the heavy ones load TypeScript). */
 export function archLib(name) {
-  return import(new URL(`../../../scripts/architecture/lib/${name}`, import.meta.url).href);
+  return import(
+    new URL(`../../../scripts/architecture/lib/${name}`, import.meta.url).href
+  );
 }

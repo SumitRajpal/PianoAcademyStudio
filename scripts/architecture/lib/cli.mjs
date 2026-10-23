@@ -16,6 +16,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
       positional.push(arg);
     }
   }
-  const root = values.root || fileURLToPath(new URL('../../..', import.meta.url));
+  const root =
+    values.root || fileURLToPath(new URL('../../..', import.meta.url));
   return { flags, values, positional, root: root.replace(/\/$/, '') };
 }

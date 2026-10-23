@@ -16,7 +16,9 @@ function latestHandoff(root) {
   if (!existsSync(dir)) {
     return null;
   }
-  const notes = readdirSync(dir).filter(n => n.endsWith('.md')).sort();
+  const notes = readdirSync(dir)
+    .filter(n => n.endsWith('.md'))
+    .sort();
   const name = notes.at(-1);
   return name ? { name, text: readFileSync(join(dir, name), 'utf8') } : null;
 }
@@ -30,7 +32,12 @@ runHook('session-start', async (input, { root }) => {
 
   const note = latestHandoff(root);
   if (note) {
-    parts.push(`Last handoff note (.claude/handoff/${note.name}):\n${truncate(note.text.trim(), 1500)}`);
+    parts.push(
+      `Last handoff note (.claude/handoff/${note.name}):\n${truncate(
+        note.text.trim(),
+        1500,
+      )}`,
+    );
   }
 
   const b = branch(root);
@@ -38,14 +45,25 @@ runHook('session-start', async (input, { root }) => {
   if (b) {
     const list = (changes || []).map(c => c.path);
     parts.push(
-      `Git: branch ${b} · ${list.length ? `${list.length} uncommitted file${list.length === 1 ? '' : 's'}: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}` : 'no uncommitted changes'}`,
+      `Git: branch ${b} · ${
+        list.length
+          ? `${list.length} uncommitted file${
+              list.length === 1 ? '' : 's'
+            }: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}`
+          : 'no uncommitted changes'
+      }`,
     );
   }
 
   if (input.source === 'compact') {
     const path = precompactPath(root, input.session_id);
     if (existsSync(path)) {
-      parts.push(`Working state saved before compaction:\n${readFileSync(path, 'utf8').trim()}`);
+      parts.push(
+        `Working state saved before compaction:\n${readFileSync(
+          path,
+          'utf8',
+        ).trim()}`,
+      );
     }
   }
 

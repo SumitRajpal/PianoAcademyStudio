@@ -4,10 +4,15 @@ import { analyzeCode, analyzeNative, parseHeader } from '../lib/analyze.mjs';
 import { matches } from '../lib/glob.mjs';
 
 test('header tags: purpose spans lines, thread is read', () => {
-  const h = parseHeader('/**\n * Title\n * @purpose Turns note events\n *   into glow values.\n * @thread ui\n */\nexport {};\n');
+  const h = parseHeader(
+    '/**\n * Title\n * @purpose Turns note events\n *   into glow values.\n * @thread ui\n */\nexport {};\n',
+  );
   assert.equal(h.purpose, 'Turns note events into glow values.');
   assert.equal(h.thread, 'ui');
-  assert.deepEqual(parseHeader('const a = 1;\n'), { purpose: null, thread: null });
+  assert.deepEqual(parseHeader('const a = 1;\n'), {
+    purpose: null,
+    thread: null,
+  });
 });
 
 test('imports of every form, with type-only and names', () => {
@@ -52,11 +57,17 @@ function tick() { 'worklet'; return 1; }
   assert.equal(a.hasWorklets, true);
   assert.deepEqual(a.nativeSpecs, ['AudioEngine']);
   assert.deepEqual(a.nativeUses, ['KeepAwake']);
-  assert.equal(analyzeCode('src/b.ts', 'useAnimatedStyle(() => ({}));').hasWorklets, true);
+  assert.equal(
+    analyzeCode('src/b.ts', 'useAnimatedStyle(() => ({}));').hasWorklets,
+    true,
+  );
 });
 
 test('native files: module names, includes, Kotlin imports', () => {
-  const objc = analyzeNative('ios/AudioEngine.mm', '#import "AudioEngine.h"\nRCT_EXPORT_MODULE(AudioEngine)\n');
+  const objc = analyzeNative(
+    'ios/AudioEngine.mm',
+    '#import "AudioEngine.h"\nRCT_EXPORT_MODULE(AudioEngine)\n',
+  );
   assert.deepEqual(objc.includes, ['AudioEngine.h']);
   assert.deepEqual(objc.moduleNames, ['AudioEngine']);
   const kt = analyzeNative(
@@ -66,7 +77,15 @@ test('native files: module names, includes, Kotlin imports', () => {
   assert.equal(kt.pkg, 'com.x');
   assert.deepEqual(kt.imports, ['com.x.dsp.Pitch']);
   assert.deepEqual(kt.moduleNames, ['AudioEngine']);
-  assert.deepEqual(analyzeNative('ios/A.swift', '@objc(AudioEngine)\nclass A {}').moduleNames, ['AudioEngine']);
+  assert.deepEqual(
+    analyzeNative('ios/A.swift', '@objc(AudioEngine)\nclass A {}').moduleNames,
+    ['AudioEngine'],
+  );
+  const cxx = analyzeNative(
+    'src/x/shared/Engine.h',
+    'struct E { static constexpr auto kModuleName = "NativePianoEngine"; };',
+  );
+  assert.deepEqual(cxx.moduleNames, ['NativePianoEngine']);
 });
 
 test('glob semantics', () => {

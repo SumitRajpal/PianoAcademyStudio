@@ -5,11 +5,23 @@
  * Design: docs/claude-setup/DESIGN.md (sections 3 and 4).
  */
 
+// The note-detection engine (audio by role) lives inside PianoMaster.
+const ENGINE = 'src/motion/scenes/PianoMaster/CorePianoNotesDetection';
+// Game scenes keep their per-frame drawing next to the screen.
+const GAME_MOTION = [
+  'src/screens/game/*/scene/**',
+  'src/screens/game/*/entities/**',
+  'src/screens/game/*/shared/**',
+  'src/screens/game/*/*Design.ts',
+];
+const MOTION_CODE = ['src/motion/**', ...GAME_MOTION];
+
 export default {
   // Files and folders scanned for code. Everything else is ignored.
   roots: ['App.tsx', 'index.js', 'src', 'native', 'ios', 'android'],
 
   exclude: [
+    `${ENGINE}/test/**`,
     '**/node_modules/**',
     'ios/Pods/**',
     '**/build/**',
@@ -34,39 +46,56 @@ export default {
   // Platform projects shown as single modules, with fixed purposes.
   platformModules: {
     ios: 'iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code',
-    android: 'Android app project: Gradle build, MainActivity, manifest and native Android code',
+    android:
+      'Android app project: Gradle build, MainActivity, manifest and native Android code',
   },
 
-  // First match wins. `thread` is the default for files in the plane; a file can
-  // override it with an `@thread ui|js|audio|native|any` header tag.
+  // Planes are assigned by role, not folder (owner's choice, 2026-10-23). First match wins.
+  // `thread` is the default for files in the plane; a file can override it with an
+  // `@thread ui|js|audio|native|any` header tag.
   planes: [
-    {
-      id: 'audio',
-      label: 'AUDIO',
-      match: ['src/audio/**'],
-      thread: 'audio',
-      description: 'mic capture, playback, DSP, onset and pitch detection (native audio thread)',
-    },
     {
       id: 'sync',
       label: 'SYNC',
-      match: ['src/sync/**'],
+      match: [
+        'src/sync/**',
+        `${ENGINE}/liveKeys.ts`,
+        `${ENGINE}/noteEventBus.ts`,
+        `${ENGINE}/shared/LiveKeys.h`,
+      ],
       thread: 'any',
-      description: 'shared clock, latency compensation, event stream (lock-free)',
+      description:
+        'note events between threads: the lock-free live-key table the UI thread reads every frame, and the JS event bus',
+    },
+    {
+      id: 'audio',
+      label: 'AUDIO',
+      match: [
+        'src/audio/**',
+        `${ENGINE}/**`,
+        'ios/PianoAcademyStudio/IosAudioInput.*',
+        'ios/PianoAcademyStudio/NativePianoEngineProvider.*',
+        'android/app/src/main/jni/**',
+      ],
+      thread: 'audio',
+      description:
+        'mic capture and the C++ note engine: onset, pitch and chord detection, calibration',
     },
     {
       id: 'motion',
       label: 'MOTION',
-      match: ['src/motion/**'],
+      match: MOTION_CODE,
       thread: 'ui',
-      description: 'animation drivers, scenes and rendering (UI thread + GPU)',
+      description:
+        'piano visuals and game scenes drawn with Skia (UI thread + GPU)',
     },
     {
       id: 'shared',
       label: 'SHARED',
       match: ['src/shared/**'],
       thread: 'any',
-      description: 'types, utilities and music-theory tables usable from any thread',
+      description:
+        'types, utilities and music-theory tables usable from any thread',
     },
     {
       id: 'platform',
@@ -80,13 +109,29 @@ export default {
       label: 'APP',
       match: ['src/**', 'App.tsx', 'index.js'],
       thread: 'js',
-      description: 'screens, navigation, lessons, scoring, progress, storage (JS thread)',
+      description:
+        'screens, navigation, lessons, scoring, progress, storage (JS thread)',
+    },
+  ],
+
+  // Thread by role, checked after a file's own @thread tag (first match wins). Files not
+  // listed get: barrel → any, React component or hook → js, otherwise the plane default.
+  threads: [
+    // Looks, designs and types are plain data: usable from worklets and React alike.
+    { match: ['**/*Look.ts', '**/*Design.ts', '**/types.ts'], thread: 'any' },
+    // The engine's TypeScript side (TurboModule wrapper, hooks, event bus, calibration guide)
+    // runs on the JS thread. liveKeys.ts reads the native key table from any thread.
+    {
+      match: [`${ENGINE}/**/*.ts`, 'src/audio/**/*.ts'],
+      except: [`${ENGINE}/liveKeys.ts`],
+      thread: 'js',
     },
   ],
 
   // Module kinds by module id (first match wins). Default kind: "module".
   kinds: [
-    { match: 'src/screens/*', kind: 'screen' },
+    { match: ENGINE, kind: 'engine' },
+    { match: ['src/screens/*', 'src/screens/game/*'], kind: 'screen' },
     { match: 'src/motion/scenes/*', kind: 'scene' },
     { match: 'src/motion/drivers/*', kind: 'driver' },
     { match: 'src/state/*', kind: 'store' },
@@ -98,7 +143,16 @@ export default {
   aliases: {},
 
   // Flow steps that are outside the code (docs/architecture/flows.md).
-  flowExternals: ['mic', 'speaker', 'headphones', 'screen', 'user', 'midi', 'storage', 'network'],
+  flowExternals: [
+    'mic',
+    'speaker',
+    'headphones',
+    'screen',
+    'user',
+    'midi',
+    'storage',
+    'network',
+  ],
 
   // Connection rules (design section 3.4). Rules with no matching files do nothing.
   rules: [
@@ -107,15 +161,16 @@ export default {
       type: 'forbid-imports',
       description: 'Screens never touch audio internals or native modules.',
       from: ['src/screens/**'],
-      to: ['src/audio/**', 'native/**'],
-      except: ['src/audio/index.{ts,tsx}'],
-      fix: 'Use the public API in src/audio/index.ts, or move the logic into a feature.',
+      to: ['src/audio/**', 'native/**', `${ENGINE}/**`],
+      except: ['src/audio/index.{ts,tsx}', `${ENGINE}/index.ts`],
+      fix: 'Use the public API (PianoMaster, or the engine’s index.ts), or move the logic into a feature.',
     },
     {
       id: 'public-api-only',
       type: 'public-api',
-      description: 'Features and audio are imported only through their public index.ts.',
-      scope: ['src/features/*', 'src/audio'],
+      description:
+        'Features and the note engine are imported only through their public index.ts.',
+      scope: ['src/features/*', 'src/audio', ENGINE],
       fix: 'Import from the module folder (its index.ts) and export what you need there.',
     },
     {
@@ -132,30 +187,45 @@ export default {
       type: 'forbid-imports',
       description: 'Audio code has no UI imports.',
       from: ['src/audio/**'],
-      to: ['src/screens/**', 'src/ui/**', 'src/motion/**', 'src/features/**', 'App.tsx'],
+      to: [
+        'src/screens/**',
+        'src/ui/**',
+        'src/motion/**',
+        'src/features/**',
+        'App.tsx',
+      ],
       fix: 'Publish events through src/sync; let the UI subscribe.',
     },
     {
       id: 'motion-no-js-hop',
       type: 'forbid-pattern',
-      description: 'Code that runs every frame in motion never hands work back to the JS thread.',
-      files: ['src/motion/**'],
+      description:
+        'Code that runs every frame in motion never hands work back to the JS thread.',
+      files: MOTION_CODE,
+      except: [`${ENGINE}/**`],
       pattern: '\\b(?:runOnJS|scheduleOnRN|runOnJSThread)\\s*\\(',
-      fix: 'Keep per-frame work in worklets; send summaries to the app from sync/ at a low rate.',
+      fix: 'Keep per-frame work in worklets; let JS listen through the note event bus instead.',
     },
     {
       id: 'motion-tokens',
       type: 'forbid-pattern',
-      description: 'Motion code takes durations and easing from tokens, not hard-coded numbers.',
-      files: ['src/motion/**'],
-      except: ['src/motion/tokens/**'],
+      description:
+        'Motion code takes durations and easing from its look or design file (xLook.ts, *Design.ts), not hard-coded numbers.',
+      files: MOTION_CODE,
+      except: [
+        'src/motion/tokens/**',
+        '**/*Look.ts',
+        '**/*Design.ts',
+        `${ENGINE}/**`,
+      ],
       pattern: '\\b(?:duration|delay|damping|stiffness|mass)\\s*:\\s*-?\\d',
-      fix: 'Add or reuse a token in src/motion/tokens and reference it.',
+      fix: 'Move the number into the component’s xLook.ts (or the scene’s *Design.ts) and reference it.',
     },
     {
       id: 'thread-boundary',
       type: 'thread-boundary',
-      description: 'Code on the UI or audio thread never imports JS-thread code.',
+      description:
+        'Code on the UI or audio thread never imports JS-thread code.',
       fromThreads: ['ui', 'audio'],
       toThreads: ['js'],
       fix: 'Move the shared piece to src/shared or src/sync (thread: any).',

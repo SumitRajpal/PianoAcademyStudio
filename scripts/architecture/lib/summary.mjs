@@ -1,9 +1,16 @@
 /**
  * The compact architecture map Claude sees at session start (design 4.4).
+ * Families of small sibling modules (4 or more under one folder, such as the notation
+ * symbols) fold onto one line; their purposes are one `/arch show <x>` away.
  * Trimmed to a character budget: modules first, then flows, then problems.
  */
 
-const truncate = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+const truncate = (text, max) =>
+  text.length > max ? `${text.slice(0, max - 1)}…` : text;
+const parentOf = name =>
+  name.includes('/') ? name.slice(0, name.lastIndexOf('/')) : '';
+const leafOf = name => name.slice(name.lastIndexOf('/') + 1);
+const FAMILY_MIN = 4;
 
 export function renderSummary(graph, flows, problems, { budget = 6000 } = {}) {
   if (!graph) {
@@ -15,12 +22,38 @@ export function renderSummary(graph, flows, problems, { budget = 6000 } = {}) {
     if (!deps.has(e.from)) {
       deps.set(e.from, []);
     }
-    deps.get(e.from).push(nameOf(e.to));
+    deps.get(e.from).push(e.to);
   }
   const violations = problems.filter(p => p.type === 'violation').length;
-  const header = `Architecture map · ${graph.modules.length} modules · ${violations} rule violation${violations === 1 ? '' : 's'} · ${problems.length ? `${problems.length} problem${problems.length === 1 ? '' : 's'}` : 'no problems'}`;
+  const header = `Architecture map · ${
+    graph.modules.length
+  } modules · ${violations} rule violation${violations === 1 ? '' : 's'} · ${
+    problems.length
+      ? `${problems.length} problem${problems.length === 1 ? '' : 's'}`
+      : 'no problems'
+  }`;
 
-  const nameWidth = Math.min(32, Math.max(12, ...graph.modules.map(m => m.name.length)) + 2);
+  // Families: FAMILY_MIN or more leaf modules (nothing nested under them) in one folder
+  // and one plane, such as the notation symbols. Modules with children stay on their own line.
+  const hasChildren = new Set(graph.modules.map(m => parentOf(m.name)));
+  const familyKey = m => `${m.plane}\u0000${parentOf(m.name)}`;
+  const familySize = new Map();
+  for (const m of graph.modules) {
+    if (parentOf(m.name) && !hasChildren.has(m.name)) {
+      familySize.set(familyKey(m), (familySize.get(familyKey(m)) || 0) + 1);
+    }
+  }
+  const inFamily = m =>
+    parentOf(m.name) !== '' &&
+    !hasChildren.has(m.name) &&
+    familySize.get(familyKey(m)) >= FAMILY_MIN;
+  const memberList = members => {
+    const names = members.map(m => leafOf(m.name));
+    return names.length > 12
+      ? `${names.slice(0, 12).join(', ')}, +${names.length - 12} more`
+      : names.join(', ');
+  };
+
   const moduleLines = (withDeps, perPlaneLimit) => {
     const lines = [];
     for (const plane of graph.planes) {
@@ -28,25 +61,73 @@ export function renderSummary(graph, flows, problems, { budget = 6000 } = {}) {
       if (!mods.length) {
         continue;
       }
-      const shown = perPlaneLimit ? mods.slice(0, perPlaneLimit) : mods;
-      shown.forEach((m, i) => {
+      const rows = [];
+      const families = new Map();
+      for (const m of mods) {
+        if (inFamily(m)) {
+          const p = parentOf(m.name);
+          if (!families.has(p)) {
+            families.set(p, []);
+            rows.push({ family: p });
+          }
+          families.get(p).push(m);
+        } else {
+          rows.push({ module: m });
+        }
+      }
+      const shown = perPlaneLimit ? rows.slice(0, perPlaneLimit) : rows;
+      const width = Math.min(
+        44,
+        Math.max(
+          14,
+          ...shown.filter(r => r.module).map(r => r.module.name.length),
+        ) + 2,
+      );
+      shown.forEach((row, i) => {
         const label = (i === 0 ? plane.label : '').padEnd(9);
-        const purpose = truncate(m.purpose || '(no purpose yet)', 46).padEnd(47);
-        const d = withDeps && deps.get(m.id)?.length ? ` → ${truncate(deps.get(m.id).join(', '), 40)}` : '';
-        lines.push(`${label}${m.name.padEnd(nameWidth)}${purpose}[${m.thread}]${d}`.trimEnd());
+        if (row.family) {
+          const members = families.get(row.family);
+          const threads = [...new Set(members.map(m => m.thread))].join('/');
+          lines.push(
+            `${label}${row.family}/ {${memberList(members)}} [${threads}]`,
+          );
+          return;
+        }
+        const m = row.module;
+        const name =
+          m.name.length >= width ? `${m.name}  ` : m.name.padEnd(width);
+        const purpose = truncate(m.purpose || '(no purpose yet)', 60);
+        const d =
+          withDeps && deps.get(m.id)?.length
+            ? ` → ${truncate(
+                deps
+                  .get(m.id)
+                  .map(id => leafOf(nameOf(id)))
+                  .join(', '),
+                48,
+              )}`
+            : '';
+        lines.push(`${label}${name}${purpose} [${m.thread}]${d}`.trimEnd());
       });
-      if (shown.length < mods.length) {
-        lines.push(`${''.padEnd(9)}… +${mods.length - shown.length} more (/arch)`);
+      if (shown.length < rows.length) {
+        lines.push(
+          `${''.padEnd(9)}… +${rows.length - shown.length} more (/arch)`,
+        );
       }
     }
     return lines;
   };
-  const flowLines = flows.map(f => `Flow ${f.name}: ${f.steps.join(' → ')}`);
-  const problemLines = problems.slice(0, 6).map(p => `! ${truncate(p.message, 160)}`);
+  const flowLines = flows.map(
+    f => `Flow ${f.name}: ${f.steps.map(s => leafOf(s)).join(' → ')}`,
+  );
+  const problemLines = problems
+    .slice(0, 6)
+    .map(p => `! ${truncate(p.message, 160)}`);
   if (problems.length > 6) {
     problemLines.push(`! … +${problems.length - 6} more (/arch check)`);
   }
-  const footer = 'More: /arch who-uses <x> · deps <x> · impact <x> · path <a> <b> · hot-path · check';
+  const footer =
+    'Folded families: /arch show <name> for each part. More: /arch who-uses <x> · deps <x> · impact <x> · path <a> <b> · hot-path · check';
 
   const attempts = [
     [moduleLines(true, 0), flowLines, problemLines],
@@ -66,5 +147,8 @@ export function renderSummary(graph, flows, problems, { budget = 6000 } = {}) {
       return text;
     }
   }
-  return truncate([header, ...moduleLines(false, 3), footer].join('\n'), budget);
+  return truncate(
+    [header, ...moduleLines(false, 3), footer].join('\n'),
+    budget,
+  );
 }
