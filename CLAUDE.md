@@ -53,6 +53,7 @@ The hooks run these automatically on what changed; run them yourself when you ne
 - `npm run test:tooling`: the architecture scripts and the Claude hooks
 - The current engine's regression gate, until Phase 7: `packages/CoreEngine/test/run.sh scenarios` (and `run.sh engine` for ThreadSanitizer after threading changes)
 - `npm run harness:test`: the evaluation harness (the scorer and the golden takes, [docs/harness.md](docs/harness.md))
+- `packages/CoreEngine/test/run.sh capture`: the take recorder, also under ThreadSanitizer, after any change to the capture code
 - Visual checks: `DESIGN_OUT=/tmp/lesson.png npx jest scripts/design`, scored with `node scripts/design/compare.mjs`. EggHatch frames: `EGG_TIME=… EGG_OUT=… npx jest scripts/design/__tests__/eggHatchRender.test.ts`. After any visual change, render the frames and look at them before reporting.
 
 ## Where things go

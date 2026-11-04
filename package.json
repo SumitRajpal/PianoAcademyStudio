@@ -16,6 +16,7 @@
     "test:engine": "bash packages/CoreEngine/test/run.sh scenarios",
     "harness:test": "bash packages/CoreEngine/tools/harness.sh test",
     "harness:score": "python3 packages/CoreEngine/tools/score/score.py report",
+    "harness:inspect": "python3 packages/CoreEngine/tools/score/score.py inspect",
     "arch:build": "node scripts/architecture/build.mjs",
     "arch:check": "node scripts/architecture/check.mjs",
     "arch:query": "node scripts/architecture/query.mjs",

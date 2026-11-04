@@ -37,3 +37,19 @@ Each strike during calibration reaches the screen through the JS event bus (`not
 mic -> packages/CoreEngine -> screens/CalibrationScreen
   -> motion/scenes/PianoMaster/CorePiano -> screen
 ```
+
+## take-recording
+
+Phase 0 slice 2: what the mic hands the engine is also written to a take. The iOS input's audio thread copies each callback's samples into the take recorder's ring (`cpp/capture/TakeRecorder.h`, wait-free, only while a take is armed), and its writer thread drains them into `Documents/Takes/<id>/audio.wav`. The samples never pass through JS.
+
+```flow
+mic -> packages/CoreEngine -> storage
+```
+
+## take-control (js ok)
+
+The take recorder screen starts and stops takes, writes each take's `meta.json`, and reads the counts five times a second on the JS thread. That crosses the JS thread on purpose: it shows numbers, nothing frame-critical.
+
+```flow
+user -> screens/TakeRecorder -> packages/CoreEngine -> storage
+```

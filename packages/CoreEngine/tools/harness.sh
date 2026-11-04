@@ -3,6 +3,7 @@
 #   harness.sh test                       the harness's own tests (C++ and Python)
 #   harness.sh synth <out> [take ...]     renders the synthetic golden takes into <out>
 #   harness.sh score <takes> <runs>       scores runs against labelled takes (score.py report)
+#   harness.sh inspect <take> [...]       checks takes from the phone against their meta.json
 # The runner, which replays takes through Reevo 2, arrives with the engine's first stage.
 set -euo pipefail
 
@@ -42,8 +43,13 @@ case "${1:-}" in
     shift
     "$PYTHON" "$DIR/score/score.py" report "$@"
     ;;
+  inspect)
+    [[ $# -ge 2 ]] || { echo "usage: $0 inspect <take> [<take> ...]" >&2; exit 2; }
+    shift
+    "$PYTHON" "$DIR/score/score.py" inspect "$@"
+    ;;
   *)
-    sed -n '2,6p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,7p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac

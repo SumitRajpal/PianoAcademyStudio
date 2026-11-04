@@ -19,6 +19,8 @@ Terms used in this project's code, docs and conversations.
 |---|---|
 | Reevo 2 | The note engine being built, and the only one the plan follows, from the master plan in `documentation/`. One engine: DSP evidence, and later neural evidence, feed one decision layer. |
 | Current engine | The detection and calibration code the app runs today (`packages/CoreEngine/cpp/legacy`). It gets no new work, and Phase 7 replaces it with Reevo 2 and deletes it. |
+| Take | One recording for the evaluation harness: a folder with `audio.wav`, `meta.json` (the conditions of master 5.2) and later `labels.json` (what was played, and when). |
+| Take recorder | The developer screen and the native recorder that record takes on the iPhone, exactly as the microphone capture hands them to the engine (`cpp/capture/TakeRecorder.h`). |
 | Onset | The moment a key is struck: a jump in new energy, found before the pitch is sure. |
 | Partials / harmonics | The frequencies a piano string sounds above its fundamental; they make octave errors possible. |
 | Polyphony | Several notes at once (chords); Reevo 2 tracks up to 32 voices (master 10.5). |

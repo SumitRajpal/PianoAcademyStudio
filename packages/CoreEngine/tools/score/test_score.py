@@ -221,5 +221,82 @@ class Files(unittest.TestCase):
             self.assertAlmostEqual(report['overall']['detectionRate']['value'], 1.0)
 
 
+
+class Inspect(unittest.TestCase):
+    """Takes from the phone's take recorder, checked against their meta.json."""
+
+    def make(self, x, rate=48000, meta=None):
+        import numpy as np
+        from scipy.io import wavfile
+
+        folder = tempfile.mkdtemp()
+        wavfile.write(os.path.join(folder, 'audio.wav'), rate, x)
+        if meta is not None:
+            with open(os.path.join(folder, 'meta.json'), 'w') as f:
+                json.dump(meta, f)
+        return folder
+
+    def counts(self, x, **override):
+        import math
+
+        import numpy as np
+
+        a = np.abs(x.astype(np.float32))
+        peak = float(a.max())
+        cap = {
+            'samples': len(x),
+            'peakDbfs': 20 * math.log10(peak),
+            'clippedSamples': int((a >= np.float32(0.985)).sum()),
+            'droppedSamples': 0,
+            'gaps': [],
+            'stopReason': '',
+        }
+        cap.update(override)
+        return {'durationSec': len(x) / 48000, 'capture': cap}
+
+    def tone(self):
+        import numpy as np
+
+        x = (0.5 * np.sin(np.arange(48000) * 0.05)).astype(np.float32)
+        x[100] = 0.99
+        x[200] = -0.99
+        return x
+
+    def test_a_take_that_matches_its_meta(self):
+        x = self.tone()
+        ok, lines = score.inspect_take(self.make(x, meta=self.counts(x)))
+        self.assertTrue(ok, lines)
+        self.assertIn('1.00 s, peak -0.1 dBFS, 2 clipped', lines[0])
+
+    def test_counts_that_disagree_fail(self):
+        x = self.tone()
+        ok, lines = score.inspect_take(self.make(x, meta=self.counts(x, samples=47000, clippedSamples=5)))
+        self.assertFalse(ok)
+        self.assertTrue(any('samples' in line for line in lines))
+        self.assertTrue(any('clippedSamples' in line for line in lines))
+
+    def test_the_wrong_format_fails(self):
+        import numpy as np
+
+        x = self.tone()
+        self.assertFalse(score.inspect_take(self.make(x, rate=44100, meta=self.counts(x)))[0])
+        self.assertFalse(score.inspect_take(self.make((x * 32767).astype(np.int16), meta=self.counts(x)))[0])
+
+    def test_dropped_samples_and_an_early_stop_are_reported(self):
+        x = self.tone()
+        meta = self.counts(x, droppedSamples=512, gaps=[{'position': 24000, 'length': 512}], stopReason='route')
+        ok, lines = score.inspect_take(self.make(x, meta=meta))
+        self.assertTrue(ok, lines)
+        self.assertTrue(any('512 samples were dropped' in line and '0.50 s' in line for line in lines))
+        self.assertTrue(any('stopped early: route' in line for line in lines))
+
+    def test_a_take_without_counts_never_finished(self):
+        x = self.tone()
+        self.assertFalse(score.inspect_take(self.make(x, meta={'durationSec': None, 'capture': None}))[0])
+        ok, lines = score.inspect_take(self.make(x))
+        self.assertTrue(ok)
+        self.assertIn('no meta.json', lines[-1])
+
+
 if __name__ == '__main__':
     unittest.main()

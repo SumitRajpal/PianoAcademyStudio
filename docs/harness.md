@@ -2,7 +2,7 @@
 
 Master section 5: nothing is tuned until recordings can be replayed through the engine and scored. The harness does that on a computer, the same way every time, for Reevo 2, the only engine the plan follows. It lives in `packages/CoreEngine/tools/`. Spec: [Phase 0 harness](specs/phase-0-harness.md); decisions: [ADR 0004](adr/0004-evaluation-harness.md).
 
-What exists now: the scorer, the synthetic golden takes, and the take and run formats. The runner, which replays takes through Reevo 2 hop by hop, arrives with the engine's first stage, Phase 2's front end. Until then nothing is replayed. The runner and baseline first built for the app's current engine were removed on 4 November 2026 ([Reevo 2 only](specs/reevo-2-only.md)).
+What exists now: the scorer, the synthetic golden takes, the take and run formats, and the take recorder in the app, which records real takes on the iPhone. The runner, which replays takes through Reevo 2 hop by hop, arrives with the engine's first stage, Phase 2's front end. Until then nothing is replayed. The runner and baseline first built for the app's current engine were removed on 4 November 2026 ([Reevo 2 only](specs/reevo-2-only.md)).
 
 ## Quick start
 
@@ -11,12 +11,24 @@ What exists now: the scorer, the synthetic golden takes, and the take and run fo
 | `npm run harness:test` | The harness's own tests: C++ (each golden take renders the same samples every time and matches its labels; WAV files) and Python (the scorer) |
 | `bash packages/CoreEngine/tools/harness.sh synth <out> [take ...]` | Renders the synthetic golden takes as take folders |
 | `npm run harness:score -- <takes> <runs> --out report.json` | Scores runs against labelled takes |
+| `npm run harness:inspect -- <take> [<take> ...]` | Checks takes copied from the phone against their `meta.json`: 48 kHz mono 32-bit float, and the length, peak and clipped count the phone saw. Dropped samples and early stops are reported |
 
 The C++ tools build themselves with `clang++` (or `$CXX`) into `tools/.build/`. The scorer needs Python 3 with `pip install -r packages/CoreEngine/tools/score/requirements.txt` (numpy, scipy and mir\_eval 0.8.2).
 
 ## Recordings stay outside git
 
 The repository is public, and recordings of rooms hold speech and television. Real takes live in a folder outside the repository, named by the `PIANO_CORPUS` setting; only the synthetic golden takes, which are rendered on demand, belong to git.
+
+## Takes from the phone
+
+The app's take recorder (Phase 0 slice 2; [spec](specs/phase-0-slice-2-take-recorder.md), [ADR 0005](adr/0005-take-recorder.md)) records master 5.2's takes on the iPhone:
+
+1. Open it with **Record takes**, on the calibration screen or on the lesson's engine overlay.
+2. Set the take's conditions (which take, instrument, distance, placement, room, background, pedal), then **Record** and **Stop**. While recording, the screen shows the time, the peak, clipped samples and dropped samples, which should stay at 0. A call, a route change or leaving the app stops the take and keeps what it has.
+3. Copy the takes to the Mac: Finder › your iPhone › Files › Piano Academy Studio › Takes, or the Files app. Put them in `$PIANO_CORPUS`.
+4. Check them: `npm run harness:inspect -- "$PIANO_CORPUS"/<take>`.
+
+Each take folder holds `audio.wav` (every sample the microphone capture hands the engine, 48 kHz mono 32-bit float) and `meta.json` (the conditions, the phone and its route, and the capture's counts). Labels come later: from the PSR-E343 rig (slice 3), or by hand for the acoustic piano (master 5.3).
 
 ## A take
 
@@ -26,7 +38,7 @@ A take is a folder:
 | --- | --- |
 | `audio.wav` | The microphone at 48 kHz: 16-bit, 24-bit or float, mono or averaged to mono |
 | `labels.json` | `{"version": 1, "notes": [{"midi": 60, "onset": 1.234, "offset": 1.734, "velocity": 64, "releaseObservable": true}]}`; times in seconds, velocity as MIDI |
-| `meta.json` | The conditions of 5.2: `instrument`, `phone`, `distance_m`, `placement`, `room`, `background`, `pedal`, `take` (which of 5.2's takes), `durationSec` |
+| `meta.json` | The conditions of 5.2: `instrument`, `phone`, `distance_m`, `placement`, `room`, `background`, `pedal`, `take` (which of 5.2's takes), `durationSec`. The take recorder adds `date`, `device` (the route, the hardware rate, the I/O buffer and input latency) and `capture` (samples, peak, clipped and dropped samples, where any were dropped, and why a take stopped early) |
 | `expected.txt` | Lesson takes only: one line per change, a time in ms and the MIDI numbers expected from then on |
 
 ## A run

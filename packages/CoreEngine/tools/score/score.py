@@ -6,6 +6,11 @@ comparison with a baseline that 5.6 asks for.
 
   score.py report <takes> <runs> [--out report.json] [--boot 1000] [--seed 1]
   score.py compare <baseline.json> <report.json> [--per-take]
+  score.py inspect <take> [<take> ...]
+
+inspect checks a take copied from the phone (the take recorder, slice 2)
+against its meta.json: 48 kHz mono 32-bit float, and the length, peak and
+clipped count the phone saw.
 
 compare fails when a gate metric is worse than the baseline's 95% interval
 (5.6), the rule for a recorded corpus. With --per-take it fails when any take
@@ -486,6 +491,69 @@ def summary(rep):
     return '\n'.join(lines)
 
 
+CLIP_LEVEL = np.float32(0.985)  # master 6.5's clip flag, as the take recorder counts it
+
+
+def inspect_take(folder):
+    """Checks a take recorded on the phone against its meta.json. Returns (ok, lines)."""
+    from scipy.io import wavfile
+
+    name = os.path.basename(os.path.normpath(folder))
+    path = os.path.join(folder, 'audio.wav')
+    if not os.path.exists(path):
+        return False, [f'✗ {name}: no audio.wav']
+    try:
+        rate, x = wavfile.read(path)
+    except Exception as e:  # noqa: BLE001 - any unreadable file is reported, not raised
+        return False, [f'✗ {name}: audio.wav cannot be read ({e})']
+    ok = True
+    problems = []
+    if x.ndim != 1:
+        ok = False
+        problems.append(f'✗ {x.shape[1]} channels, not mono')
+        x = x[:, 0]
+    if rate != 48000:
+        ok = False
+        problems.append(f'✗ {rate} Hz, not 48000')
+    if x.dtype != np.float32:
+        ok = False
+        problems.append(f'✗ {x.dtype} samples, not 32-bit float')
+    a = np.abs(x.astype(np.float32))
+    samples = int(len(x))
+    peak = float(a.max()) if samples else 0.0
+    peak_db = 20 * math.log10(peak) if peak > 0 else -200.0
+    clipped = int(np.count_nonzero(a >= CLIP_LEVEL))
+    lines = [f'{name}: {samples / 48000:.2f} s, peak {peak_db:.1f} dBFS, {clipped} clipped']
+
+    meta_path = os.path.join(folder, 'meta.json')
+    if not os.path.exists(meta_path):
+        return ok, lines + problems + ['  no meta.json to check against']
+    meta = _read_json(meta_path)
+    cap = meta.get('capture')
+    if not cap:
+        return False, lines + problems + ['✗ meta.json has no capture counts: the take never finished']
+    for key, said, found in (('samples', cap.get('samples'), samples), ('clippedSamples', cap.get('clippedSamples'), clipped)):
+        if said != found:
+            ok = False
+            problems.append(f'✗ {key}: meta.json says {said}, the file has {found}')
+    said_peak = cap.get('peakDbfs')
+    if said_peak is None or (abs(said_peak - peak_db) > 0.01 and not (said_peak <= -150 and peak_db <= -150)):
+        ok = False
+        problems.append(f'✗ peak: meta.json says {said_peak} dBFS, the file has {peak_db:.2f}')
+    duration = meta.get('durationSec')
+    if duration is None or abs(duration - samples / 48000) > 1 / 48000:
+        ok = False
+        problems.append(f'✗ durationSec: meta.json says {duration}, the file lasts {samples / 48000:.6f} s')
+    dropped = cap.get('droppedSamples', 0) or 0
+    if dropped:
+        gaps = cap.get('gaps') or []
+        where = ', '.join(f"{g['position'] / 48000:.2f} s" for g in gaps[:5])
+        problems.append(f'  ! {dropped} samples were dropped, at {len(gaps)} place(s): {where}')
+    if cap.get('stopReason'):
+        problems.append(f"  ! stopped early: {cap['stopReason']}")
+    return ok, lines + problems
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest='command', required=True)
@@ -499,7 +567,17 @@ def main(argv=None):
     c.add_argument('baseline')
     c.add_argument('report')
     c.add_argument('--per-take', action='store_true', help='fail when any take is worse (golden takes)')
+    i = sub.add_parser('inspect', help="check takes from the phone against their meta.json")
+    i.add_argument('takes', nargs='+')
     args = p.parse_args(argv)
+
+    if args.command == 'inspect':
+        all_ok = True
+        for folder in args.takes:
+            ok, lines = inspect_take(folder)
+            all_ok = all_ok and ok
+            print('\n'.join(lines))
+        return 0 if all_ok else 1
 
     if args.command == 'report':
         rep = report(args.takes, args.runs, boot=args.boot, seed=args.seed)
@@ -515,7 +593,7 @@ def main(argv=None):
         for pr in problems:
             print(f"✗ {pr['take']}: {pr['metric']} {pr['baseline']} → {pr['now']}")
         if better:
-            print('Better than the baseline: ' + ', '.join(b['take'] for b in better) + ' (update it with harness.sh check --update)')
+            print('Better than the baseline: ' + ', '.join(b['take'] for b in better) + ' (record a new baseline report)')
         if problems:
             return 1
         print('✓ no golden take got worse')

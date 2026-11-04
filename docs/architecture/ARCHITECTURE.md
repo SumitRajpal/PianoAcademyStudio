@@ -189,6 +189,8 @@ flowchart LR
 
 - **key-lights:** mic → packages/CoreEngine → [screens/LessonScreen] → motion/scenes/PianoMaster → motion/scenes/PianoMaster/CorePiano → screen
 - **calibration:** mic → packages/CoreEngine → screens/CalibrationScreen → motion/scenes/PianoMaster/CorePiano → screen
+- **take-recording:** mic → packages/CoreEngine → storage
+- **take-control:** user → screens/TakeRecorder → packages/CoreEngine → storage
 
 ## 5. Rules
 
