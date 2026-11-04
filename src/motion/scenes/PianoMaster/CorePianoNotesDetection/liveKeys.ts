@@ -1,6 +1,7 @@
 /**
- * Detected keys onto a PianoState on the UI thread, read straight from the
- * engine's key table: no JS thread in between, no queue and no React render.
+ * Detected keys into the key sink the screen hands over, on the UI thread,
+ * read straight from the engine's key table: no JS thread in between, no
+ * queue and no React render.
  *
  * Two things run the same reader, whichever comes first:
  * - every frame, on the UI thread, so a key shows within one frame however
@@ -20,11 +21,10 @@ import {
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
-import { pressKey, releaseKey, type PianoState } from '../shared/pianoState';
 import { CORE_PIANO_NOTES_DETECTION_LOOK } from './corePianoNotesDetectionLook';
 import { noteEventBus } from './noteEventBus';
 import { getLiveKeys } from './pianoEngine';
-import type { LiveKeys } from './types';
+import type { KeySink, LiveKeys } from './types';
 
 /** What a reader remembers between looks. Used on the UI thread only. */
 export type LiveKeysReader = {
@@ -49,13 +49,13 @@ export function detectedKeyLevel(velocity: number): number {
 }
 
 /**
- * Applies to `state` what changed in `keys` since this reader last looked.
+ * Gives `sink` what changed in `keys` since this reader last looked.
  * Pass `frameMs` from a frame callback. A look without it (between frames)
  * lights keys too, but only a frame lets a short key go, so every strike is
  * drawn at least once. A worklet.
  */
 export function readLiveKeys(
-  state: PianoState,
+  sink: KeySink,
   keys: LiveKeys,
   reader: SharedValue<LiveKeysReader>,
   frameMs?: number,
@@ -72,7 +72,7 @@ export function readLiveKeys(
           if (frameMs < r.short[i + 1]) {
             kept.push(midi, r.short[i + 1]);
           } else if (!keys.isDown(midi)) {
-            releaseKey(state, midi);
+            sink.release(midi);
           }
         }
         r.short = kept;
@@ -90,12 +90,12 @@ export function readLiveKeys(
       const midi = changes[i];
       const down = changes[i + 1] === 1;
       if (down || changes[i + 3] === 1) {
-        pressKey(state, midi, detectedKeyLevel(changes[i + 2]));
+        sink.press(midi, detectedKeyLevel(changes[i + 2]));
         if (!down) {
           r.short.push(midi, r.now + shortestLitMs);
         }
       } else {
-        releaseKey(state, midi);
+        sink.release(midi);
       }
     }
     return r;
@@ -105,30 +105,30 @@ export function readLiveKeys(
 /** The native key table, or null with the mock engine. Fixed for the life of the app. */
 const NATIVE_KEYS = getLiveKeys();
 
-function useNativeLiveKeys(pianoState?: PianoState): LiveKeys | null {
+function useNativeLiveKeys(keySink?: KeySink): LiveKeys | null {
   const keys = NATIVE_KEYS!;
   const reader = useSharedValue(createLiveKeysReader());
 
   const onFrame = useCallback(
     (frame: FrameInfo) => {
       'worklet';
-      if (pianoState) {
-        readLiveKeys(pianoState, keys, reader, frame.timestamp);
+      if (keySink) {
+        readLiveKeys(keySink, keys, reader, frame.timestamp);
       }
     },
-    [keys, pianoState, reader],
+    [keys, keySink, reader],
   );
-  useFrameCallback(onFrame, pianoState !== undefined);
+  useFrameCallback(onFrame, keySink !== undefined);
 
   // The engine woke JS with new notes: look now rather than at the next
   // frame. One look per JS task, however many notes the batch holds.
   useEffect(() => {
-    if (!pianoState) {
+    if (!keySink) {
       return;
     }
     const lookNow = () => {
       'worklet';
-      readLiveKeys(pianoState, keys, reader);
+      readLiveKeys(keySink, keys, reader);
     };
     let queued = false;
     return noteEventBus.subscribeNote(() => {
@@ -141,7 +141,7 @@ function useNativeLiveKeys(pianoState?: PianoState): LiveKeys | null {
         queued = false;
       });
     });
-  }, [keys, pianoState, reader]);
+  }, [keys, keySink, reader]);
 
   return keys;
 }
@@ -151,11 +151,14 @@ function useNoLiveKeys(): LiveKeys | null {
 }
 
 /**
- * Lights the keys of `pianoState` that the engine detects, on the UI thread.
+ * Gives `keySink` the keys the engine detects, on the UI thread. Pass the
+ * same sink every render (PianoMaster's usePianoKeySink memoises one), so
+ * the frame callback is registered once.
  * Returns the key table, for O(1) reads from JS (`keys.isDown(60)`), or null
  * with the mock engine (Jest): a JS object cannot be shared with the UI
  * thread, so callers then press keys from the event bus instead. Which one
  * is decided once, so every render runs the same hooks.
  */
-export const useLiveKeys: (pianoState?: PianoState) => LiveKeys | null =
-  NATIVE_KEYS ? useNativeLiveKeys : useNoLiveKeys;
+export const useLiveKeys: (keySink?: KeySink) => LiveKeys | null = NATIVE_KEYS
+  ? useNativeLiveKeys
+  : useNoLiveKeys;

@@ -7,6 +7,7 @@ export {
   isKeyPressed,
   KeyRole,
   lightKey,
+  pianoKeySink,
   pressKey,
   releaseAllKeys,
   releaseKey,
@@ -14,8 +15,10 @@ export {
   setPressedMidiKeys,
   unlightAllKeys,
   unlightKey,
+  usePianoKeySink,
   usePianoState,
   type PianoKeyLights,
+  type PianoKeySink,
   type PianoState,
 } from './pianoState';
 export {

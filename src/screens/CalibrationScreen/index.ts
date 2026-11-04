@@ -14,6 +14,19 @@ export {
   type DesignBox,
 } from './calibrationDesign';
 export {
+  calibrationKeys,
+  calibrationPrompt,
+  classifyPianoType,
+  describeKey,
+  describeProfile,
+  KEYBOARD_CHOICES,
+  keyboardChoiceFor,
+  type CalibrationFeedback,
+  type CalibrationFlash,
+  type CalibrationPrompt,
+  type KeyboardChoice,
+} from './calibrationGuide';
+export {
   calibrationView,
   type CalibrationChoice,
   type CalibrationStep,

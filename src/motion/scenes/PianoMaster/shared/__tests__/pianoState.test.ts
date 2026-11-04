@@ -5,6 +5,7 @@ import {
   isKeyPressed,
   KeyRole,
   lightKey,
+  pianoKeySink,
   pressKey,
   releaseAllKeys,
   releaseKey,
@@ -209,5 +210,53 @@ describe('piano key state', () => {
     expect(isKeyPressed(state, 127)).toBe(true);
     expect(isKeyPressed(state, 128)).toBe(false);
     expect(state.value.held).toHaveLength(2);
+  });
+});
+
+describe('the key state as a sink for detected keys', () => {
+  /** The same strikes and releases, in the same order, as pressKey and releaseKey get them. */
+  const STEPS: readonly [
+    kind: 'press' | 'release',
+    midi: number,
+    level: number,
+  ][] = [
+    ['press', 60, 0.55],
+    ['press', 64, 1],
+    ['press', 60, 0.8],
+    ['release', 64, 0],
+    ['press', 67, 0],
+    ['release', 61, 0],
+    ['press', 128, 1],
+    ['press', 72, 2],
+    ['release', 60, 0],
+  ];
+
+  it('leaves exactly the key lights that pressKey and releaseKey leave', () => {
+    const direct = fakeState();
+    const sunk = fakeState();
+    const sink = pianoKeySink(sunk);
+    for (const [kind, midi, level] of STEPS) {
+      if (kind === 'press') {
+        pressKey(direct, midi, level);
+        sink.press(midi, level);
+      } else {
+        releaseKey(direct, midi);
+        sink.release(midi);
+      }
+      expect(sunk.value).toEqual(direct.value);
+    }
+    expect(sunk.value.held).toEqual([72]);
+    expect(sunk.value.pressed[72]).toBe(1);
+  });
+
+  it('leaves lesson roles alone, as pressKey does', () => {
+    const state = fakeState();
+    lightKey(state, 60, KeyRole.Target, 0.7);
+    const sink = pianoKeySink(state);
+    sink.press(60, 0.9);
+    sink.release(60);
+    expect(state.value.roles[60]).toBe(KeyRole.Target);
+    expect(state.value.levels[60]).toBe(0.7);
+    expect(isKeyPressed(state, 60)).toBe(false);
   });
 });

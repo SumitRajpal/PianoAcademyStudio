@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { noteName, parseNote, type NoteInput } from '../../../../shared/piano';
-import { pressKey, releaseKey, type PianoState } from '../shared/pianoState';
 import { useLiveKeys } from './liveKeys';
 import { noteEventBus } from './noteEventBus';
 import {
@@ -22,12 +20,18 @@ import {
   type DetectedNoteEvent,
   type DetectionStats,
   type EngineStatus,
+  type KeySink,
   type PianoProfile,
 } from './types';
 
 export type UseCorePianoNotesDetectionOptions = {
-  pianoState?: PianoState;
-  expected?: readonly NoteInput[];
+  /**
+   * Where detected keys go, on the UI thread (PianoMaster's usePianoKeySink).
+   * Pass the same sink every render.
+   */
+  keySink?: KeySink;
+  /** The notes a lesson expects now, as MIDI numbers (0 to 127). */
+  expected?: readonly number[];
   polyphony?: boolean;
   autoStart?: boolean;
   /** Poll the engine's timing stats this often (ms); 0 or unset: never. */
@@ -35,6 +39,18 @@ export type UseCorePianoNotesDetectionOptions = {
   onNoteDetected?: (event: DetectedNoteEvent) => void;
   onCalibrationComplete?: (profile: PianoProfile) => void;
 };
+
+const NO_NOTES: readonly number[] = [];
+
+/** Throws, as the note parser did, for anything that is not a MIDI number. */
+function checkMidi(midi: number): number {
+  if (!Number.isInteger(midi) || midi < 0 || midi > 127) {
+    throw new RangeError(
+      `MIDI note must be a whole number from 0 to 127, got ${midi}`,
+    );
+  }
+  return midi;
+}
 
 function readProfile(): PianoProfile | null {
   try {
@@ -48,7 +64,7 @@ export function useCorePianoNotesDetection(
   options: UseCorePianoNotesDetectionOptions = {},
 ) {
   const {
-    pianoState,
+    keySink,
     expected,
     polyphony = false,
     autoStart = true,
@@ -64,7 +80,6 @@ export function useCorePianoNotesDetection(
   >(new Map());
   const [latestNote, setLatestNote] = useState<{
     midi: number;
-    name: string;
     cents: number;
   } | null>(null);
   const [stats, setStats] = useState<DetectionStats>(() =>
@@ -83,19 +98,19 @@ export function useCorePianoNotesDetection(
   const onCalibrationCompleteRef = useRef(onCalibrationComplete);
   onCalibrationCompleteRef.current = onCalibrationComplete;
 
-  const pianoStateRef = useRef(pianoState);
-  pianoStateRef.current = pianoState;
+  const keySinkRef = useRef(keySink);
+  keySinkRef.current = keySink;
 
   // With the native engine the UI thread lights the keys itself, straight
   // from the key table; only the mock (Jest) presses them from here.
-  const liveKeys = useLiveKeys(pianoState);
+  const liveKeys = useLiveKeys(keySink);
   const liveKeysRef = useRef(liveKeys);
   liveKeysRef.current = liveKeys;
 
-  // Resolve expected note names to MIDI numbers
+  // The expected notes, checked once per new list
   const expectedMidi = useMemo(() => {
-    if (!expected || expected.length === 0) return [];
-    return expected.map(n => parseNote(n));
+    if (!expected || expected.length === 0) return NO_NOTES;
+    return expected.map(checkMidi);
   }, [expected]);
 
   // Sync expected notes to engine
@@ -111,13 +126,13 @@ export function useCorePianoNotesDetection(
   // Subscribe to pitch events from the event bus
   useEffect(() => {
     const unsubscribeNote = noteEventBus.subscribeNote(event => {
-      const state = pianoStateRef.current;
+      const sink = keySinkRef.current;
 
-      if (state && !liveKeysRef.current) {
+      if (sink && !liveKeysRef.current) {
         if (event.type === 'noteOn') {
-          pressKey(state, event.midi, event.velocity);
+          sink.press(event.midi, event.velocity);
         } else {
-          releaseKey(state, event.midi);
+          sink.release(event.midi);
         }
       }
 
@@ -135,7 +150,6 @@ export function useCorePianoNotesDetection(
       if (event.type === 'noteOn') {
         setLatestNote({
           midi: event.midi,
-          name: noteName(event.midi),
           cents: event.cents,
         });
       }

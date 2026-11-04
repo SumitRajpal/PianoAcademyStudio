@@ -5,13 +5,13 @@
  * strike. Pure functions: no React, no engine.
  */
 
-import { noteName, parseNote, PIANO_RANGES } from '../../../../shared/piano';
 import {
   CALIBRATION_STATE,
   type CalibrationOptions,
   type CalibrationProgressEvent,
   type PianoProfile,
-} from './types';
+} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { noteName, parseNote, PIANO_RANGES } from '../../shared/piano';
 
 export type KeyboardChoice = {
   id: '88' | '76' | '61' | '49';

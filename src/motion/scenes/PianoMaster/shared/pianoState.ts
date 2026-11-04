@@ -4,7 +4,7 @@
  * the mic can change it every few milliseconds without React re-rendering.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 import { MIDI_MAX, parseNote, type NoteInput } from '../../../../shared/piano';
@@ -181,6 +181,43 @@ export function releaseKey(state: PianoState, midi: number): void {
     'worklet';
     return letGo(lights, midi) ? changedLights(lights) : lights;
   }, false);
+}
+
+/**
+ * Where an input that detects keys, such as the note engine, presses and
+ * releases them. Both are worklets: the engine calls them from its UI-thread
+ * frame callback. The engine declares the same shape as its KeySink without
+ * importing this file, and this file never imports the engine.
+ */
+export type PianoKeySink = {
+  /** Presses a key, `level` from 0 to 1, as pressKey does. */
+  press(midi: number, level: number): void;
+  /** Releases a key, as releaseKey does. */
+  release(midi: number): void;
+};
+
+/** The key state as a sink for detected keys: each call is pressKey or releaseKey. */
+export function pianoKeySink(state: PianoState): PianoKeySink {
+  return {
+    press: (midi: number, level: number) => {
+      'worklet';
+      pressKey(state, midi, level);
+    },
+    release: (midi: number) => {
+      'worklet';
+      releaseKey(state, midi);
+    },
+  };
+}
+
+/**
+ * pianoKeySink for a component: one sink per key state, so frame callbacks
+ * register once. Without a state there is no sink.
+ */
+export function usePianoKeySink(state: PianoState): PianoKeySink;
+export function usePianoKeySink(state?: PianoState): PianoKeySink | undefined;
+export function usePianoKeySink(state?: PianoState): PianoKeySink | undefined {
+  return useMemo(() => (state ? pianoKeySink(state) : undefined), [state]);
 }
 
 /** Releases every held key, in O(held keys). Lesson roles stay. */

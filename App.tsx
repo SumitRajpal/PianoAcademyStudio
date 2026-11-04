@@ -9,12 +9,9 @@ import { useState } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import {
-  CorePianoNotesDetection,
-  usePianoState,
-} from './src/motion/scenes/PianoMaster';
+import { usePianoState } from './src/motion/scenes/PianoMaster';
 import { CalibrationScreen } from './src/screens/CalibrationScreen';
-import { LessonScreen } from './src/screens/LessonScreen';
+import { EngineDiagnostics, LessonScreen } from './src/screens/LessonScreen';
 
 function MainScreen({ onCalibrate }: { onCalibrate: () => void }) {
   const piano = usePianoState();
@@ -22,7 +19,7 @@ function MainScreen({ onCalibrate }: { onCalibrate: () => void }) {
   return (
     <View style={styles.container}>
       <LessonScreen pianoState={piano} />
-      <CorePianoNotesDetection
+      <EngineDiagnostics
         pianoState={piano}
         showDiagnostics
         autoStart

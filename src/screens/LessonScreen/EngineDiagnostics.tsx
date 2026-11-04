@@ -1,23 +1,84 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { CORE_PIANO_NOTES_DETECTION_LOOK } from './corePianoNotesDetectionLook';
-import type { CorePianoNotesDetectionProps, EngineStatus } from './types';
-import { useCorePianoNotesDetection } from './useCorePianoNotesDetection';
+/**
+ * The lesson's connection to the note engine, with an overlay for checking it
+ * on the phone. Detected keys light the lesson keyboard through PianoMaster's
+ * key sink, on the UI thread and without React renders. With
+ * `showDiagnostics` it also shows a small tuner and timing overlay, and a
+ * Calibrate button when `onCalibrate` is given.
+ */
 
-/** Microphone problems the user can fix, in their words. */
-export const STATUS_MESSAGES: Partial<Record<EngineStatus['state'], string>> = {
-  permissionPending: 'Waiting for microphone permission…',
-  permissionDenied: 'Microphone access is off. Turn it on in Settings.',
-  interrupted: 'Listening paused by another app or a call.',
-  error: 'The microphone could not start.',
+import { useMemo } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+
+import {
+  usePianoKeySink,
+  type NoteInput,
+  type PianoState,
+} from '../../motion/scenes/PianoMaster';
+import {
+  useCorePianoNotesDetection,
+  type DetectedNoteEvent,
+  type PianoProfile,
+} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { noteName, parseNote } from '../../shared/piano';
+import { ENGINE_DIAGNOSTICS_LOOK } from './engineDiagnosticsLook';
+import { STATUS_MESSAGES } from './micStatusMessages';
+
+export type EngineDiagnosticsProps = {
+  /**
+   * The shared piano state from usePianoState(). When passed, detected notes
+   * press and release its keys on the UI thread, straight from the engine's
+   * key table: no JS thread in between and no React re-render.
+   */
+  pianoState?: PianoState;
+
+  /**
+   * Expected notes for score-informed detection mode (MIDI numbers or names like ['C4', 'E4', 'G4']).
+   * Filters out extraneous acoustic noise and semitone spillover.
+   */
+  expected?: readonly NoteInput[];
+
+  /**
+   * Enable polyphonic chord estimation (default: false).
+   */
+  polyphony?: boolean;
+
+  /**
+   * Whether to automatically start microphone capture on mount (default: true).
+   */
+  autoStart?: boolean;
+
+  /**
+   * Render real-time telemetry HUD overlay (latency, CPU microsecond budget, cents meter).
+   */
+  showDiagnostics?: boolean;
+
+  /**
+   * Optional callback fired when any note is confirmed or released.
+   */
+  onNoteDetected?: (event: DetectedNoteEvent) => void;
+
+  /**
+   * Optional callback fired when piano calibration completes.
+   */
+  onCalibrationComplete?: (profile: PianoProfile) => void;
+
+  /** Shows a Calibrate button in the diagnostics that calls this (to open the calibration screen). */
+  onCalibrate?: () => void;
+
+  /**
+   * Optional styling container for the diagnostic overlay.
+   */
+  style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Connects the note engine to the PianoMaster scene: detected keys light on
- * CorePiano through `pianoState` (on the UI thread, without React renders).
- * With `showDiagnostics` it also shows a small tuner and timing overlay, and
- * a Calibrate button when `onCalibrate` is given.
- */
-export function CorePianoNotesDetection({
+export function EngineDiagnostics({
   pianoState,
   expected,
   polyphony,
@@ -27,11 +88,17 @@ export function CorePianoNotesDetection({
   onCalibrationComplete,
   onCalibrate,
   style,
-}: CorePianoNotesDetectionProps) {
+}: EngineDiagnosticsProps) {
+  // The engine speaks MIDI numbers; note names are resolved here, once per list.
+  const expectedMidi = useMemo(
+    () => (expected ? expected.map(note => parseNote(note)) : undefined),
+    [expected],
+  );
+  const keySink = usePianoKeySink(pianoState);
   const { latestNote, stats, status, activeNotes, profile } =
     useCorePianoNotesDetection({
-      pianoState,
-      expected,
+      keySink,
+      expected: expectedMidi,
       polyphony,
       autoStart,
       // Timing stats only while the diagnostics are on screen.
@@ -44,7 +111,7 @@ export function CorePianoNotesDetection({
     return null;
   }
 
-  const look = CORE_PIANO_NOTES_DETECTION_LOOK;
+  const look = ENGINE_DIAGNOSTICS_LOOK;
   const isPresent = latestNote !== null && activeNotes.size > 0;
   const cents = latestNote?.cents ?? 0;
   const isInTune = Math.abs(cents) <= look.tuner.toleranceCents;
@@ -64,7 +131,7 @@ export function CorePianoNotesDetection({
         <View style={styles.topRow}>
           <View style={styles.noteRow}>
             <Text style={styles.noteLabel}>
-              {isPresent ? latestNote?.name : '—'}
+              {isPresent && latestNote ? noteName(latestNote.midi) : '—'}
             </Text>
             <Text style={[styles.centsLabel, { color: needleColor }]}>
               {isPresent
@@ -134,17 +201,17 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   hudCard: {
-    backgroundColor: CORE_PIANO_NOTES_DETECTION_LOOK.hud.backgroundColor,
-    borderColor: CORE_PIANO_NOTES_DETECTION_LOOK.hud.borderColor,
-    borderWidth: CORE_PIANO_NOTES_DETECTION_LOOK.hud.borderWidth,
-    borderRadius: CORE_PIANO_NOTES_DETECTION_LOOK.hud.borderRadius,
-    paddingHorizontal: CORE_PIANO_NOTES_DETECTION_LOOK.hud.paddingHorizontal,
-    paddingVertical: CORE_PIANO_NOTES_DETECTION_LOOK.hud.paddingVertical,
+    backgroundColor: ENGINE_DIAGNOSTICS_LOOK.hud.backgroundColor,
+    borderColor: ENGINE_DIAGNOSTICS_LOOK.hud.borderColor,
+    borderWidth: ENGINE_DIAGNOSTICS_LOOK.hud.borderWidth,
+    borderRadius: ENGINE_DIAGNOSTICS_LOOK.hud.borderRadius,
+    paddingHorizontal: ENGINE_DIAGNOSTICS_LOOK.hud.paddingHorizontal,
+    paddingVertical: ENGINE_DIAGNOSTICS_LOOK.hud.paddingVertical,
     alignItems: 'center',
-    shadowColor: CORE_PIANO_NOTES_DETECTION_LOOK.hud.shadowColor,
-    shadowOpacity: CORE_PIANO_NOTES_DETECTION_LOOK.hud.shadowOpacity,
-    shadowRadius: CORE_PIANO_NOTES_DETECTION_LOOK.hud.shadowRadius,
-    shadowOffset: CORE_PIANO_NOTES_DETECTION_LOOK.hud.shadowOffset,
+    shadowColor: ENGINE_DIAGNOSTICS_LOOK.hud.shadowColor,
+    shadowOpacity: ENGINE_DIAGNOSTICS_LOOK.hud.shadowOpacity,
+    shadowRadius: ENGINE_DIAGNOSTICS_LOOK.hud.shadowRadius,
+    shadowOffset: ENGINE_DIAGNOSTICS_LOOK.hud.shadowOffset,
     elevation: 4,
   },
   topRow: {
@@ -160,12 +227,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   noteLabel: {
-    fontSize: CORE_PIANO_NOTES_DETECTION_LOOK.typography.noteSize,
+    fontSize: ENGINE_DIAGNOSTICS_LOOK.typography.noteSize,
     fontWeight: '700',
-    color: CORE_PIANO_NOTES_DETECTION_LOOK.typography.textColor,
+    color: ENGINE_DIAGNOSTICS_LOOK.typography.textColor,
   },
   centsLabel: {
-    fontSize: CORE_PIANO_NOTES_DETECTION_LOOK.typography.centsSize,
+    fontSize: ENGINE_DIAGNOSTICS_LOOK.typography.centsSize,
     fontWeight: '600',
   },
   calBtn: {
@@ -186,9 +253,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   meterTrack: {
-    width: CORE_PIANO_NOTES_DETECTION_LOOK.tuner.meterWidth,
-    height: CORE_PIANO_NOTES_DETECTION_LOOK.tuner.meterHeight,
-    backgroundColor: CORE_PIANO_NOTES_DETECTION_LOOK.tuner.meterBackground,
+    width: ENGINE_DIAGNOSTICS_LOOK.tuner.meterWidth,
+    height: ENGINE_DIAGNOSTICS_LOOK.tuner.meterHeight,
+    backgroundColor: ENGINE_DIAGNOSTICS_LOOK.tuner.meterBackground,
     borderRadius: 2,
     marginVertical: 8,
     alignItems: 'center',
@@ -203,13 +270,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   statsText: {
-    fontSize: CORE_PIANO_NOTES_DETECTION_LOOK.typography.statsSize,
-    color: CORE_PIANO_NOTES_DETECTION_LOOK.typography.mutedColor,
+    fontSize: ENGINE_DIAGNOSTICS_LOOK.typography.statsSize,
+    color: ENGINE_DIAGNOSTICS_LOOK.typography.mutedColor,
     fontFamily: 'Menlo',
   },
   statusText: {
-    fontSize: CORE_PIANO_NOTES_DETECTION_LOOK.typography.statsSize,
-    color: CORE_PIANO_NOTES_DETECTION_LOOK.tuner.sharpColor,
+    fontSize: ENGINE_DIAGNOSTICS_LOOK.typography.statsSize,
+    color: ENGINE_DIAGNOSTICS_LOOK.tuner.sharpColor,
     fontWeight: '600',
     marginBottom: 4,
     maxWidth: 220,

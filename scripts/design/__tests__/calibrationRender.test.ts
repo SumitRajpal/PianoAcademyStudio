@@ -17,10 +17,9 @@ import { Skia, type SkCanvas, type SkTypeface } from 'react-native-skia';
 import { buildKeyboard, noteName } from '../../../src/shared/piano';
 import {
   CALIBRATION_STATE,
-  KEYBOARD_CHOICES,
   type CalibrationProgressEvent,
   type PianoProfile,
-} from '../../../src/motion/scenes/PianoMaster';
+} from '../../../src/motion/scenes/PianoMaster/CorePianoNotesDetection';
 import {
   drawBlackPianoKeyLight,
   drawCorePianoBlackLayer,
@@ -46,6 +45,7 @@ import {
   calloutPlacement,
   choiceBox,
   drawCalibrationBackground,
+  KEYBOARD_CHOICES,
   type CalibrationStep,
   type CalibrationText,
   type DesignBox,

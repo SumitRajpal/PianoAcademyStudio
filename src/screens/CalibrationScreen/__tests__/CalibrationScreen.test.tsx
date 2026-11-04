@@ -7,15 +7,16 @@ import {
 } from 'react-test-renderer';
 
 import {
-  CALIBRATION_STATE,
   CorePiano,
   KeyRole,
-  KEYBOARD_CHOICES,
-  noteEventBus,
   type PianoKeyLights,
 } from '../../../motion/scenes/PianoMaster';
-import { mockAudioEngine } from '../../../motion/scenes/PianoMaster/CorePianoNotesDetection';
-import { CalibrationScreen, calibrationView } from '..';
+import {
+  CALIBRATION_STATE,
+  mockAudioEngine,
+  noteEventBus,
+} from '../../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { CalibrationScreen, calibrationView, KEYBOARD_CHOICES } from '..';
 
 function texts(root: ReactTestInstance): string {
   return root

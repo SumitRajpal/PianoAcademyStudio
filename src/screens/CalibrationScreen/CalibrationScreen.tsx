@@ -20,19 +20,17 @@ import { Canvas, Picture } from 'react-native-skia';
 
 import {
   CorePiano,
-  KEYBOARD_CHOICES,
-  keyboardChoiceFor,
   KeyRole,
   lightKey,
   recordPicture,
   unlightAllKeys,
   unlightKey,
-  useCorePianoNotesDetection,
+  usePianoKeySink,
   usePianoState,
-  type KeyboardChoice,
   type NoteInput,
 } from '../../motion/scenes/PianoMaster';
 import { layoutCorePiano } from '../../motion/scenes/PianoMaster/CorePiano';
+import { useCorePianoNotesDetection } from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
 import { buildKeyboard, noteName } from '../../shared/piano';
 import { ROUNDED_FAMILY, textTop } from '../../shared/typography';
 import { DESIGN_SIZE } from '../LessonScreen';
@@ -43,6 +41,11 @@ import {
   type CalibrationText,
   type DesignBox,
 } from './calibrationDesign';
+import {
+  KEYBOARD_CHOICES,
+  keyboardChoiceFor,
+  type KeyboardChoice,
+} from './calibrationGuide';
 import {
   calibrationView,
   type CalibrationChoice,
@@ -65,6 +68,7 @@ export function CalibrationScreen({ onSaved }: CalibrationScreenProps) {
   const scale = width / DESIGN_SIZE.width;
   const design = CALIBRATION_DESIGN;
   const piano = usePianoState();
+  const keySink = usePianoKeySink(piano);
   const {
     calibrationEvent,
     profile,
@@ -72,7 +76,7 @@ export function CalibrationScreen({ onSaved }: CalibrationScreenProps) {
     startCalibration,
     stopCalibration,
     saveCalibration,
-  } = useCorePianoNotesDetection({ pianoState: piano });
+  } = useCorePianoNotesDetection({ keySink });
 
   const [step, setStep] = useState<CalibrationStep>('keyboard');
   const [keyboard, setKeyboard] = useState<KeyboardChoice>(() =>

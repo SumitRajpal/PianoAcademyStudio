@@ -1,24 +1,7 @@
 /**
- * @purpose Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.
+ * @purpose Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.
  */
 
-export {
-  CorePianoNotesDetection,
-  STATUS_MESSAGES,
-} from './CorePianoNotesDetection';
-export {
-  calibrationKeys,
-  calibrationPrompt,
-  classifyPianoType,
-  describeKey,
-  describeProfile,
-  KEYBOARD_CHOICES,
-  keyboardChoiceFor,
-  type CalibrationFeedback,
-  type CalibrationFlash,
-  type CalibrationPrompt,
-  type KeyboardChoice,
-} from './calibrationGuide';
 export {
   CORE_PIANO_NOTES_DETECTION_LOOK,
   type CorePianoNotesDetectionLook,
@@ -53,12 +36,12 @@ export type {
   CalibrationOptions,
   CalibrationProgressEvent,
   CalibrationStepEvent,
-  CorePianoNotesDetectionProps,
   DetectedNoteEvent,
   DetectionStats,
   DetectionTelemetry,
   DetectorOptions,
   EngineStatus,
+  KeySink,
   LiveKey,
   LiveKeys,
   NoteEventListener,

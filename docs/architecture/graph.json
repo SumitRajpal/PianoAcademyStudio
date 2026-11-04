@@ -159,7 +159,7 @@
       "kind": "scene",
       "plane": "motion",
       "thread": "any",
-      "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here.",
       "entry": "src/motion/scenes/PianoMaster/index.ts",
       "files": [
         "src/motion/scenes/PianoMaster/index.ts"
@@ -577,11 +577,9 @@
       "kind": "engine",
       "plane": "audio",
       "thread": "audio",
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
       "entry": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "files": [
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
         "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
@@ -654,6 +652,7 @@
       "files": [
         "src/screens/CalibrationScreen/CalibrationScreen.tsx",
         "src/screens/CalibrationScreen/calibrationDesign.ts",
+        "src/screens/CalibrationScreen/calibrationGuide.ts",
         "src/screens/CalibrationScreen/calibrationView.ts",
         "src/screens/CalibrationScreen/drawCalibrationBackground.ts",
         "src/screens/CalibrationScreen/index.ts"
@@ -670,13 +669,16 @@
       "kind": "screen",
       "plane": "app",
       "thread": "js",
-      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape.",
+      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape; and the lesson's connection to the note engine, with its diagnostics overlay and the microphone messages.",
       "entry": "src/screens/LessonScreen/index.ts",
       "files": [
+        "src/screens/LessonScreen/EngineDiagnostics.tsx",
         "src/screens/LessonScreen/LessonScreen.tsx",
         "src/screens/LessonScreen/drawLessonBackground.ts",
+        "src/screens/LessonScreen/engineDiagnosticsLook.ts",
         "src/screens/LessonScreen/index.ts",
-        "src/screens/LessonScreen/lessonDesign.ts"
+        "src/screens/LessonScreen/lessonDesign.ts",
+        "src/screens/LessonScreen/micStatusMessages.ts"
       ],
       "packages": [
         "react",
@@ -1935,40 +1937,6 @@
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "CorePianoNotesDetection",
-        "STATUS_MESSAGES"
-      ],
-      "jsOnly": [
-        "CorePianoNotesDetection"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "CalibrationFeedback",
-        "CalibrationFlash",
-        "CalibrationPrompt",
-        "KEYBOARD_CHOICES",
-        "KeyboardChoice",
-        "calibrationKeys",
-        "calibrationPrompt",
-        "classifyPianoType",
-        "describeKey",
-        "describeProfile",
-        "keyboardChoiceFor"
-      ]
-    },
-    {
       "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
       "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "plane": "audio",
@@ -1986,50 +1954,37 @@
       "thread": "any",
       "lang": "code",
       "barrel": true,
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its bridge to PianoMaster. Detected keys light CorePiano from a lock-free native key table read on the UI thread; JS listeners get every note in order; the calibration guide says what to play.",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
       "exports": [
         "AudioEngineStatus",
         "CALIBRATION_STATE",
         "CORE_PIANO_NOTES_DETECTION_LOOK",
-        "CalibrationFeedback",
-        "CalibrationFlash",
         "CalibrationListener",
         "CalibrationOptions",
         "CalibrationProgressEvent",
-        "CalibrationPrompt",
         "CalibrationStepEvent",
-        "CorePianoNotesDetection",
         "CorePianoNotesDetectionLook",
-        "CorePianoNotesDetectionProps",
         "DetectedNoteEvent",
         "DetectionStats",
         "DetectionTelemetry",
         "DetectorOptions",
         "EngineStatus",
-        "KEYBOARD_CHOICES",
-        "KeyboardChoice",
+        "KeySink",
         "LiveKey",
         "LiveKeys",
         "LiveKeysReader",
         "NoteEventListener",
         "PianoProfile",
-        "STATUS_MESSAGES",
         "StatsListener",
         "StatusListener",
         "UseCorePianoNotesDetectionOptions",
-        "calibrationKeys",
-        "calibrationPrompt",
-        "classifyPianoType",
         "clearPianoCalibration",
         "createLiveKeysReader",
-        "describeKey",
-        "describeProfile",
         "detectedKeyLevel",
         "getAudioStats",
         "getLiveKeys",
         "getPianoCalibrationProfile",
         "isAudioMockActive",
-        "keyboardChoiceFor",
         "mockAudioEngine",
         "noteEventBus",
         "readLiveKeys",
@@ -2044,7 +1999,6 @@
         "useLiveKeys"
       ],
       "jsOnly": [
-        "CorePianoNotesDetection",
         "useCorePianoNotesDetection",
         "useLiveKeys"
       ]
@@ -2240,12 +2194,12 @@
         "CalibrationOptions",
         "CalibrationProgressEvent",
         "CalibrationStepEvent",
-        "CorePianoNotesDetectionProps",
         "DetectedNoteEvent",
         "DetectionStats",
         "DetectionTelemetry",
         "DetectorOptions",
         "EngineStatus",
+        "KeySink",
         "LiveKey",
         "LiveKeys",
         "NoteEventListener",
@@ -2275,38 +2229,21 @@
       "thread": "any",
       "lang": "code",
       "barrel": true,
-      "purpose": "The piano's single source of truth on screen, in three parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other), CoreNotes (the sheet music above it), and CorePianoNotesDetection (real-time acoustic pitch detection). Also owns the key state (which keys are lit, in which role) that lessons and the mic write to on the UI thread.",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here.",
       "exports": [
-        "CALIBRATION_STATE",
-        "CORE_PIANO_NOTES_DETECTION_LOOK",
-        "CalibrationFeedback",
-        "CalibrationFlash",
-        "CalibrationOptions",
-        "CalibrationProgressEvent",
-        "CalibrationPrompt",
         "CoreNotesLook",
         "CorePiano",
         "CorePianoLook",
-        "CorePianoNotesDetection",
-        "CorePianoNotesDetectionLook",
-        "CorePianoNotesDetectionProps",
         "CorePianoProps",
         "DEFAULT_RANGE",
         "DEFAULT_ROLE_COLORS",
-        "DetectedNoteEvent",
-        "DetectionTelemetry",
-        "EngineStatus",
         "GlyphFit",
         "GradientStop",
-        "KEYBOARD_CHOICES",
         "KeyRole",
-        "KeyboardChoice",
         "KeyboardProportions",
         "KeyboardRange",
         "LESSON_NOTES_LOOK",
         "LESSON_PIANO_LOOK",
-        "LiveKey",
-        "LiveKeys",
         "MusicFont",
         "NotationTypefaces",
         "NoteInput",
@@ -2314,31 +2251,25 @@
         "PIANO_RANGES",
         "PianoKeyLabels",
         "PianoKeyLights",
-        "PianoProfile",
+        "PianoKeySink",
         "PianoState",
         "PlayheadPosition",
         "QuarterNotes",
         "QuarterNotesProps",
         "RoleColors",
-        "STATUS_MESSAGES",
         "Score",
         "ScoreItem",
         "StaffLayout",
-        "UseCorePianoNotesDetectionOptions",
         "beatX",
-        "calibrationKeys",
-        "calibrationPrompt",
         "createKeyLights",
-        "describeProfile",
         "diatonicStep",
         "drawCoreNotesNoteLayer",
         "drawCoreNotesStaffLayer",
         "drawPlayhead",
         "isKeyPressed",
-        "keyboardChoiceFor",
         "ledgerLines",
         "lightKey",
-        "noteEventBus",
+        "pianoKeySink",
         "pressKey",
         "recordPicture",
         "releaseAllKeys",
@@ -2348,16 +2279,15 @@
         "trebleY",
         "unlightAllKeys",
         "unlightKey",
-        "useCorePianoNotesDetection",
         "useNotationTypefaces",
+        "usePianoKeySink",
         "usePianoState"
       ],
       "jsOnly": [
         "CorePiano",
-        "CorePianoNotesDetection",
         "QuarterNotes",
-        "useCorePianoNotesDetection",
         "useNotationTypefaces",
+        "usePianoKeySink",
         "usePianoState"
       ]
     },
@@ -2381,6 +2311,7 @@
         "NotationTypefaces",
         "PianoKeyLightStop",
         "PianoKeyLights",
+        "PianoKeySink",
         "PianoState",
         "PressedPianoKeyFace",
         "PressedPianoKeyFaceLook",
@@ -2399,6 +2330,7 @@
         "makePianoKeyLightGradient",
         "makePressedPianoKeyFace",
         "pianoKeyShape",
+        "pianoKeySink",
         "pressKey",
         "pt",
         "recordPicture",
@@ -2412,9 +2344,11 @@
         "staffLineY",
         "unlightAllKeys",
         "unlightKey",
+        "usePianoKeySink",
         "usePianoState"
       ],
       "jsOnly": [
+        "usePianoKeySink",
         "usePianoState"
       ]
     },
@@ -2508,10 +2442,12 @@
       "exports": [
         "KeyRole",
         "PianoKeyLights",
+        "PianoKeySink",
         "PianoState",
         "createKeyLights",
         "isKeyPressed",
         "lightKey",
+        "pianoKeySink",
         "pressKey",
         "releaseAllKeys",
         "releaseKey",
@@ -2519,10 +2455,12 @@
         "setPressedMidiKeys",
         "unlightAllKeys",
         "unlightKey",
+        "usePianoKeySink",
         "usePianoState"
       ],
       "hasWorklets": true,
       "jsOnly": [
+        "usePianoKeySink",
         "usePianoState"
       ]
     },
@@ -2595,6 +2533,26 @@
       ]
     },
     {
+      "id": "src/screens/CalibrationScreen/calibrationGuide.ts",
+      "module": "src/screens/CalibrationScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CalibrationFeedback",
+        "CalibrationFlash",
+        "CalibrationPrompt",
+        "KEYBOARD_CHOICES",
+        "KeyboardChoice",
+        "calibrationKeys",
+        "calibrationPrompt",
+        "classifyPianoType",
+        "describeKey",
+        "describeProfile",
+        "keyboardChoiceFor"
+      ]
+    },
+    {
       "id": "src/screens/CalibrationScreen/calibrationView.ts",
       "module": "src/screens/CalibrationScreen",
       "plane": "app",
@@ -2631,6 +2589,9 @@
         "CALIBRATION_DESIGN",
         "CalibrationBackdrop",
         "CalibrationChoice",
+        "CalibrationFeedback",
+        "CalibrationFlash",
+        "CalibrationPrompt",
         "CalibrationScreen",
         "CalibrationScreenProps",
         "CalibrationStep",
@@ -2638,13 +2599,35 @@
         "CalibrationView",
         "CalibrationViewInput",
         "DesignBox",
+        "KEYBOARD_CHOICES",
+        "KeyboardChoice",
+        "calibrationKeys",
+        "calibrationPrompt",
         "calibrationView",
         "calloutPlacement",
         "choiceBox",
-        "drawCalibrationBackground"
+        "classifyPianoType",
+        "describeKey",
+        "describeProfile",
+        "drawCalibrationBackground",
+        "keyboardChoiceFor"
       ],
       "jsOnly": [
         "CalibrationScreen"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "EngineDiagnostics",
+        "EngineDiagnosticsProps"
+      ],
+      "jsOnly": [
+        "EngineDiagnostics"
       ]
     },
     {
@@ -2672,23 +2655,40 @@
       ]
     },
     {
+      "id": "src/screens/LessonScreen/engineDiagnosticsLook.ts",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "ENGINE_DIAGNOSTICS_LOOK",
+        "EngineDiagnosticsLook"
+      ]
+    },
+    {
       "id": "src/screens/LessonScreen/index.ts",
       "module": "src/screens/LessonScreen",
       "plane": "app",
       "thread": "any",
       "lang": "code",
       "barrel": true,
-      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape.",
+      "purpose": "The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape; and the lesson's connection to the note engine, with its diagnostics overlay and the microphone messages.",
       "exports": [
         "DESIGN_SIZE",
+        "ENGINE_DIAGNOSTICS_LOOK",
+        "EngineDiagnostics",
+        "EngineDiagnosticsLook",
+        "EngineDiagnosticsProps",
         "LESSON_DESIGN",
         "LessonScreen",
         "LessonScreenProps",
         "RotatedTextRun",
+        "STATUS_MESSAGES",
         "TextRun",
         "drawLessonBackground"
       ],
       "jsOnly": [
+        "EngineDiagnostics",
         "LessonScreen"
       ]
     },
@@ -2703,6 +2703,16 @@
         "LESSON_DESIGN",
         "RotatedTextRun",
         "TextRun"
+      ]
+    },
+    {
+      "id": "src/screens/LessonScreen/micStatusMessages.ts",
+      "module": "src/screens/LessonScreen",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "STATUS_MESSAGES"
       ]
     },
     {
@@ -3688,11 +3698,6 @@
       "from": "App.tsx",
       "to": "src/motion/scenes/PianoMaster/index.ts",
       "kind": "imports"
-    },
-    {
-      "from": "App.tsx",
-      "to": "src/motion/scenes/PianoMaster/index.ts",
-      "kind": "renders"
     },
     {
       "from": "App.tsx",
@@ -4726,42 +4731,6 @@
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/calibrationGuide.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/CorePianoNotesDetection.tsx",
-      "kind": "imports"
-    },
-    {
       "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
       "kind": "imports"
@@ -4816,11 +4785,6 @@
       "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
       "kind": "imports",
       "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
-      "kind": "imports"
     },
     {
       "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
@@ -5007,18 +4971,6 @@
       "approx": true
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
       "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
       "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
       "kind": "imports"
@@ -5039,16 +4991,6 @@
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/motion/scenes/PianoMaster/shared/pianoState.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/shared/piano/index.ts",
-      "kind": "imports"
-    },
-    {
       "from": "src/motion/scenes/PianoMaster/index.ts",
       "to": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "kind": "imports"
@@ -5056,11 +4998,6 @@
     {
       "from": "src/motion/scenes/PianoMaster/index.ts",
       "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "kind": "imports"
     },
     {
@@ -5155,8 +5092,23 @@
       "kind": "imports"
     },
     {
+      "from": "src/screens/CalibrationScreen/calibrationGuide.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationGuide.ts",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
       "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
       "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "kind": "imports"
     },
     {
@@ -5172,6 +5124,11 @@
     {
       "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
       "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
+      "to": "src/screens/CalibrationScreen/calibrationGuide.ts",
       "kind": "imports"
     },
     {
@@ -5201,12 +5158,22 @@
     },
     {
       "from": "src/screens/CalibrationScreen/calibrationView.ts",
-      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
       "kind": "imports"
     },
     {
       "from": "src/screens/CalibrationScreen/calibrationView.ts",
       "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationView.ts",
+      "to": "src/screens/CalibrationScreen/calibrationGuide.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/calibrationView.ts",
+      "to": "src/screens/LessonScreen/index.ts",
       "kind": "imports"
     },
     {
@@ -5217,6 +5184,11 @@
     {
       "from": "src/screens/CalibrationScreen/index.ts",
       "to": "src/screens/CalibrationScreen/calibrationDesign.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/CalibrationScreen/index.ts",
+      "to": "src/screens/CalibrationScreen/calibrationGuide.ts",
       "kind": "imports"
     },
     {
@@ -5995,8 +5967,43 @@
       "kind": "imports"
     },
     {
+      "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "to": "src/motion/scenes/PianoMaster/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "to": "src/screens/LessonScreen/engineDiagnosticsLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "to": "src/screens/LessonScreen/micStatusMessages.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "to": "src/shared/piano/index.ts",
+      "kind": "imports"
+    },
+    {
       "from": "src/screens/LessonScreen/index.ts",
       "to": "src/screens/LessonScreen/drawLessonBackground.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/EngineDiagnostics.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/engineDiagnosticsLook.ts",
       "kind": "imports"
     },
     {
@@ -6007,6 +6014,11 @@
     {
       "from": "src/screens/LessonScreen/index.ts",
       "to": "src/screens/LessonScreen/LessonScreen.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/LessonScreen/index.ts",
+      "to": "src/screens/LessonScreen/micStatusMessages.ts",
       "kind": "imports"
     },
     {
@@ -6046,6 +6058,12 @@
       "kind": "imports"
     },
     {
+      "from": "src/screens/LessonScreen/micStatusMessages.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
       "from": "src/shared/piano/index.ts",
       "to": "src/shared/piano/keyboard.ts",
       "kind": "imports"
@@ -6073,8 +6091,7 @@
       "from": "App.tsx",
       "to": "src/motion/scenes/PianoMaster",
       "kinds": [
-        "imports",
-        "renders"
+        "imports"
       ]
     },
     {
@@ -6117,13 +6134,6 @@
     {
       "from": "src/motion/scenes/PianoMaster",
       "to": "src/motion/scenes/PianoMaster/CorePiano",
-      "kinds": [
-        "imports"
-      ]
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -6494,20 +6504,6 @@
       ]
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "to": "src/motion/scenes/PianoMaster/shared",
-      "kinds": [
-        "imports"
-      ]
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "to": "src/shared/piano",
-      "kinds": [
-        "imports"
-      ]
-    },
-    {
       "from": "src/motion/scenes/PianoMaster/shared",
       "to": "src/shared/piano",
       "kinds": [
@@ -6525,6 +6521,13 @@
     {
       "from": "src/screens/CalibrationScreen",
       "to": "src/motion/scenes/PianoMaster/CorePiano",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -6556,6 +6559,13 @@
       "kinds": [
         "imports",
         "renders"
+      ]
+    },
+    {
+      "from": "src/screens/LessonScreen",
+      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "kinds": [
+        "imports"
       ]
     },
     {

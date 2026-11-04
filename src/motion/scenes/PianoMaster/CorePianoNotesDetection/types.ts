@@ -1,6 +1,15 @@
-import type { StyleProp, ViewStyle } from 'react-native';
-import type { NoteInput } from '../../../../shared/piano';
-import type { PianoState } from '../shared/pianoState';
+/**
+ * Where detected keys go: the engine calls these from its UI-thread frame
+ * callback, so both must be worklets. The screen hands one over (PianoMaster's
+ * key state makes one with pianoKeySink); the engine knows nothing else about
+ * what draws the keys. Keys are MIDI numbers, levels 0 to 1.
+ */
+export type KeySink = {
+  /** Presses a key at `level`, from 0 to 1. */
+  press(midi: number, level: number): void;
+  /** Releases a key. */
+  release(midi: number): void;
+};
 
 export type DetectedNoteEvent = {
   type: 'noteOn' | 'noteOff';
@@ -128,8 +137,8 @@ export type CalibrationListener = (event: CalibrationProgressEvent) => void;
 export type StatusListener = (status: EngineStatus) => void;
 
 export type DetectorOptions = {
-  /** Optional subset of expected MIDI notes for score-informed detection mode */
-  expected?: readonly NoteInput[];
+  /** Optional subset of expected notes for score-informed detection mode, as MIDI numbers */
+  expected?: readonly number[];
   /** Enable blind polyphonic chord estimation (default: false) */
   polyphony?: boolean;
 };
@@ -140,57 +149,8 @@ export type AudioEngineStatus = {
   isCalibrating?: boolean;
 };
 
-export type CorePianoNotesDetectionProps = {
-  /**
-   * The shared piano state from usePianoState(). When passed, detected notes
-   * press and release its keys on the UI thread, straight from the engine's
-   * key table: no JS thread in between and no React re-render.
-   */
-  pianoState?: PianoState;
-
-  /**
-   * Expected notes for score-informed detection mode (MIDI numbers or names like ['C4', 'E4', 'G4']).
-   * Filters out extraneous acoustic noise and semitone spillover.
-   */
-  expected?: readonly NoteInput[];
-
-  /**
-   * Enable polyphonic chord estimation (default: false).
-   */
-  polyphony?: boolean;
-
-  /**
-   * Whether to automatically start microphone capture on mount (default: true).
-   */
-  autoStart?: boolean;
-
-  /**
-   * Render real-time telemetry HUD overlay (latency, CPU microsecond budget, cents meter).
-   */
-  showDiagnostics?: boolean;
-
-  /**
-   * Optional callback fired when any note is confirmed or released.
-   */
-  onNoteDetected?: (event: DetectedNoteEvent) => void;
-
-  /**
-   * Optional callback fired when piano calibration completes.
-   */
-  onCalibrationComplete?: (profile: PianoProfile) => void;
-
-  /** Shows a Calibrate button in the diagnostics that calls this (to open the calibration screen). */
-  onCalibrate?: () => void;
-
-  /**
-   * Optional styling container for the diagnostic overlay.
-   */
-  style?: StyleProp<ViewStyle>;
-};
-
 export type DetectionTelemetry = DetectionStats & {
   lastMidi: number | null;
-  lastNoteName: string | null;
   lastCents: number;
   activeCount: number;
   profile?: PianoProfile | null;

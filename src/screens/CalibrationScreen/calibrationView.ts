@@ -6,19 +6,21 @@
 
 import {
   CALIBRATION_STATE,
+  type CalibrationProgressEvent,
+  type EngineStatus,
+  type PianoProfile,
+} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { STATUS_MESSAGES } from '../LessonScreen';
+import { CALIBRATION_DESIGN } from './calibrationDesign';
+import {
   calibrationKeys,
   calibrationPrompt,
   describeProfile,
   KEYBOARD_CHOICES,
-  STATUS_MESSAGES,
   type CalibrationFeedback,
   type CalibrationFlash,
-  type CalibrationProgressEvent,
-  type EngineStatus,
   type KeyboardChoice,
-  type PianoProfile,
-} from '../../motion/scenes/PianoMaster';
-import { CALIBRATION_DESIGN } from './calibrationDesign';
+} from './calibrationGuide';
 
 /** 1: how many keys; 2: quick or thorough; 3: playing the keys (then saving). */
 export type CalibrationStep = 'keyboard' | 'thoroughness' | 'listening';
