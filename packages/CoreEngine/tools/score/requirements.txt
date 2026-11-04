@@ -1,0 +1,4 @@
+# The harness scorer (packages/CoreEngine/tools/score). mir_eval is pinned: its note matching defines 5.1's F1.
+mir_eval==0.8.2
+numpy>=1.24
+scipy>=1.10
