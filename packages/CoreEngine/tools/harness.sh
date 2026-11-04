@@ -4,6 +4,7 @@
 #   harness.sh synth <out> [take ...]     renders the synthetic golden takes into <out>
 #   harness.sh score <takes> <runs>       scores runs against labelled takes (score.py report)
 #   harness.sh inspect <take> [...]       checks takes from the phone against their meta.json
+#   harness.sh rig <command> [...]        the PSR-E343 self-play rig (rig.py: takes, ports, check, play, record, label)
 # The runner, which replays takes through Reevo 2, arrives with the engine's first stage.
 set -euo pipefail
 
@@ -49,8 +50,12 @@ case "${1:-}" in
     shift
     "$PYTHON" "$DIR/score/score.py" inspect "$@"
     ;;
+  rig)
+    shift
+    "$PYTHON" "$DIR/rig/rig.py" "$@"
+    ;;
   *)
-    sed -n '2,7p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,8p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac

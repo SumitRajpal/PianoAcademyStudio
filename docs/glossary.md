@@ -21,6 +21,9 @@ Terms used in this project's code, docs and conversations.
 | Current engine | The detection and calibration code the app runs today (`packages/CoreEngine/cpp/legacy`). It gets no new work, and Phase 7 replaces it with Reevo 2 and deletes it. |
 | Take | One recording for the evaluation harness: a folder with `audio.wav`, `meta.json` (the conditions of master 5.2) and later `labels.json` (what was played, and when). |
 | Take recorder | The developer screen and the native recorder that record takes on the iPhone, exactly as the microphone capture hands them to the engine (`cpp/capture/TakeRecorder.h`). |
+| PSR-E343 rig | The Mac tools that play takes into the Yamaha PSR-E343 over USB MIDI while the phone records, then write each take's labels from the log (`packages/CoreEngine/tools/rig/`). |
+| Sync note | A loud C7 with 2 s of silence on each side, which the rig plays at the start of a take, about once a minute and at the end. Finding them in the audio fits the phone's clock to the Mac's. |
+| Delay take | The take that measures how long each key of the keyboard takes to sound after its MIDI arrives: every key alone at pp, mf and ff. The rig adds each key's delay to its labels. |
 | Onset | The moment a key is struck: a jump in new energy, found before the pitch is sure. |
 | Partials / harmonics | The frequencies a piano string sounds above its fundamental; they make octave errors possible. |
 | Polyphony | Several notes at once (chords); Reevo 2 tracks up to 32 voices (master 10.5). |

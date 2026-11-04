@@ -1,4 +1,4 @@
-"""The rig's tests: the scripts, the log, and alignment, delays and labels on synthetic audio with known answers."""
+"""The rig's tests: the scripts, the log, alignment, delays, labels and the command line, on synthetic audio."""
 
 import io
 import json
@@ -368,6 +368,75 @@ class DelaysAndLabels(unittest.TestCase):
         expected = 12.0 + (7.0 + self.table[72][72] - self.table[60][72]) / 1000
         self.assertAlmostEqual(labels['notes'][0]['onset'], expected, places=6)
         self.assertTrue(labels['notes'][0]['played'])
+
+
+# ---- the command line ----------------------------------------------------------------
+
+class CommandLine(unittest.TestCase):
+    """rig.py label, end to end, on takes written as the phone and the rig write them."""
+
+    def write_log(self, folder, take, mode, messages, audio):
+        from scipy.io import wavfile
+
+        os.makedirs(folder)
+        wavfile.write(os.path.join(folder, 'audio.wav'), RATE, audio.astype(np.float32))
+        log = folder + '.midi.jsonl'
+        with open(log, 'w', encoding='utf-8') as f:
+            f.write(json.dumps({'type': 'header', 'version': 1, 'take': take, 'mode': mode}) + '\n')
+            for m in messages:
+                f.write(json.dumps(m) + '\n')
+        return log
+
+    def write_take(self, folder, script, seed):
+        messages, audio, _ = perform(script, seed=seed)
+        return self.write_log(folder, script.take, script.mode, messages, audio)
+
+    def test_the_delay_take_then_a_take_labelled_with_it(self):
+        import rig
+
+        with tempfile.TemporaryDirectory() as d:
+            delays_path = os.path.join(d, 'instruments', 'delays.json')
+            log = self.write_take(os.path.join(d, 'delays-take'), scripts.build('delays'), seed=6)
+            # The phone has no entry for the delay take, so it was recorded as another take.
+            with open(os.path.join(d, 'delays-take', 'meta.json'), 'w', encoding='utf-8') as f:
+                json.dump({'take': 'velocity-sweep', 'instrument': 'PSR-E343'}, f)
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(rig.main(['label', os.path.join(d, 'delays-take'), log, '--delays', delays_path]), 0)
+            self.assertIn('Delays saved', out.getvalue())
+            self.assertIn('the phone recorded this take as "velocity-sweep"; the rig played "delays"', out.getvalue())
+            self.assertTrue(os.path.exists(delays_path))
+
+            folder = os.path.join(d, 'ladder-take')
+            log = self.write_take(folder, scripts.build('ladder'), seed=7)
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(rig.main(['label', folder, log, '--delays', delays_path]), 0)
+            self.assertIn('✓ every sync note within 2 ms', out.getvalue())
+            with open(os.path.join(folder, 'labels.json'), encoding='utf-8') as f:
+                labels = json.load(f)
+            self.assertEqual(len([n for n in labels['notes'] if not n.get('sync')]), 90)
+
+    def test_a_failed_clock_fit_writes_nothing(self):
+        import rig
+
+        with tempfile.TemporaryDirectory() as d:
+            folder = os.path.join(d, 'sweep')
+            messages, audio, _ = perform(scripts.build('velocity-sweep'), seed=9, shift_sync=1)
+            log = self.write_log(folder, 'velocity-sweep', 'play', messages, audio)
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(rig.main(['label', folder, log, '--no-delays']), 1)
+            self.assertIn('nothing was written', out.getvalue())
+            self.assertFalse(os.path.exists(os.path.join(folder, 'labels.json')))
+
+    def test_labelling_without_delays_is_refused_unless_asked(self):
+        import rig
+
+        with tempfile.TemporaryDirectory() as d:
+            folder = os.path.join(d, 'sweep')
+            log = self.write_take(folder, scripts.build('velocity-sweep'), seed=8)
+            with self.assertRaises(SystemExit), redirect_stdout(io.StringIO()):
+                rig.main(['label', folder, log, '--delays', os.path.join(d, 'none.json')])
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(rig.main(['label', folder, log, '--delays', os.path.join(d, 'none.json'), '--no-delays']), 0)
 
 
 if __name__ == '__main__':
