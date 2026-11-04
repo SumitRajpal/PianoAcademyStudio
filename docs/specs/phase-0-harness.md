@@ -91,7 +91,7 @@ Settled while building:
 - **False notes are ghosts.** A detection that matches no played note even 250 ms late counts as false. A late note counts against the detection rate, not twice.
 - **Golden takes are compared take by take** (`compare --per-take`). Seven takes give bootstrap intervals too wide to catch a regression (the deliberate one passed the interval rule), and the takes are deterministic. The interval rule stays for the recorded corpus.
 - **Velocity is scored by rank for now:** the rank correlation of detected and labelled velocity. The error in dB and the dynamic-level confusion table need each instrument's velocity-to-level curve, which slice 3's recordings measure.
-- **The log names the code's gates.** v1.2's gates differ from master 5.5's list; [the harness guide](../harness.md) has both. Section 5.5 should be corrected at the next master update.
+- **The log names the code's gates.** They differed from master 5.5's list, which master v1.7 corrected with the owner's yes the same day; [the harness guide](../harness.md) has the details.
 - **The guide:** [docs/harness.md](../harness.md), with v1.2's synthetic baseline and what it already shows.
 
 ## Delivery

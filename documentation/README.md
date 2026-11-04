@@ -6,7 +6,7 @@ Every plan document for Piano Academy Studio lives in this folder: the Reevo 2 e
 
 | # | File | Document | Version | Status |
 | --- | --- | --- | --- | --- |
-| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.6 | The plan everything builds on |
+| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.7 | The plan everything builds on |
 | 2 | [02-engine-re-audit.md](02-engine-re-audit.md) | Reevo 2 Engine Re-Audit: Maths, Capabilities and Cases | v1.0, based on master v1.5 | Merged into master v1.6 |
 | 3 | [03-calibration-engine.md](03-calibration-engine.md) | Reevo 2 Calibration Engine | v1.0, based on master v1.5 | Merged into master v1.6; it replaced section 8 |
 | 4 | [04-ui-phase-1-structure.md](04-ui-phase-1-structure.md) | UI Implementation Plan — Phase 1: Structure | v1.6, based on master v1.6 | Merged into master v1.2–v1.5; updated for v1.6 |
@@ -89,3 +89,4 @@ Agreed with Sumit on 22 October 2026; the home of the master moved to this folde
 | v1.4 | 28 Oct 2026 | UI Implementation Plan: Phase 5 Visual and motion design v1.0 | 4, 12.3, 17 |
 | v1.5 | 28 Oct 2026 | UI Implementation Plan: Phase 4 Lesson internals v1.2 (the backing is a FLAC decoded by react-native-audio-api; the engine still plays it) | 6.1, 11.2, 12.1, 17 |
 | v1.6 | 4 Nov 2026 | Engine Re-Audit v1.0 and Calibration Engine v1.0, without the set-aside two-octave audit. Phase 1 to v1.6, Phase 2 to v1.3 and Phase 3 to v1.4 to match | 1, 2.2, 2.4–2.9, 3.1, 4, 5.2, 5.4, 6.1, 6.6, 7.3, 7.4, 8 (replaced), 9.1–9.6, 9.8, 9.9, 9.11, 10.2–10.4, 10.6, 10.7, 11.1, 11.3, 11.5, 13.2–13.4, 14.4, 14.5, 14.8, 14.10, 15, 16.1–16.3, 17 |
+| v1.7 | 4 Nov 2026 | Phase 0 harness, slice 1 ([harness guide](../docs/harness.md)): v1.2's code checked against 5.5. The section listed the Apex v2.0 design's five-layer fingerprint, most of which v1.2 never built; it now lists v1.2's own gates | 5.5 |

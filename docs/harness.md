@@ -59,7 +59,7 @@ For every candidate the cascade turns down, the log records the hop time, the ca
 
 Not logged: silence (hops under the energy gate), notes still confirming over their two hops, re-strikes waiting for a knock to die, and chord mode, whose blind estimator has no per-key gates.
 
-The code's gates differ from master 5.5's list ("five fingerprint layers: range and ±22 cents, harmonic ratio, timbre similarity, dB window, stability"). v1.2 has no timbre-similarity, dB-window or stability layer; its cents windows are 25 and 40; and it has gates the list doesn't name (rise, transient, pure tone, one per strike, and the ringing-note tests). The log names the code's gates. Section 5.5 should be corrected at the next master update.
+Until master v1.7, section 5.5 listed the five-layer fingerprint of the Apex v2.0 design v1.2 came from ("range and ±22 cents, harmonic ratio, timbre similarity, dB window, stability"). v1.2's code has no timbre-similarity, dB-window or stability layer; its cents windows are 25 and 40; and it has gates that list didn't name (rise, transient, pure tone, one per strike, and the ringing-note tests). The log names the code's gates, and master v1.7 lists them too.
 
 ## The scorer
 

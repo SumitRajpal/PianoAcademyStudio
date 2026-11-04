@@ -551,10 +551,16 @@ n = \frac{1.96^2\,p\,(1-p)}{e^2} = \frac{3.84 \times 0.97 \times 0.03}{0.02^2} =
 ### 5.5 v1.2 rejection log and baseline
 
 - Add a log to v1.2 recording, for every candidate onset and every expected note not detected, which gate rejected it and by how much (measured value against threshold).
-- The gates are: energy gate, flux onset, McLeod pitch, Goertzel verification, the five fingerprint layers (range and ±22 cents, harmonic ratio, timbre similarity, dB window, stability) and 2-hop confirmation.
+- The gates are v1.2's own, as its code has them. They are not the five-layer fingerprint of the Apex v2.0 design v1.2 came from ([research/](research/)): v1.2 never built its timbre-similarity, loudness-window or pitch-stability layers, and its calibrated loudness range only scales velocity.
+  - **Strike:** the energy gate, the flux onset, and the window in which a note must confirm after its strike (64 ms; 150 ms below C3, which waits for the 4096-sample window).
+  - **Pitch:** out of silence, McLeod pitch (clarity 0.88, or 0.80 on the 4096-sample window). Over ringing notes, the key whose partials gained the most new energy since the strike; it fails when it added too little, another key gained more, or its energy died within a few hops.
+  - **Verification:** Goertzel harmonics (a 10% share of the frame), then the calibrated fingerprint: key range, the cents grid (±25 cents on measured keys, ±40 on modelled ones), the note's own partials rising at least 6 dB with the strike, overtones present (rejects whistles) and string-like decay (rejects knocks).
+  - **Confirmation:** 2 agreeing hops. Single-note free play takes one note per strike and none on a key already ringing. Lessons need the expected key's score within its strike window.
+  - **Not logged:** hops under the energy gate (silence), candidates still confirming, re-strikes waiting for a knock to die away, and chord mode, whose blind estimator has no per-key gates. A miss with no logged gate counts as "no candidate".
 - Run v1.2 offline on the whole corpus. Publish its metrics (5.1) and a histogram of miss causes.
-- The six suspects from the discussion each map to a gate: re-strikes (flux), soft notes under loud ones (single-pitch tracking), soft notes (dB window, energy gate), unstable attacks (±22 cents, stability), digital loudness layers (timbre similarity) and late or out-of-step notes (lesson timing).
+- The six suspects from the discussion each map to v1.2's gates: re-strikes (flux onset), soft notes under loud ones (new energy, and another key gaining more), soft notes (energy gate, flux onset), unstable attacks (cents grid), digital loudness layers (overtones present, against the minimum calibration measured) and late or out-of-step notes (strike window, expected score).
 - The histogram shows which problems these two instruments actually have, and sets the test priorities for Phases 4 and 5.
+- The app repository's [harness guide](../docs/harness.md) lists each gate with what it measures.
 
 ### 5.6 The evaluation harness
 
