@@ -219,19 +219,22 @@ packages/CoreEngine/
   bindings/
     NativePianoEngine.cpp
     NativePianoEngine.h
-  cpp/legacy/
-    AudioInput.h
-    Calibration.h
-    Cascade.h
-    Engine.h
-    Fft.h
-    Goertzel.h
-    LiveKeys.h
-    Mpm.h
-    Onset.h
-    PianoProfile.h
-    PolyEstimator.h
-    SampleRing.h
+  cpp/
+    capture/
+      TakeRecorder.h
+    legacy/
+      AudioInput.h
+      Calibration.h
+      Cascade.h
+      Engine.h
+      Fft.h
+      Goertzel.h
+      LiveKeys.h
+      Mpm.h
+      Onset.h
+      PianoProfile.h
+      PolyEstimator.h
+      SampleRing.h
   ios/
     IosAudioInput.h
     IosAudioInput.mm

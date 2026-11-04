@@ -160,6 +160,7 @@
         "packages/CoreEngine/android/OboeInput.h",
         "packages/CoreEngine/bindings/NativePianoEngine.cpp",
         "packages/CoreEngine/bindings/NativePianoEngine.h",
+        "packages/CoreEngine/cpp/capture/TakeRecorder.h",
         "packages/CoreEngine/cpp/legacy/AudioInput.h",
         "packages/CoreEngine/cpp/legacy/Calibration.h",
         "packages/CoreEngine/cpp/legacy/Cascade.h",
@@ -885,6 +886,13 @@
       "nativeModules": [
         "NativePianoEngine"
       ]
+    },
+    {
+      "id": "packages/CoreEngine/cpp/capture/TakeRecorder.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
     },
     {
       "id": "packages/CoreEngine/cpp/legacy/AudioInput.h",

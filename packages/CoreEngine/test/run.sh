@@ -4,6 +4,7 @@
 #   ./run.sh quick|full|upright   the benchmark only
 #   ./run.sh scenarios [section] [harsh]   the regression suite
 #   ./run.sh engine          engine threads and the live key table under ThreadSanitizer, then optimised
+#   ./run.sh capture         the take recorder under ThreadSanitizer, then optimised
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,17 +40,28 @@ engine() {
   "$BUILD/live_keys"
 }
 
+capture() {
+  echo "Compiling the take recorder's tests with ThreadSanitizer..."
+  "$CXX" "${FLAGS[@]}" -O1 -g -fsanitize=thread take_recorder_test.cpp -o "$BUILD/take_recorder_tsan"
+  TSAN_OPTIONS="halt_on_error=1 exitcode=66" "$BUILD/take_recorder_tsan" quick
+  echo "Compiling the take recorder's tests (optimised)..."
+  "$CXX" "${FLAGS[@]}" -O3 take_recorder_test.cpp -o "$BUILD/take_recorder"
+  "$BUILD/take_recorder"
+}
+
 case "${1:-all}" in
   quick | full | upright) benchmark "$1" ;;
   scenarios) shift; scenarios "$@" ;;
   engine) engine ;;
+  capture) capture ;;
   all)
     benchmark quick
     scenarios
     engine
+    capture
     ;;
   *)
-    echo "usage: $0 [quick|full|upright|scenarios [section] [harsh]|engine|all]" >&2
+    echo "usage: $0 [quick|full|upright|scenarios [section] [harsh]|engine|capture|all]" >&2
     exit 2
     ;;
 esac
