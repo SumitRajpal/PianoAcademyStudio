@@ -81,6 +81,7 @@
         "index.js",
         "src/screens/CalibrationScreen",
         "src/screens/LessonScreen",
+        "src/screens/TakeRecorder",
         "src/screens/game/EggHatch"
       ]
     }
@@ -92,7 +93,7 @@
       "kind": "entry",
       "plane": "app",
       "thread": "js",
-      "purpose": "Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection.",
+      "purpose": "Root component: safe-area provider, hidden status bar, and the screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection; and, from either, the developer's take recorder.",
       "entry": "App.tsx",
       "files": [
         "App.tsx"
@@ -671,6 +672,7 @@
       "packages": [
         "react",
         "react-native",
+        "react-native-safe-area-context",
         "react-native-skia"
       ]
     },
@@ -695,6 +697,26 @@
         "react",
         "react-native",
         "react-native-skia"
+      ]
+    },
+    {
+      "id": "src/screens/TakeRecorder",
+      "name": "screens/TakeRecorder",
+      "kind": "screen",
+      "plane": "app",
+      "thread": "js",
+      "purpose": "The take recorder screen (Phase 0 slice 2): records master 5.2's takes from the microphone, exactly as the capture hands them to the engine, with each take's conditions in meta.json, as harness take folders the owner copies to the Mac. A developer screen, reached from calibration and the lesson's engine overlay.",
+      "entry": "src/screens/TakeRecorder/index.ts",
+      "files": [
+        "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+        "src/screens/TakeRecorder/index.ts",
+        "src/screens/TakeRecorder/takeConditions.ts",
+        "src/screens/TakeRecorder/takeRecorderLook.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-safe-area-context"
       ]
     },
     {
@@ -818,7 +840,7 @@
       "plane": "app",
       "thread": "js",
       "lang": "code",
-      "purpose": "Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection.",
+      "purpose": "Root component: safe-area provider, hidden status bar, and the screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection; and, from either, the developer's take recorder.",
       "exports": [
         "default"
       ],
@@ -2827,6 +2849,94 @@
       ]
     },
     {
+      "id": "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+      "module": "src/screens/TakeRecorder",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "TAKE_STATUS_POLL_MS",
+        "TakeRecorderScreen",
+        "TakeRecorderScreenProps"
+      ],
+      "jsOnly": [
+        "TakeRecorderScreen"
+      ]
+    },
+    {
+      "id": "src/screens/TakeRecorder/index.ts",
+      "module": "src/screens/TakeRecorder",
+      "plane": "app",
+      "thread": "any",
+      "lang": "code",
+      "barrel": true,
+      "purpose": "The take recorder screen (Phase 0 slice 2): records master 5.2's takes from the microphone, exactly as the capture hands them to the engine, with each take's conditions in meta.json, as harness take folders the owner copies to the Mac. A developer screen, reached from calibration and the lesson's engine overlay.",
+      "exports": [
+        "CONDITION_OPTIONS",
+        "DEFAULT_CONDITIONS",
+        "STOP_REASONS",
+        "TAKES",
+        "TAKE_RECORDER_LOOK",
+        "TAKE_STATUS_POLL_MS",
+        "TakeConditions",
+        "TakeId",
+        "TakeMeta",
+        "TakeRecorderLook",
+        "TakeRecorderScreen",
+        "TakeRecorderScreenProps",
+        "buildTakeMeta",
+        "captureOf",
+        "completeTakeMeta",
+        "conditionsFromMeta",
+        "formatBytes",
+        "formatDuration",
+        "formatPeak",
+        "instrumentLabel",
+        "takeFolderId",
+        "takeName"
+      ],
+      "jsOnly": [
+        "TakeRecorderScreen"
+      ]
+    },
+    {
+      "id": "src/screens/TakeRecorder/takeConditions.ts",
+      "module": "src/screens/TakeRecorder",
+      "plane": "app",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CONDITION_OPTIONS",
+        "DEFAULT_CONDITIONS",
+        "STOP_REASONS",
+        "TAKES",
+        "TakeConditions",
+        "TakeId",
+        "TakeMeta",
+        "buildTakeMeta",
+        "captureOf",
+        "completeTakeMeta",
+        "conditionsFromMeta",
+        "formatBytes",
+        "formatDuration",
+        "formatPeak",
+        "instrumentLabel",
+        "takeFolderId",
+        "takeName"
+      ]
+    },
+    {
+      "id": "src/screens/TakeRecorder/takeRecorderLook.ts",
+      "module": "src/screens/TakeRecorder",
+      "plane": "app",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "TAKE_RECORDER_LOOK",
+        "TakeRecorderLook"
+      ]
+    },
+    {
       "id": "src/screens/game/EggHatch/EggHatch.tsx",
       "module": "src/screens/game/EggHatch",
       "plane": "app",
@@ -3789,6 +3899,11 @@
     },
     {
       "from": "App.tsx",
+      "to": "packages/CoreEngine/src/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "App.tsx",
       "to": "src/motion/scenes/PianoMaster/index.ts",
       "kind": "imports"
     },
@@ -3810,6 +3925,16 @@
     {
       "from": "App.tsx",
       "to": "src/screens/LessonScreen/index.ts",
+      "kind": "renders"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/TakeRecorder/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/TakeRecorder/index.ts",
       "kind": "renders"
     },
     {
@@ -6252,6 +6377,42 @@
       "typeOnly": true
     },
     {
+      "from": "src/screens/TakeRecorder/index.ts",
+      "to": "src/screens/TakeRecorder/takeConditions.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/TakeRecorder/index.ts",
+      "to": "src/screens/TakeRecorder/takeRecorderLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/TakeRecorder/index.ts",
+      "to": "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/TakeRecorder/takeConditions.ts",
+      "to": "packages/CoreEngine/src/index.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+      "to": "packages/CoreEngine/src/index.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+      "to": "src/screens/TakeRecorder/takeConditions.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "src/screens/TakeRecorder/TakeRecorderScreen.tsx",
+      "to": "src/screens/TakeRecorder/takeRecorderLook.ts",
+      "kind": "imports"
+    },
+    {
       "from": "src/shared/piano/index.ts",
       "to": "src/shared/piano/keyboard.ts",
       "kind": "imports"
@@ -6277,6 +6438,13 @@
     },
     {
       "from": "App.tsx",
+      "to": "packages/CoreEngine",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "App.tsx",
       "to": "src/motion/scenes/PianoMaster",
       "kinds": [
         "imports"
@@ -6293,6 +6461,14 @@
     {
       "from": "App.tsx",
       "to": "src/screens/LessonScreen",
+      "kinds": [
+        "imports",
+        "renders"
+      ]
+    },
+    {
+      "from": "App.tsx",
+      "to": "src/screens/TakeRecorder",
       "kinds": [
         "imports",
         "renders"
@@ -6759,6 +6935,13 @@
     {
       "from": "src/screens/LessonScreen",
       "to": "src/shared/typography",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/TakeRecorder",
+      "to": "packages/CoreEngine",
       "kinds": [
         "imports"
       ]

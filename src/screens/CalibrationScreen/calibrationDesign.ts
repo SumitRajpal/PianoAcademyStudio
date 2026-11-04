@@ -141,6 +141,16 @@ export const CALIBRATION_DESIGN = {
     top: LESSON_DESIGN.keyboard.top,
     height: LESSON_DESIGN.keyboard.height,
   },
+  /** The developer's "Record takes" button, top left, clear of the centred title (design points, inside the safe area). */
+  recordTakes: {
+    top: 8,
+    left: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    radius: 6,
+    fill: 'rgba(0, 0, 0, 0.25)',
+    text: { size: 11, color: '#FFFFFF' },
+  },
 };
 
 /** The box of choice `index` in a row of buttons `width` wide. */

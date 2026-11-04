@@ -13,7 +13,7 @@
 | MOTION | ui | 25 | piano visuals and game scenes drawn with Skia (UI thread + GPU) |
 | SHARED | any | 2 | types, utilities and music-theory tables usable from any thread |
 | PLATFORM | native | 2 | iOS and Android projects and native modules |
-| APP | js | 5 | screens, navigation, lessons, scoring, progress, storage (JS thread) |
+| APP | js | 6 | screens, navigation, lessons, scoring, progress, storage (JS thread) |
 
 **No problems.** Every rule passes, every module has a purpose, and every flow matches the code.
 
@@ -21,11 +21,11 @@
 
 | Module | Kind | Plane | Thread | Purpose | Uses | Used by |
 |---|---|---|---|---|---|---|
-| `App.tsx` | entry | app | js | Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection. | `motion/scenes/PianoMaster`, `screens/CalibrationScreen`, `screens/LessonScreen` | `index.js` |
+| `App.tsx` | entry | app | js | Root component: safe-area provider, hidden status bar, and the screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection; and, from either, the developer's take recorder. | `packages/CoreEngine`, `motion/scenes/PianoMaster`, `screens/CalibrationScreen`, `screens/LessonScreen`, `screens/TakeRecorder` | `index.js` |
 | `android` | platform | platform | native | Android app project: Gradle build, MainActivity, manifest and native Android code | `packages/CoreEngine` | — |
 | `index.js` | entry | app | js | Native entry point: registers the root App component with React Native. | `App.tsx` | — |
 | `ios` | platform | platform | native | iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code | — | — |
-| `packages/CoreEngine` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side, and the take recorder that saves what the mic hears for the evaluation harness. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `screens/CalibrationScreen`, `screens/LessonScreen` |
+| `packages/CoreEngine` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side, and the take recorder that saves what the mic hears for the evaluation harness. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `App.tsx`, `screens/CalibrationScreen`, `screens/LessonScreen`, `screens/TakeRecorder` |
 | `motion/scenes/PianoMaster` | scene | motion | any | The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it. | `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `App.tsx`, `screens/CalibrationScreen`, `screens/LessonScreen` |
 | `motion/scenes/PianoMaster/CoreNotes` | module | motion | ui | The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead). | `motion/scenes/PianoMaster/CoreNotes/DurationBar`, `motion/scenes/PianoMaster/CoreNotes/Playhead`, `motion/scenes/PianoMaster/CoreNotes/StaffPaper`, `motion/scenes/PianoMaster/CoreNotes/symbols`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `motion/scenes/PianoMaster` |
 | `motion/scenes/PianoMaster/CoreNotes/DurationBar` | module | motion | ui | The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CoreNotes` |
@@ -53,6 +53,7 @@
 | `motion/scenes/PianoMaster/shared` | module | motion | ui | What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, paint helpers, picture recording and the look units; and for the music symbols, SMuFL glyph drawing, staff line positions and the notation ink. | `shared/piano` | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CoreNotes/DurationBar`, `motion/scenes/PianoMaster/CoreNotes/Playhead`, `motion/scenes/PianoMaster/CoreNotes/StaffPaper`, `motion/scenes/PianoMaster/CoreNotes/symbols/Barline` +17 |
 | `screens/CalibrationScreen` | screen | app | js | The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson. | `packages/CoreEngine`, `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CorePiano`, `screens/LessonScreen`, `shared/piano`, `shared/typography` | `App.tsx` |
 | `screens/LessonScreen` | screen | app | js | The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape; and the lesson's connection to the note engine, with its diagnostics overlay and the microphone messages. | `packages/CoreEngine`, `motion/scenes/PianoMaster`, `shared/piano`, `shared/typography` | `App.tsx`, `screens/CalibrationScreen` |
+| `screens/TakeRecorder` | screen | app | js | The take recorder screen (Phase 0 slice 2): records master 5.2's takes from the microphone, exactly as the capture hands them to the engine, with each take's conditions in meta.json, as harness take folders the owner copies to the Mac. A developer screen, reached from calibration and the lesson's engine overlay. | `packages/CoreEngine` | `App.tsx` |
 | `screens/game/EggHatch` | screen | app | js | The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4. | — | — |
 | `shared/piano` | module | shared | any | The piano model: notes, MIDI numbers, frequencies, keyboards of any size and key positions. Pure code, usable from any thread. | — | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/CorePiano/PianoKeyLabel`, `motion/scenes/PianoMaster/shared`, `screens/CalibrationScreen` +1 |
 | `shared/typography` | module | shared | any | The system fonts (SF Pro and SF Pro Rounded) and their metrics, so text can be placed by its baseline. React Native font family for SF Pro Rounded on iOS. | — | `motion/scenes/PianoMaster/CorePiano/PianoKeyLabel`, `screens/CalibrationScreen`, `screens/LessonScreen` |
@@ -94,8 +95,8 @@ flowchart LR
     m29["motion/scenes/PianoMaster/shared"]
   end
   subgraph plane_shared["SHARED · any"]
-    m33["shared/piano"]
-    m34["shared/typography"]
+    m34["shared/piano"]
+    m35["shared/typography"]
   end
   subgraph plane_platform["PLATFORM · native"]
     m1["android"]
@@ -106,23 +107,26 @@ flowchart LR
     m2["index.js"]
     m30["screens/CalibrationScreen"]
     m31["screens/LessonScreen"]
-    m32["screens/game/EggHatch"]
+    m32["screens/TakeRecorder"]
+    m33["screens/game/EggHatch"]
   end
   m1 --> m4
+  m0 --> m4
   m0 --> m5
   m0 -->|renders| m30
   m0 -->|renders| m31
+  m0 -->|renders| m32
   m2 --> m0
   m5 --> m6
   m5 --> m21
   m5 --> m29
-  m5 --> m33
+  m5 --> m34
   m6 --> m7
   m6 --> m8
   m6 --> m9
   m6 --> m10
   m6 --> m29
-  m6 --> m33
+  m6 --> m34
   m7 --> m29
   m8 --> m29
   m9 --> m29
@@ -157,27 +161,28 @@ flowchart LR
   m21 --> m26
   m21 --> m28
   m21 --> m29
-  m21 --> m33
+  m21 --> m34
   m22 --> m29
   m23 --> m29
   m24 --> m29
   m27 --> m29
   m25 --> m29
-  m25 --> m33
   m25 --> m34
+  m25 --> m35
   m26 --> m29
   m28 --> m29
-  m29 --> m33
+  m29 --> m34
   m30 --> m4
   m30 -->|renders| m5
   m30 --> m21
   m30 --> m31
-  m30 --> m33
   m30 --> m34
+  m30 --> m35
   m31 --> m4
   m31 -->|renders| m5
-  m31 --> m33
   m31 --> m34
+  m31 --> m35
+  m32 --> m4
 ```
 
 ## 4. Flows
@@ -396,6 +401,11 @@ src/
       index.ts
       lessonDesign.ts
       micStatusMessages.ts
+    TakeRecorder/
+      TakeRecorderScreen.tsx
+      index.ts
+      takeConditions.ts
+      takeRecorderLook.ts
     game/EggHatch/
       EggHatch.tsx
       eggHatchDesign.ts

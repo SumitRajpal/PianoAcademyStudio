@@ -72,6 +72,9 @@ export type EngineDiagnosticsProps = {
   /** Shows a Calibrate button in the diagnostics that calls this (to open the calibration screen). */
   onCalibrate?: () => void;
 
+  /** Shows the developer's "Record takes" button, which calls this (to open the take recorder). */
+  onRecordTakes?: () => void;
+
   /**
    * Optional styling container for the diagnostic overlay.
    */
@@ -87,6 +90,7 @@ export function EngineDiagnostics({
   onNoteDetected,
   onCalibrationComplete,
   onCalibrate,
+  onRecordTakes,
   style,
 }: EngineDiagnosticsProps) {
   // The engine speaks MIDI numbers; note names are resolved here, once per list.
@@ -152,6 +156,15 @@ export function EngineDiagnostics({
               <Text style={styles.calBtnText}>
                 {profile?.isCalibrated ? '✓ Calibrated' : 'Calibrate'}
               </Text>
+            </TouchableOpacity>
+          ) : null}
+          {onRecordTakes ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={styles.calBtn}
+              onPress={onRecordTakes}
+            >
+              <Text style={styles.calBtnText}>Record takes</Text>
             </TouchableOpacity>
           ) : null}
         </View>

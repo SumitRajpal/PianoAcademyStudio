@@ -175,6 +175,21 @@ describe('CalibrationScreen', () => {
     );
   });
 
+  it('offers Record takes only when the app can open the take recorder', () => {
+    expect(texts(renderer.root)).not.toContain('Record takes');
+    const onRecordTakes = jest.fn();
+    act(() => {
+      renderer.update(
+        <CalibrationScreen onSaved={onSaved} onRecordTakes={onRecordTakes} />,
+      );
+    });
+    const button = renderer.root.findAll(
+      node => node.props.accessibilityRole === 'button' && typeof node.props.onPress === 'function' && texts(node) === 'Record takes',
+    )[0];
+    act(() => button.props.onPress());
+    expect(onRecordTakes).toHaveBeenCalledTimes(1);
+  });
+
   it('says when the microphone is off', () => {
     act(() =>
       mockAudioEngine.simulateStatus({

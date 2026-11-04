@@ -6,17 +6,19 @@
  * a key green or red as each strike is checked. Saving goes on to the lesson.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   useWindowDimensions,
   View,
   type StyleProp,
   type TextStyle,
 } from 'react-native';
 import { Canvas, Picture } from 'react-native-skia';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import {
   CorePiano,
@@ -58,12 +60,21 @@ const PAPER_TEXT_WIDTH = 760;
 const LINK_WIDTH = 160;
 const MARKERS: readonly NoteInput[] = ['C4'];
 
+const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
+
 export type CalibrationScreenProps = {
   /** Called once the user has saved the calibration. */
   onSaved: () => void;
+  /** Shows the developer's "Record takes" button, which calls this (to open the take recorder). */
+  onRecordTakes?: () => void;
 };
 
-export function CalibrationScreen({ onSaved }: CalibrationScreenProps) {
+export function CalibrationScreen({
+  onSaved,
+  onRecordTakes,
+}: CalibrationScreenProps) {
+  // Zero insets where no SafeAreaProvider is above (tests).
+  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
   const { width, height } = useWindowDimensions();
   const scale = width / DESIGN_SIZE.width;
   const design = CALIBRATION_DESIGN;
@@ -282,6 +293,22 @@ export function CalibrationScreen({ onSaved }: CalibrationScreenProps) {
           },
         ]}
       />
+
+      {onRecordTakes ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={onRecordTakes}
+          style={[
+            styles.recordTakes,
+            {
+              top: Math.max(insets.top, design.recordTakes.top * scale),
+              left: Math.max(insets.left, design.recordTakes.left * scale),
+            },
+          ]}
+        >
+          <Text style={styles.recordTakesText}>Record takes</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -509,6 +536,18 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: CALIBRATION_DESIGN.bottomStrip,
+  },
+  recordTakes: {
+    position: 'absolute',
+    paddingHorizontal: CALIBRATION_DESIGN.recordTakes.paddingHorizontal,
+    paddingVertical: CALIBRATION_DESIGN.recordTakes.paddingVertical,
+    borderRadius: CALIBRATION_DESIGN.recordTakes.radius,
+    backgroundColor: CALIBRATION_DESIGN.recordTakes.fill,
+  },
+  recordTakesText: {
+    fontSize: CALIBRATION_DESIGN.recordTakes.text.size,
+    color: CALIBRATION_DESIGN.recordTakes.text.color,
+    fontWeight: '600',
   },
   keyboard: {
     position: 'absolute',

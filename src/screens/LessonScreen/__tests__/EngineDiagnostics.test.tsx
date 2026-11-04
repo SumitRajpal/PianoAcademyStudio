@@ -124,6 +124,22 @@ describe('EngineDiagnostics', () => {
     expect(onCalibrate).toHaveBeenCalledTimes(1);
   });
 
+  it('offers Record takes only when the app can open the take recorder', async () => {
+    let renderer: any;
+    await act(async () => {
+      renderer = create(<EngineDiagnostics showDiagnostics />);
+    });
+    expect(textOf(renderer.root)).not.toContain('Record takes');
+    const onRecordTakes = jest.fn();
+    await act(async () => {
+      renderer.update(
+        <EngineDiagnostics showDiagnostics onRecordTakes={onRecordTakes} />,
+      );
+    });
+    pressText(renderer.root, 'Record takes');
+    expect(onRecordTakes).toHaveBeenCalledTimes(1);
+  });
+
   it('shows microphone problems the user can fix', async () => {
     let renderer: any;
     await act(async () => {
