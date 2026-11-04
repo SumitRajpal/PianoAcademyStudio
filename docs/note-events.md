@@ -10,8 +10,8 @@ mic ─▶ audio thread ─(lock-free sample ring)─▶ analysis thread (C++)
                       LiveKeys: one slot per MIDI note (0-127)  +  NoteEventRing: last 256 notes
                          │                                              │
    UI thread, every frame (and right after a JS wake):     JS thread, woken at most once at a time:
-   version changed? → apply the changed keys to the        reads every new note in order
-   PianoState → CorePiano redraws                          → noteEventBus → listeners
+   version changed? → hand the changed keys to the         reads every new note in order
+   key sink → PianoState → CorePiano redraws               → noteEventBus → listeners
 ```
 
 ## The two shared structures (`shared/LiveKeys.h`)
@@ -41,7 +41,7 @@ subscribes while keys are held hears about them.
 
 | Who                      | How                                                            | Cost                                                                  |
 | ------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------- |
-| CorePiano (key lights)   | `useLiveKeys(pianoState)`: a frame callback on the UI thread   | one number compared per frame; O(changed keys) when something changed |
+| CorePiano (key lights)   | `useLiveKeys(keySink)`: a frame callback on the UI thread      | one number compared per frame; O(changed keys) when something changed |
 | Any code, "is C4 down?"  | `getLiveKeys().isDown(60)` or `.key(60)`, from JS or a worklet | O(1), one atomic read                                                 |
 | Listeners for every note | `noteEventBus.subscribeNote(listener)`                         | O(listeners) per note                                                 |
 | Listeners for one key    | `noteEventBus.subscribeKey(60, listener)`                      | other keys' notes cost them nothing                                   |
@@ -52,6 +52,16 @@ UI thread to look at once, so the key can show before that frame. A key struck
 and released between two looks still lights for 120 ms
 (`CORE_PIANO_NOTES_DETECTION_LOOK.keys.shortestLitMs`).
 
+## The key sink
+
+The engine does not know what draws the keys. The screen hands it a key
+sink, `{ press(midi, level), release(midi) }`, two worklets that the frame
+callback calls on the UI thread; PianoMaster's key state makes one with
+`usePianoKeySink(piano)`, which is `pressKey` and `releaseKey` underneath. The
+engine and PianoMaster never import each other: TypeScript matches the two
+shapes ([ADR 0002](adr/0002-engine-output-through-sinks.md)). Pass the same
+sink every render, so the frame callback is registered once.
+
 The JS thread is woken through one `AsyncCallback` at a time: however many
 notes arrive while it is busy, one drain is pending and it reads them all. The
 only lock left on the analysis thread is inside React Native's scheduler,
@@ -61,7 +71,8 @@ taken for that one wake.
 
 - Do not put note state in React state for anything that must keep up with
   playing; read the table, or listen with `subscribeKey`.
-- Do not press keys from JS for mic input; pass `pianoState` to the detector.
+- Do not press keys from JS for mic input; pass a key sink to the detector
+  (`useCorePianoNotesDetection({ keySink: usePianoKeySink(piano) })`).
 - Listeners run on the JS thread: keep them short, never block.
 
 ## Tests

@@ -61,9 +61,10 @@ unchanged chord, a repeated press or a release of a key that is up changes
 nothing and does not redraw. Invalid MIDI numbers are ignored; a level of 0
 releases.
 
-The mic does not call these from JS. `CorePianoNotesDetection` (or
-`useCorePianoNotesDetection({ pianoState })`) lights the keys on the UI thread
-straight from the engine's native key table, so detected keys never wait for
+The mic does not call these from JS. The note engine lights the keys on the
+UI thread straight from its native key table, through the key sink a screen
+hands it (`useCorePianoNotesDetection({ keySink: usePianoKeySink(piano) })`, as
+the lesson screen's `EngineDiagnostics` does), so detected keys never wait for
 the JS thread: see [note-events.md](note-events.md).
 
 All of these are worklets. Call them on the UI thread (a worklet input

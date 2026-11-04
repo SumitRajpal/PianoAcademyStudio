@@ -24,6 +24,7 @@ Terms used in this project's code, docs and conversations.
 | Free mode / lesson mode | Free mode detects whatever is played; lesson mode checks against the expected notes. |
 | Calibration profile | What calibration measures for the owner's piano (tuning, stretch, soft and firm levels per key), saved as JSON. |
 | LiveKeys | The lock-free table (one slot per MIDI note) that the engine writes and the UI thread reads every frame. |
+| Key sink | `{ press(midi, level), release(midi) }`: two worklets a screen hands the engine, which calls them from its UI-thread frame callback for every key that changed. PianoMaster's key state makes one (`usePianoKeySink`). The engine and PianoMaster never import each other. |
 | NoteEventRing | The last 256 notes in order, read by JS listeners through `noteEventBus`. |
 
 ## Motion

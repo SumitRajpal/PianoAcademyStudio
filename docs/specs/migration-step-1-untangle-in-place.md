@@ -1,6 +1,6 @@
 # Feature: Migration step 1, untangle in place
 
-- **Status:** Draft, waiting for the owner's approval
+- **Status:** Built on 4 November 2026 on `claude/chore-setup`; waiting for the owner's iPhone check. Approved the same day with every recommendation: the overlay and messages in LessonScreen (1a), note names out of the engine now (2a), and the wires-at-mount flow step (3a)
 - **Owner's request:** 4 November 2026: start building with "Reshape then Harness": UI Phase 1's migration step 1 (untangle in place), then step 2 (`packages/CoreEngine`), then the engine's Phase 0 harness. Step 1, as approved in [UI Phase 1, Migration plan](../../documentation/04-ui-phase-1-structure.md#migration-plan): "Sinks replace the engine's imports of PianoMaster's `pianoState`. PianoMaster stops re-exporting the engine. The diagnostics overlay, `STATUS_MESSAGES` and `calibrationGuide` move out to the screens that use them. Gate: golden frames identical."
 
 ## Goal
@@ -113,6 +113,19 @@ Staying in the engine until a later step:
 2. Save: the lesson opens; single notes, fast repeats and chords light at once, as before.
 3. The overlay shows the note, the cents needle and the timing line; Calibrate returns to calibration.
 4. With the microphone turned off in iOS Settings, the overlay shows the same message.
+
+### Results (4 November 2026, cloud workspace)
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | Clean |
+| `npm test` | 126 of 129 pass. The 3 failures are the baseline's EggHatch tests |
+| `npm run test:tooling` | 35 of 35 (31 before, plus 4 for the wiring step) |
+| `npm run arch:check` | Passes. The engine uses no app module and is used by the two screens, iOS and Android; PianoMaster no longer uses it. `/arch hot-path` shows no warning |
+| Golden frames | All 7 byte-identical before and after (`compare.mjs`: 0.00) |
+| Engine gate | 46 of 46 |
+
+Not checked here, because it needs the phone: the four iPhone steps above. In particular, the frame callback now captures the sink object and calls its worklets; Jest mocks the UI thread, so only a Release build proves it on the device.
 
 ### Delivery
 

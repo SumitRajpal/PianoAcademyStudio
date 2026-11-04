@@ -1,8 +1,8 @@
 # 0002. The note engine hands detected keys to a sink
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-04
-- **Decided by:** proposed by Claude, waiting for the owner (part of [migration step 1](../specs/migration-step-1-untangle-in-place.md))
+- **Decided by:** the owner, approving [migration step 1's spec](../specs/migration-step-1-untangle-in-place.md) on 2026-11-04
 
 ## Context
 
@@ -17,7 +17,7 @@ The engine lights CorePiano's keys by importing PianoMaster's key state (`pressK
 
 ## Decision
 
-Option 1, proposed and waiting for the owner.
+Option 1.
 
 ## Consequences
 
