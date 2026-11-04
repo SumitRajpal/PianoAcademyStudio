@@ -118,7 +118,10 @@ export function renderSummary(graph, flows, problems, { budget = 6000 } = {}) {
     return lines;
   };
   const flowLines = flows.map(
-    f => `Flow ${f.name}: ${f.steps.map(s => leafOf(s)).join(' → ')}`,
+    f =>
+      `Flow ${f.name}: ${f.steps
+        .map((s, i) => (f.wiring?.[i] ? `[${leafOf(s)}]` : leafOf(s)))
+        .join(' → ')}`,
   );
   const problemLines = problems
     .slice(0, 6)

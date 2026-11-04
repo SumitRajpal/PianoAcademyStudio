@@ -2,6 +2,9 @@
  * Data flows written by Claude in docs/architecture/flows.md.
  * Each flow is a `## name` heading followed by a ```flow block of arrow-separated steps.
  * The checker confirms every step exists and every hop is a real connection in the code.
+ * A step in square brackets, `[screens/Lesson]`, is a module that wires its two
+ * neighbours together when it mounts and runs nothing per frame: its connections
+ * are still checked, and hot-path does not count it as a hop.
  */
 
 import { CODE_EXT } from './constants.mjs';
@@ -31,11 +34,15 @@ export function parseFlows(text) {
       if (/^```\s*$/.test(line)) {
         inBlock = false;
         if (current) {
-          current.steps = buffer
+          const written = buffer
             .join(' ')
             .split(/\s*(?:->|→|=>)\s*/)
             .map(s => s.trim())
             .filter(Boolean);
+          current.steps = written.map(s =>
+            s.replace(/^\[\s*(.+?)\s*\]$/, '$1'),
+          );
+          current.wiring = written.map(s => /^\[.+\]$/.test(s));
         }
         buffer = [];
       } else {
@@ -62,6 +69,11 @@ export function parseFlows(text) {
     }
   });
   return flows.filter(f => f.steps && f.steps.length);
+}
+
+/** A flow's steps as written: modules that only wire their neighbours keep their [brackets]. */
+export function flowStepLabels(flow) {
+  return flow.steps.map((s, i) => (flow.wiring?.[i] ? `[${s}]` : s));
 }
 
 export function makeStepResolver(graph, config) {
@@ -100,6 +112,20 @@ export function checkFlows(graph, flows, config) {
   }
   for (const flow of flows) {
     let prev = null;
+    flow.steps.forEach((step, i) => {
+      if (!flow.wiring?.[i]) {
+        return;
+      }
+      const isModule = s => s !== undefined && resolveStep(s).module;
+      if (!isModule(flow.steps[i - 1]) || !isModule(flow.steps[i + 1])) {
+        problems.push({
+          type: 'flow-wiring-misplaced',
+          flow: flow.name,
+          step,
+          message: `Flow "${flow.name}": [${step}] wires its neighbours at mount, so it needs a module on each side.`,
+        });
+      }
+    });
     for (const step of flow.steps) {
       const r = resolveStep(step);
       if (r.unknown) {

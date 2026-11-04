@@ -150,9 +150,15 @@ export function hotPath(idx, flows, config) {
       `Flow ${f.name}:${f.jsOk ? ' (crosses the JS thread on purpose)' : ''}`,
     );
     let sawAudio = false;
-    for (const step of f.steps) {
+    for (const [i, step] of f.steps.entries()) {
       const r = resolveStep(step);
-      if (r.module) {
+      if (r.module && f.wiring?.[i]) {
+        // Connects its neighbours when it mounts; nothing of it runs per frame.
+        const m = idx.modules.get(r.module);
+        lines.push(
+          `  ${m.name} [${m.thread}]   (wires at mount; nothing per frame)`,
+        );
+      } else if (r.module) {
         const m = idx.modules.get(r.module);
         const onJs = sawAudio && m.thread === 'js';
         const warn = onJs

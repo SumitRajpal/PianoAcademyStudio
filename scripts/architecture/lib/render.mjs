@@ -200,7 +200,8 @@ export function renderArchitectureDoc(graph, flows, problems, existingDoc) {
     out.push('_No flows yet. Add them to [flows.md](flows.md)._', '');
   } else {
     for (const f of flows) {
-      out.push(`- **${f.name}:** ${f.steps.join(' → ')}`);
+      const steps = f.steps.map((s, i) => (f.wiring?.[i] ? `[${s}]` : s));
+      out.push(`- **${f.name}:** ${steps.join(' → ')}`);
     }
     out.push('');
   }
