@@ -17,6 +17,9 @@ Terms used in this project's code, docs and conversations.
 
 | Term | Meaning |
 |---|---|
+| Reevo 2 | The note engine being built, from the master plan in `documentation/`. One engine: DSP evidence, and later neural evidence, feed one decision layer. It replaces v1.2. |
+| v1.2 (legacy engine) | The engine the app runs today (`packages/CoreEngine/cpp/legacy`), built from the Apex v2.0 design. It gets no new detection work: Phase 0 measures it as the bar Reevo 2 must beat, it stays as a legacy toggle for comparison, and Phase 8 removes it. |
+| Apex v1, Apex v2, Reevo | Earlier engine designs, compared in the research report that started Reevo 2 (`documentation/research/`). Reevo 2 keeps Reevo's structure and v1.2 came from Apex v2; none is built on its own. |
 | Onset | The moment a key is struck: a jump in new energy, found before the pitch is sure. |
 | Partials / harmonics | The frequencies a piano string sounds above its fundamental; they make octave errors possible. |
 | MPM / NSDF | The pitch method used for single notes (McLeod pitch method, normalised square difference function). |

@@ -4,7 +4,9 @@ Phases of the Claude setup ([DESIGN.md](claude-setup/DESIGN.md)) and the app's i
 
 ## Implementation (from 2026-11-04)
 
-The plan lives in [documentation/](../documentation/README.md): the engine master v1.6 and the five UI phases. On 4 November 2026 the owner chose the order: reshape the repository first (lane A, steps 1 and 2), then build the engine's Phase 0 harness (lane B). The master's own order of work is its section 16.1.
+The plan lives in [documentation/](../documentation/README.md): the Reevo 2 engine master v1.7 and the five UI phases. On 4 November 2026 the owner chose the order: reshape the repository first (lane A, steps 1 and 2), then build the engine's Phase 0 harness (lane B). The master's own order of work is its section 16.1.
+
+Reevo 2 is the only engine being built (the owner, 4 November 2026). Its DSP evidence (lane B) and neural evidence (lane C) feed one decision layer. v1.2, the engine the app runs today, gets no new detection work: Phase 0 measures it as the bar Reevo 2 must beat, Phase 7 keeps it as the legacy toggle for comparing the two on the piano, and Phase 8 removes it (master 1, 12.5 and 13.5).
 
 ### Lane A: reshape the repository (UI Phase 1, migration plan)
 
@@ -13,7 +15,7 @@ The plan lives in [documentation/](../documentation/README.md): the engine maste
 - [ ] Step 3: build the layers: PianoStage, LessonKit, the route folders, navigation
 - [ ] Step 4: rules and docs: Phase 1's rules in `config.mjs`, flows, glossary, CLAUDE.md
 
-### Lane B: the Reevo 2 DSP engine (master sections 5–13)
+### Lane B: Reevo 2 with DSP evidence (master sections 5–13)
 
 - [ ] Phase 0: recording rig, corpus and ground truth, metrics, the desktop harness, the v1.2 rejection log and baseline (master 5). [Spec](specs/phase-0-harness.md), [ADR 0004](adr/0004-evaluation-harness.md) and [guide](harness.md). Slice 1 (runner, scorer, rejection log, synthetic takes) built on 2026-11-04; next: slice 2, the app's developer recording mode, then slice 3, the PSR-E343 rig and your recordings
 - [ ] Phase 1: capture hardening, in parallel (6)
@@ -22,7 +24,7 @@ The plan lives in [documentation/](../documentation/README.md): the engine maste
 - [ ] Phase 7: integration beside the legacy v1.2 engine (12)
 - [ ] Phase 8: the release gate; DSP becomes the default and v1.2 is removed (13)
 
-### Lane C: the neural engine (master section 14)
+### Lane C: Reevo 2's neural evidence (master section 14)
 
 - [ ] N1–N11, from when Phase 2's features and the Phase 0 rig exist. Personal or paid use is settled before N2 (master 16.3)
 

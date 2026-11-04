@@ -2,7 +2,7 @@
 
 A piano-learning app: React Native 0.87 (bare CLI, New Architecture, Hermes), TypeScript. It has two equal pillars:
 
-- **Listening:** a C++ note engine hears the piano through the mic: onsets, pitch, chords, calibration.
+- **Listening:** a C++ note engine hears the piano through the mic: onsets, pitch, chords, calibration. Reevo 2, planned in [documentation/](documentation/README.md), is the only engine being built. v1.2 (`packages/CoreEngine/cpp/legacy`), which the app runs today, is the baseline and comparison fallback until Phase 8 removes it.
 - **Motion:** advanced 2D animation at 120 fps that moves in sync with the sound.
 
 How this Claude setup works and why: [docs/claude-setup/DESIGN.md](docs/claude-setup/DESIGN.md).
