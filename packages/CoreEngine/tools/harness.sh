@@ -32,6 +32,7 @@ case "${1:-}" in
   test)
     "$(tool harness_test "$DIR/test/harness_test.cpp")"
     (cd "$DIR/score" && "$PYTHON" -m unittest -q test_score)
+    (cd "$DIR/rig" && "$PYTHON" -m unittest -q test_rig)
     ;;
   synth)
     [[ $# -ge 2 ]] || { echo "usage: $0 synth <out> [take ...]" >&2; exit 2; }
