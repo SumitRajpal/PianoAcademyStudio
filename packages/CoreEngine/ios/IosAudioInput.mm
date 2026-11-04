@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "../cpp/capture/TakeRecorder.h"
+
 namespace piano {
 
 namespace {
@@ -48,6 +50,7 @@ const char* kDeniedMessage = "Microphone access is off. Turn it on in Settings >
 IosAudioInput::IosAudioInput(EngineRing& ring) : ring_(ring), shared_(std::make_shared<Shared>()) {
   shared_->owner = this;
   capture_.assign(kMaxFramesPerSlice, 0.0f);
+  capture::takeRecorder();  // built here, so the audio thread never builds it
 }
 
 IosAudioInput::~IosAudioInput() {
@@ -304,6 +307,8 @@ OSStatus IosAudioInput::inputCallback(void* refCon, AudioUnitRenderActionFlags* 
   list.mBuffers[0].mData = self->capture_.data();
   if (AudioUnitRender(self->unit_, flags, timeStamp, bus, frames, &list) == noErr) {
     self->ring_.push(self->capture_.data(), frames);
+    // The take recorder gets the same samples; it returns at once unless a take is armed.
+    capture::takeRecorder().push(self->capture_.data(), frames);
   }
   return noErr;
 }

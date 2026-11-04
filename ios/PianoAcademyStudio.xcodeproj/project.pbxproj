@@ -14,6 +14,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A10000012CA4567400000003 /* IosAudioInput.mm in Sources */ = {isa = PBXBuildFile; fileRef = A10000012CA4567400000002 /* IosAudioInput.mm */; settings = {COMPILER_FLAGS = "-O3"; }; };
 		A10000012CA4567400000006 /* NativePianoEngineProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = A10000012CA4567400000005 /* NativePianoEngineProvider.mm */; settings = {COMPILER_FLAGS = "-O3"; }; };
+		A10000012CA4567400000009 /* NativeTakeRecorderProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = A10000012CA4567400000008 /* NativeTakeRecorderProvider.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,8 @@
 		A10000012CA4567400000002 /* IosAudioInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IosAudioInput.mm; path = ../packages/CoreEngine/ios/IosAudioInput.mm; sourceTree = SOURCE_ROOT; };
 		A10000012CA4567400000004 /* NativePianoEngineProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativePianoEngineProvider.h; path = ../packages/CoreEngine/ios/NativePianoEngineProvider.h; sourceTree = SOURCE_ROOT; };
 		A10000012CA4567400000005 /* NativePianoEngineProvider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NativePianoEngineProvider.mm; path = ../packages/CoreEngine/ios/NativePianoEngineProvider.mm; sourceTree = SOURCE_ROOT; };
+		A10000012CA4567400000007 /* NativeTakeRecorderProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeTakeRecorderProvider.h; path = ../packages/CoreEngine/ios/NativeTakeRecorderProvider.h; sourceTree = SOURCE_ROOT; };
+		A10000012CA4567400000008 /* NativeTakeRecorderProvider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NativeTakeRecorderProvider.mm; path = ../packages/CoreEngine/ios/NativeTakeRecorderProvider.mm; sourceTree = SOURCE_ROOT; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -57,6 +60,8 @@
 				A10000012CA4567400000002 /* IosAudioInput.mm */,
 				A10000012CA4567400000004 /* NativePianoEngineProvider.h */,
 				A10000012CA4567400000005 /* NativePianoEngineProvider.mm */,
+				A10000012CA4567400000007 /* NativeTakeRecorderProvider.h */,
+				A10000012CA4567400000008 /* NativeTakeRecorderProvider.mm */,
 			);
 			name = PianoAcademyStudio;
 			sourceTree = "<group>";
@@ -261,6 +266,7 @@
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				A10000012CA4567400000003 /* IosAudioInput.mm in Sources */,
 				A10000012CA4567400000006 /* NativePianoEngineProvider.mm in Sources */,
+				A10000012CA4567400000009 /* NativeTakeRecorderProvider.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

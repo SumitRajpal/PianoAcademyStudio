@@ -153,13 +153,15 @@
       "kind": "engine",
       "plane": "audio",
       "thread": "audio",
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side, and the take recorder that saves what the mic hears for the evaluation harness. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
       "entry": null,
       "files": [
         "packages/CoreEngine/android/OboeInput.cpp",
         "packages/CoreEngine/android/OboeInput.h",
         "packages/CoreEngine/bindings/NativePianoEngine.cpp",
         "packages/CoreEngine/bindings/NativePianoEngine.h",
+        "packages/CoreEngine/bindings/NativeTakeRecorder.cpp",
+        "packages/CoreEngine/bindings/NativeTakeRecorder.h",
         "packages/CoreEngine/cpp/capture/TakeRecorder.h",
         "packages/CoreEngine/cpp/legacy/AudioInput.h",
         "packages/CoreEngine/cpp/legacy/Calibration.h",
@@ -177,6 +179,8 @@
         "packages/CoreEngine/ios/IosAudioInput.mm",
         "packages/CoreEngine/ios/NativePianoEngineProvider.h",
         "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+        "packages/CoreEngine/ios/NativeTakeRecorderProvider.h",
+        "packages/CoreEngine/ios/NativeTakeRecorderProvider.mm",
         "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
         "packages/CoreEngine/src/index.ts",
         "packages/CoreEngine/src/liveKeys.ts",
@@ -184,6 +188,8 @@
         "packages/CoreEngine/src/noteEventBus.ts",
         "packages/CoreEngine/src/pianoEngine.ts",
         "packages/CoreEngine/src/specs/NativePianoEngine.ts",
+        "packages/CoreEngine/src/specs/NativeTakeRecorder.ts",
+        "packages/CoreEngine/src/takeRecorder.ts",
         "packages/CoreEngine/src/types.ts",
         "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
         "packages/CoreEngine/tools/common/Wav.h",
@@ -888,6 +894,23 @@
       ]
     },
     {
+      "id": "packages/CoreEngine/bindings/NativeTakeRecorder.cpp",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/bindings/NativeTakeRecorder.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family",
+      "nativeModules": [
+        "NativeTakeRecorder"
+      ]
+    },
+    {
       "id": "packages/CoreEngine/cpp/capture/TakeRecorder.h",
       "module": "packages/CoreEngine",
       "plane": "audio",
@@ -1007,6 +1030,20 @@
       "lang": "c-family"
     },
     {
+      "id": "packages/CoreEngine/ios/NativeTakeRecorderProvider.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/ios/NativeTakeRecorderProvider.mm",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
       "id": "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
       "module": "packages/CoreEngine",
       "plane": "audio",
@@ -1024,7 +1061,7 @@
       "thread": "any",
       "lang": "code",
       "barrel": true,
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side, and the take recorder that saves what the mic hears for the evaluation harness. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
       "exports": [
         "AudioEngineStatus",
         "CALIBRATION_STATE",
@@ -1047,6 +1084,10 @@
         "PianoProfile",
         "StatsListener",
         "StatusListener",
+        "StoredTake",
+        "TakeDevice",
+        "TakeStats",
+        "TakeStatus",
         "UseCorePianoNotesDetectionOptions",
         "clearPianoCalibration",
         "createLiveKeysReader",
@@ -1065,6 +1106,7 @@
         "startPianoCalibration",
         "stopAudioDetector",
         "stopPianoCalibration",
+        "takeRecorder",
         "useCorePianoNotesDetection",
         "useLiveKeys"
       ],
@@ -1148,6 +1190,35 @@
         "PianoProfile",
         "Spec",
         "default"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/specs/NativeTakeRecorder.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "Spec",
+        "StoredTake",
+        "TakeDevice",
+        "TakeStats",
+        "TakeStatus",
+        "default"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/takeRecorder.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "StoredTake",
+        "TakeDevice",
+        "TakeStats",
+        "TakeStatus",
+        "takeRecorder"
       ]
     },
     {
@@ -3782,6 +3853,18 @@
       "approx": true
     },
     {
+      "from": "packages/CoreEngine/bindings/NativeTakeRecorder.cpp",
+      "to": "packages/CoreEngine/bindings/NativeTakeRecorder.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/bindings/NativeTakeRecorder.h",
+      "to": "packages/CoreEngine/cpp/capture/TakeRecorder.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
       "from": "packages/CoreEngine/cpp/legacy/Calibration.h",
       "to": "packages/CoreEngine/cpp/legacy/Goertzel.h",
       "kind": "imports",
@@ -3921,6 +4004,12 @@
     },
     {
       "from": "packages/CoreEngine/ios/IosAudioInput.mm",
+      "to": "packages/CoreEngine/cpp/capture/TakeRecorder.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/IosAudioInput.mm",
       "to": "packages/CoreEngine/ios/IosAudioInput.h",
       "kind": "imports",
       "approx": true
@@ -3940,6 +4029,18 @@
     {
       "from": "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
       "to": "packages/CoreEngine/ios/NativePianoEngineProvider.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/NativeTakeRecorderProvider.mm",
+      "to": "packages/CoreEngine/bindings/NativeTakeRecorder.cpp",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/NativeTakeRecorderProvider.mm",
+      "to": "packages/CoreEngine/ios/NativeTakeRecorderProvider.h",
       "kind": "imports",
       "approx": true
     },
@@ -3966,6 +4067,11 @@
     {
       "from": "packages/CoreEngine/src/index.ts",
       "to": "packages/CoreEngine/src/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/takeRecorder.ts",
       "kind": "imports"
     },
     {
@@ -4044,6 +4150,24 @@
       "to": "packages/CoreEngine/bindings/NativePianoEngine.h",
       "kind": "calls-native",
       "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/specs/NativeTakeRecorder.ts",
+      "to": "packages/CoreEngine/bindings/NativeTakeRecorder.h",
+      "kind": "calls-native",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/takeRecorder.ts",
+      "to": "packages/CoreEngine/bindings/NativeTakeRecorder.h",
+      "kind": "calls-native",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/takeRecorder.ts",
+      "to": "packages/CoreEngine/src/specs/NativeTakeRecorder.ts",
+      "kind": "imports",
+      "typeOnly": true
     },
     {
       "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",

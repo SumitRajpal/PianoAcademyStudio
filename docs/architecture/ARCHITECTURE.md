@@ -25,7 +25,7 @@
 | `android` | platform | platform | native | Android app project: Gradle build, MainActivity, manifest and native Android code | `packages/CoreEngine` | — |
 | `index.js` | entry | app | js | Native entry point: registers the root App component with React Native. | `App.tsx` | — |
 | `ios` | platform | platform | native | iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code | — | — |
-| `packages/CoreEngine` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `screens/CalibrationScreen`, `screens/LessonScreen` |
+| `packages/CoreEngine` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side, and the take recorder that saves what the mic hears for the evaluation harness. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `screens/CalibrationScreen`, `screens/LessonScreen` |
 | `motion/scenes/PianoMaster` | scene | motion | any | The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it. | `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `App.tsx`, `screens/CalibrationScreen`, `screens/LessonScreen` |
 | `motion/scenes/PianoMaster/CoreNotes` | module | motion | ui | The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead). | `motion/scenes/PianoMaster/CoreNotes/DurationBar`, `motion/scenes/PianoMaster/CoreNotes/Playhead`, `motion/scenes/PianoMaster/CoreNotes/StaffPaper`, `motion/scenes/PianoMaster/CoreNotes/symbols`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `motion/scenes/PianoMaster` |
 | `motion/scenes/PianoMaster/CoreNotes/DurationBar` | module | motion | ui | The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CoreNotes` |
@@ -219,6 +219,8 @@ packages/CoreEngine/
   bindings/
     NativePianoEngine.cpp
     NativePianoEngine.h
+    NativeTakeRecorder.cpp
+    NativeTakeRecorder.h
   cpp/
     capture/
       TakeRecorder.h
@@ -240,6 +242,8 @@ packages/CoreEngine/
     IosAudioInput.mm
     NativePianoEngineProvider.h
     NativePianoEngineProvider.mm
+    NativeTakeRecorderProvider.h
+    NativeTakeRecorderProvider.mm
   src/
     corePianoNotesDetectionLook.ts
     index.ts
@@ -249,6 +253,8 @@ packages/CoreEngine/
     pianoEngine.ts
     specs/
       NativePianoEngine.ts
+      NativeTakeRecorder.ts
+    takeRecorder.ts
     types.ts
     useCorePianoNotesDetection.ts
   tools/

@@ -76,7 +76,8 @@
     },
     "ios": {
       "modulesProvider": {
-        "NativePianoEngine": "NativePianoEngineProvider"
+        "NativePianoEngine": "NativePianoEngineProvider",
+        "NativeTakeRecorder": "NativeTakeRecorderProvider"
       }
     }
   }
