@@ -6,17 +6,21 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(oboe REQUIRED CONFIG)
 
-set(PIANO_SHARED_DIR ../../../../../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared)
+# The note engine package (ADR 0003): the app compiles its C++ core, its
+# binding and its Android audio input.
+set(CORE_ENGINE_DIR ../../../../../packages/CoreEngine)
 
 add_library(piano_engine SHARED
-    OboeInput.cpp
     OnLoad.cpp
-    ${PIANO_SHARED_DIR}/NativePianoEngine.cpp
+    ${CORE_ENGINE_DIR}/android/OboeInput.cpp
+    ${CORE_ENGINE_DIR}/bindings/NativePianoEngine.cpp
 )
 
 target_include_directories(piano_engine PUBLIC
     .
-    ${PIANO_SHARED_DIR}
+    ${CORE_ENGINE_DIR}/cpp/legacy
+    ${CORE_ENGINE_DIR}/bindings
+    ${CORE_ENGINE_DIR}/android
 )
 
 target_link_libraries(piano_engine

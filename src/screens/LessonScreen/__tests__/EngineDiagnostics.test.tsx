@@ -8,10 +8,7 @@ import {
   type ReactTestRenderer,
 } from 'react-test-renderer';
 
-import {
-  mockAudioEngine,
-  noteEventBus,
-} from '../../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { mockAudioEngine, noteEventBus } from '@pianoacademy/core-engine';
 import {
   createKeyLights,
   isKeyPressed,

@@ -3,7 +3,7 @@
  * and the calibration screen show them; the engine only reports its state.
  */
 
-import type { EngineStatus } from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import type { EngineStatus } from '@pianoacademy/core-engine';
 
 export const STATUS_MESSAGES: Partial<Record<EngineStatus['state'], string>> = {
   permissionPending: 'Waiting for microphone permission…',

@@ -23,10 +23,10 @@ const isTooling = f => f.startsWith('scripts/') || f.startsWith('.claude/');
 // The note engine's regression gate (owner's rule): any change to the C++ engine or the
 // native audio input runs the scenario suite; changes to the threaded parts (engine
 // threads, live key table, sample ring) also run ThreadSanitizer.
-const ENGINE_DIR = 'src/motion/scenes/PianoMaster/CorePianoNotesDetection';
+const ENGINE_DIR = 'packages/CoreEngine';
 const ENGINE_RUN = `${ENGINE_DIR}/test/run.sh`;
 const ENGINE_NATIVE = new RegExp(
-  `^(?:${ENGINE_DIR}/(?:shared|test)/.*\\.(?:h|hpp|cpp|cc|mm)|ios/PianoAcademyStudio/(?:IosAudioInput|NativePianoEngineProvider)\\.(?:h|mm))$`,
+  `^${ENGINE_DIR}/(?:cpp|bindings|ios|android|test)/.*\\.(?:h|hpp|cpp|cc|mm)$`,
 );
 const ENGINE_THREADED =
   /(?:Engine|LiveKeys|SampleRing|NativePianoEngine|AudioInput|engine_test|live_keys_test)\.\w+$/;

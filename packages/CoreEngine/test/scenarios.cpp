@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "../shared/Calibration.h"
-#include "../shared/Cascade.h"
-#include "../shared/SampleRing.h"
+#include "../cpp/legacy/Calibration.h"
+#include "../cpp/legacy/Cascade.h"
+#include "../cpp/legacy/SampleRing.h"
 #include "PianoSynth.h"
 
 using namespace piano;

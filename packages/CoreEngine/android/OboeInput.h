@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <oboe/Oboe.h>
-#include "../../../../../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h"
-#include "../../../../../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h"
+#include "AudioInput.h"
+#include "SampleRing.h"
 
 namespace piano {
 

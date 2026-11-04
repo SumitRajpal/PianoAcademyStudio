@@ -5,8 +5,9 @@
  * Design: docs/claude-setup/DESIGN.md (sections 3 and 4).
  */
 
-// The note-detection engine (audio by role) lives inside PianoMaster.
-const ENGINE = 'src/motion/scenes/PianoMaster/CorePianoNotesDetection';
+// The note-detection engine (audio by role): a workspace package, imported as
+// @pianoacademy/core-engine (ADR 0003).
+const ENGINE = 'packages/CoreEngine';
 // Game scenes keep their per-frame drawing next to the screen.
 const GAME_MOTION = [
   'src/screens/game/*/scene/**',
@@ -18,7 +19,7 @@ const MOTION_CODE = ['src/motion/**', ...GAME_MOTION];
 
 export default {
   // Files and folders scanned for code. Everything else is ignored.
-  roots: ['App.tsx', 'index.js', 'src', 'native', 'ios', 'android'],
+  roots: ['App.tsx', 'index.js', 'src', 'packages', 'native', 'ios', 'android'],
 
   exclude: [
     `${ENGINE}/test/**`,
@@ -41,7 +42,8 @@ export default {
   moduleRoots: ['src', 'native'],
 
   // Folders that are one module even without an index file (native code has none).
-  folderModules: ['native/*'],
+  // A workspace package is one module: its TypeScript door is src/index.ts.
+  folderModules: ['native/*', 'packages/*'],
 
   // Platform projects shown as single modules, with fixed purposes.
   platformModules: {
@@ -59,9 +61,9 @@ export default {
       label: 'SYNC',
       match: [
         'src/sync/**',
-        `${ENGINE}/liveKeys.ts`,
-        `${ENGINE}/noteEventBus.ts`,
-        `${ENGINE}/shared/LiveKeys.h`,
+        `${ENGINE}/src/liveKeys.ts`,
+        `${ENGINE}/src/noteEventBus.ts`,
+        `${ENGINE}/cpp/legacy/LiveKeys.h`,
       ],
       thread: 'any',
       description:
@@ -70,13 +72,7 @@ export default {
     {
       id: 'audio',
       label: 'AUDIO',
-      match: [
-        'src/audio/**',
-        `${ENGINE}/**`,
-        'ios/PianoAcademyStudio/IosAudioInput.*',
-        'ios/PianoAcademyStudio/NativePianoEngineProvider.*',
-        'android/app/src/main/jni/**',
-      ],
+      match: ['src/audio/**', `${ENGINE}/**`, 'android/app/src/main/jni/**'],
       thread: 'audio',
       description:
         'mic capture and the C++ note engine: onset, pitch and chord detection, calibration',
@@ -119,11 +115,11 @@ export default {
   threads: [
     // Looks, designs and types are plain data: usable from worklets and React alike.
     { match: ['**/*Look.ts', '**/*Design.ts', '**/types.ts'], thread: 'any' },
-    // The engine's TypeScript side (TurboModule wrapper, hooks, event bus, calibration guide)
-    // runs on the JS thread. liveKeys.ts reads the native key table from any thread.
+    // The engine's TypeScript side (TurboModule wrapper, hooks, event bus) runs on the
+    // JS thread. liveKeys.ts reads the native key table from any thread.
     {
       match: [`${ENGINE}/**/*.ts`, 'src/audio/**/*.ts'],
-      except: [`${ENGINE}/liveKeys.ts`],
+      except: [`${ENGINE}/src/liveKeys.ts`],
       thread: 'js',
     },
   ],
@@ -140,7 +136,8 @@ export default {
   ],
 
   // Import aliases, e.g. { '@audio': 'src/audio' }. Keep in sync with babel and tsconfig.
-  aliases: {},
+  // Workspace packages resolve through node_modules links; name them here so the graph sees them.
+  aliases: { '@pianoacademy/core-engine': `${ENGINE}/src` },
 
   // Flow steps that are outside the code (docs/architecture/flows.md).
   flowExternals: [
@@ -162,7 +159,7 @@ export default {
       description: 'Screens never touch audio internals or native modules.',
       from: ['src/screens/**'],
       to: ['src/audio/**', 'native/**', `${ENGINE}/**`],
-      except: ['src/audio/index.{ts,tsx}', `${ENGINE}/index.ts`],
+      except: ['src/audio/index.{ts,tsx}', `${ENGINE}/src/index.ts`],
       fix: 'Use the public API (PianoMaster, or the engine’s index.ts), or move the logic into a feature.',
     },
     {
@@ -170,7 +167,7 @@ export default {
       type: 'public-api',
       description:
         'Features and the note engine are imported only through their public index.ts.',
-      scope: ['src/features/*', 'src/audio', ENGINE],
+      scope: ['src/features/*', 'src/audio', `${ENGINE}/src`],
       fix: 'Import from the module folder (its index.ts) and export what you need there.',
     },
     {
@@ -186,7 +183,7 @@ export default {
       id: 'audio-no-ui',
       type: 'forbid-imports',
       description: 'Audio code has no UI imports.',
-      from: ['src/audio/**'],
+      from: ['src/audio/**', `${ENGINE}/**`],
       to: [
         'src/screens/**',
         'src/ui/**',
@@ -195,6 +192,15 @@ export default {
         'App.tsx',
       ],
       fix: 'Publish events through src/sync; let the UI subscribe.',
+    },
+    {
+      id: 'engine-imports-no-app',
+      type: 'forbid-imports',
+      description:
+        'The note engine package imports nothing from the app (UI Phase 1, dependency rule 1).',
+      from: [`${ENGINE}/**`],
+      to: ['src/**', 'App.tsx', 'index.js'],
+      fix: 'Hand the engine what it needs from the screen (a sink, MIDI numbers); publish what it hears through its event bus.',
     },
     {
       id: 'motion-no-js-hop',

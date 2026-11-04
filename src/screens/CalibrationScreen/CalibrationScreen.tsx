@@ -30,7 +30,7 @@ import {
   type NoteInput,
 } from '../../motion/scenes/PianoMaster';
 import { layoutCorePiano } from '../../motion/scenes/PianoMaster/CorePiano';
-import { useCorePianoNotesDetection } from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+import { useCorePianoNotesDetection } from '@pianoacademy/core-engine';
 import { buildKeyboard, noteName } from '../../shared/piano';
 import { ROUNDED_FAMILY, textTop } from '../../shared/typography';
 import { DESIGN_SIZE } from '../LessonScreen';

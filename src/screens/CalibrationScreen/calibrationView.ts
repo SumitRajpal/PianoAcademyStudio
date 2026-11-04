@@ -9,7 +9,7 @@ import {
   type CalibrationProgressEvent,
   type EngineStatus,
   type PianoProfile,
-} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import { STATUS_MESSAGES } from '../LessonScreen';
 import { CALIBRATION_DESIGN } from './calibrationDesign';
 import {

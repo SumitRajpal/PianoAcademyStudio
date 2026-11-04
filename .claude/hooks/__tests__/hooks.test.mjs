@@ -416,13 +416,11 @@ test('stop: checks what changed, blocks once, then lets Claude finish', async ()
 test('stop: engine changes run the regression gate', async () => {
   const root = project({
     ...BASE,
-    'src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts': `${purpose(
+    'packages/CoreEngine/src/index.ts': `${purpose(
       'engine api',
     )}export const e = 1;\n`,
-    'src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h':
-      'struct Cascade {};\n',
-    'src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh':
-      '#!/bin/sh\n',
+    'packages/CoreEngine/cpp/legacy/Cascade.h': 'struct Cascade {};\n',
+    'packages/CoreEngine/test/run.sh': '#!/bin/sh\n',
   });
   await buildAndWrite({ root });
   hook(
@@ -430,10 +428,7 @@ test('stop: engine changes run the regression gate', async () => {
     {
       tool_name: 'Edit',
       tool_input: {
-        file_path: join(
-          root,
-          'src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h',
-        ),
+        file_path: join(root, 'packages/CoreEngine/cpp/legacy/Cascade.h'),
       },
     },
     { root },

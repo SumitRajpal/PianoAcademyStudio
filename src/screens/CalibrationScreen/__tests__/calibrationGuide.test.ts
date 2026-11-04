@@ -2,7 +2,7 @@ import {
   CALIBRATION_STATE,
   type CalibrationProgressEvent,
   type PianoProfile,
-} from '../../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import {
   calibrationKeys,
   calibrationPrompt,

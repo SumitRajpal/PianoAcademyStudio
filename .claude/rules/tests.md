@@ -10,7 +10,7 @@ paths:
 
 - **App code:** Jest (`npm test`). `jest/skiaEnvironment.js` loads CanvasKit, so Skia drawing renders headless. Pixel checks of looks live next to the component (`__tests__/`); whole-screen renders live in `scripts/design/__tests__/`.
 - **Tooling** (`.mjs` in `scripts/` and `.claude/hooks/`): Node's built-in runner, `npm run test:tooling`.
-- **The note engine (C++):** `src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh`.
+- **The note engine (C++):** `packages/CoreEngine/test/run.sh`.
   - `scenarios` is the regression gate for every engine change.
   - `engine` runs the threads and the live key table under ThreadSanitizer, for any threading change.
   - Synthetic audio comes from `test/PianoSynth.h`, and `harsh` gives a harsher synth.

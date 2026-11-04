@@ -15,7 +15,7 @@
       "thread": "audio",
       "description": "mic capture and the C++ note engine: onset, pitch and chord detection, calibration",
       "modules": [
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection"
+        "packages/CoreEngine"
       ]
     },
     {
@@ -114,8 +114,6 @@
       "files": [
         "android/app/src/main/java/com/pianoacademystudio/MainActivity.kt",
         "android/app/src/main/java/com/pianoacademystudio/MainApplication.kt",
-        "android/app/src/main/jni/OboeInput.cpp",
-        "android/app/src/main/jni/OboeInput.h",
         "android/app/src/main/jni/OnLoad.cpp"
       ]
     },
@@ -146,12 +144,55 @@
       "purpose": "iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code",
       "entry": null,
       "files": [
-        "ios/PianoAcademyStudio/AppDelegate.swift",
-        "ios/PianoAcademyStudio/IosAudioInput.h",
-        "ios/PianoAcademyStudio/IosAudioInput.mm",
-        "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
-        "ios/PianoAcademyStudio/NativePianoEngineProvider.mm"
+        "ios/PianoAcademyStudio/AppDelegate.swift"
       ]
+    },
+    {
+      "id": "packages/CoreEngine",
+      "name": "packages/CoreEngine",
+      "kind": "engine",
+      "plane": "audio",
+      "thread": "audio",
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
+      "entry": null,
+      "files": [
+        "packages/CoreEngine/android/OboeInput.cpp",
+        "packages/CoreEngine/android/OboeInput.h",
+        "packages/CoreEngine/bindings/NativePianoEngine.cpp",
+        "packages/CoreEngine/bindings/NativePianoEngine.h",
+        "packages/CoreEngine/cpp/legacy/AudioInput.h",
+        "packages/CoreEngine/cpp/legacy/Calibration.h",
+        "packages/CoreEngine/cpp/legacy/Cascade.h",
+        "packages/CoreEngine/cpp/legacy/Engine.h",
+        "packages/CoreEngine/cpp/legacy/Fft.h",
+        "packages/CoreEngine/cpp/legacy/Goertzel.h",
+        "packages/CoreEngine/cpp/legacy/LiveKeys.h",
+        "packages/CoreEngine/cpp/legacy/Mpm.h",
+        "packages/CoreEngine/cpp/legacy/Onset.h",
+        "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+        "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+        "packages/CoreEngine/cpp/legacy/SampleRing.h",
+        "packages/CoreEngine/ios/IosAudioInput.h",
+        "packages/CoreEngine/ios/IosAudioInput.mm",
+        "packages/CoreEngine/ios/NativePianoEngineProvider.h",
+        "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+        "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
+        "packages/CoreEngine/src/index.ts",
+        "packages/CoreEngine/src/liveKeys.ts",
+        "packages/CoreEngine/src/mockAudioEngine.ts",
+        "packages/CoreEngine/src/noteEventBus.ts",
+        "packages/CoreEngine/src/pianoEngine.ts",
+        "packages/CoreEngine/src/specs/NativePianoEngine.ts",
+        "packages/CoreEngine/src/types.ts",
+        "packages/CoreEngine/src/useCorePianoNotesDetection.ts"
+      ],
+      "packages": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-worklets"
+      ],
+      "hasWorklets": true
     },
     {
       "id": "src/motion/scenes/PianoMaster",
@@ -159,7 +200,7 @@
       "kind": "scene",
       "plane": "motion",
       "thread": "any",
-      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here.",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it.",
       "entry": "src/motion/scenes/PianoMaster/index.ts",
       "files": [
         "src/motion/scenes/PianoMaster/index.ts"
@@ -572,47 +613,6 @@
       "hasWorklets": true
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "name": "motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "kind": "engine",
-      "plane": "audio",
-      "thread": "audio",
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
-      "entry": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "files": [
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-        "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts"
-      ],
-      "packages": [
-        "react",
-        "react-native",
-        "react-native-reanimated",
-        "react-native-worklets"
-      ],
-      "hasWorklets": true
-    },
-    {
       "id": "src/motion/scenes/PianoMaster/shared",
       "name": "motion/scenes/PianoMaster/shared",
       "kind": "module",
@@ -830,20 +830,6 @@
       "lang": "kotlin"
     },
     {
-      "id": "android/app/src/main/jni/OboeInput.cpp",
-      "module": "android",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "android/app/src/main/jni/OboeInput.h",
-      "module": "android",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
       "id": "android/app/src/main/jni/OnLoad.cpp",
       "module": "android",
       "plane": "audio",
@@ -866,32 +852,332 @@
       "lang": "swift"
     },
     {
-      "id": "ios/PianoAcademyStudio/IosAudioInput.h",
-      "module": "ios",
+      "id": "packages/CoreEngine/android/OboeInput.cpp",
+      "module": "packages/CoreEngine",
       "plane": "audio",
       "thread": "audio",
       "lang": "c-family"
     },
     {
-      "id": "ios/PianoAcademyStudio/IosAudioInput.mm",
-      "module": "ios",
+      "id": "packages/CoreEngine/android/OboeInput.h",
+      "module": "packages/CoreEngine",
       "plane": "audio",
       "thread": "audio",
       "lang": "c-family"
     },
     {
-      "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
-      "module": "ios",
+      "id": "packages/CoreEngine/bindings/NativePianoEngine.cpp",
+      "module": "packages/CoreEngine",
       "plane": "audio",
       "thread": "audio",
       "lang": "c-family"
     },
     {
-      "id": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
-      "module": "ios",
+      "id": "packages/CoreEngine/bindings/NativePianoEngine.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family",
+      "nativeModules": [
+        "NativePianoEngine"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/AudioInput.h",
+      "module": "packages/CoreEngine",
       "plane": "audio",
       "thread": "audio",
       "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Calibration.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Fft.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Goertzel.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/LiveKeys.h",
+      "module": "packages/CoreEngine",
+      "plane": "sync",
+      "thread": "any",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Mpm.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/Onset.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/cpp/legacy/SampleRing.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/ios/IosAudioInput.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/ios/IosAudioInput.mm",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/ios/NativePianoEngineProvider.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "CORE_PIANO_NOTES_DETECTION_LOOK",
+        "CorePianoNotesDetectionLook"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/index.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "any",
+      "lang": "code",
+      "barrel": true,
+      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
+      "exports": [
+        "AudioEngineStatus",
+        "CALIBRATION_STATE",
+        "CORE_PIANO_NOTES_DETECTION_LOOK",
+        "CalibrationListener",
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "CalibrationStepEvent",
+        "CorePianoNotesDetectionLook",
+        "DetectedNoteEvent",
+        "DetectionStats",
+        "DetectionTelemetry",
+        "DetectorOptions",
+        "EngineStatus",
+        "KeySink",
+        "LiveKey",
+        "LiveKeys",
+        "LiveKeysReader",
+        "NoteEventListener",
+        "PianoProfile",
+        "StatsListener",
+        "StatusListener",
+        "UseCorePianoNotesDetectionOptions",
+        "clearPianoCalibration",
+        "createLiveKeysReader",
+        "detectedKeyLevel",
+        "getAudioStats",
+        "getLiveKeys",
+        "getPianoCalibrationProfile",
+        "isAudioMockActive",
+        "mockAudioEngine",
+        "noteEventBus",
+        "readLiveKeys",
+        "savePianoCalibration",
+        "setAudioExpectedNotes",
+        "setAudioPolyphony",
+        "startAudioDetector",
+        "startPianoCalibration",
+        "stopAudioDetector",
+        "stopPianoCalibration",
+        "useCorePianoNotesDetection",
+        "useLiveKeys"
+      ],
+      "jsOnly": [
+        "useCorePianoNotesDetection",
+        "useLiveKeys"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/liveKeys.ts",
+      "module": "packages/CoreEngine",
+      "plane": "sync",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "LiveKeysReader",
+        "createLiveKeysReader",
+        "detectedKeyLevel",
+        "readLiveKeys",
+        "useLiveKeys"
+      ],
+      "hasWorklets": true,
+      "jsOnly": [
+        "useLiveKeys"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/mockAudioEngine.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "mockAudioEngine"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/noteEventBus.ts",
+      "module": "packages/CoreEngine",
+      "plane": "sync",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "noteEventBus"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/pianoEngine.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "clearPianoCalibration",
+        "getAudioStats",
+        "getLiveKeys",
+        "getPianoCalibrationProfile",
+        "isAudioMockActive",
+        "mockAudioEngine",
+        "savePianoCalibration",
+        "setAudioExpectedNotes",
+        "setAudioPolyphony",
+        "startAudioDetector",
+        "startPianoCalibration",
+        "stopAudioDetector",
+        "stopPianoCalibration"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/specs/NativePianoEngine.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "EngineStats",
+        "EngineStatus",
+        "PianoNoteEvent",
+        "PianoProfile",
+        "Spec",
+        "default"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/types.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "any",
+      "lang": "code",
+      "exports": [
+        "AudioEngineStatus",
+        "CALIBRATION_STATE",
+        "CalibrationListener",
+        "CalibrationOptions",
+        "CalibrationProgressEvent",
+        "CalibrationStepEvent",
+        "DetectedNoteEvent",
+        "DetectionStats",
+        "DetectionTelemetry",
+        "DetectorOptions",
+        "EngineStatus",
+        "KeySink",
+        "LiveKey",
+        "LiveKeys",
+        "NoteEventListener",
+        "PianoProfile",
+        "StatsListener",
+        "StatusListener"
+      ]
+    },
+    {
+      "id": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "js",
+      "lang": "code",
+      "exports": [
+        "UseCorePianoNotesDetectionOptions",
+        "useCorePianoNotesDetection"
+      ],
+      "jsOnly": [
+        "useCorePianoNotesDetection"
+      ]
     },
     {
       "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
@@ -1937,299 +2223,13 @@
       ]
     },
     {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "any",
-      "lang": "code",
-      "exports": [
-        "CORE_PIANO_NOTES_DETECTION_LOOK",
-        "CorePianoNotesDetectionLook"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "any",
-      "lang": "code",
-      "barrel": true,
-      "purpose": "Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app.",
-      "exports": [
-        "AudioEngineStatus",
-        "CALIBRATION_STATE",
-        "CORE_PIANO_NOTES_DETECTION_LOOK",
-        "CalibrationListener",
-        "CalibrationOptions",
-        "CalibrationProgressEvent",
-        "CalibrationStepEvent",
-        "CorePianoNotesDetectionLook",
-        "DetectedNoteEvent",
-        "DetectionStats",
-        "DetectionTelemetry",
-        "DetectorOptions",
-        "EngineStatus",
-        "KeySink",
-        "LiveKey",
-        "LiveKeys",
-        "LiveKeysReader",
-        "NoteEventListener",
-        "PianoProfile",
-        "StatsListener",
-        "StatusListener",
-        "UseCorePianoNotesDetectionOptions",
-        "clearPianoCalibration",
-        "createLiveKeysReader",
-        "detectedKeyLevel",
-        "getAudioStats",
-        "getLiveKeys",
-        "getPianoCalibrationProfile",
-        "isAudioMockActive",
-        "mockAudioEngine",
-        "noteEventBus",
-        "readLiveKeys",
-        "savePianoCalibration",
-        "setAudioExpectedNotes",
-        "setAudioPolyphony",
-        "startAudioDetector",
-        "startPianoCalibration",
-        "stopAudioDetector",
-        "stopPianoCalibration",
-        "useCorePianoNotesDetection",
-        "useLiveKeys"
-      ],
-      "jsOnly": [
-        "useCorePianoNotesDetection",
-        "useLiveKeys"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "sync",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "LiveKeysReader",
-        "createLiveKeysReader",
-        "detectedKeyLevel",
-        "readLiveKeys",
-        "useLiveKeys"
-      ],
-      "hasWorklets": true,
-      "jsOnly": [
-        "useLiveKeys"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "mockAudioEngine"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "sync",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "noteEventBus"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "clearPianoCalibration",
-        "getAudioStats",
-        "getLiveKeys",
-        "getPianoCalibrationProfile",
-        "isAudioMockActive",
-        "mockAudioEngine",
-        "savePianoCalibration",
-        "setAudioExpectedNotes",
-        "setAudioPolyphony",
-        "startAudioDetector",
-        "startPianoCalibration",
-        "stopAudioDetector",
-        "stopPianoCalibration"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "sync",
-      "thread": "any",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family",
-      "nativeModules": [
-        "NativePianoEngine"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "audio",
-      "lang": "c-family"
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "CalibrationOptions",
-        "CalibrationProgressEvent",
-        "EngineStats",
-        "EngineStatus",
-        "PianoNoteEvent",
-        "PianoProfile",
-        "Spec",
-        "default"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "any",
-      "lang": "code",
-      "exports": [
-        "AudioEngineStatus",
-        "CALIBRATION_STATE",
-        "CalibrationListener",
-        "CalibrationOptions",
-        "CalibrationProgressEvent",
-        "CalibrationStepEvent",
-        "DetectedNoteEvent",
-        "DetectionStats",
-        "DetectionTelemetry",
-        "DetectorOptions",
-        "EngineStatus",
-        "KeySink",
-        "LiveKey",
-        "LiveKeys",
-        "NoteEventListener",
-        "PianoProfile",
-        "StatsListener",
-        "StatusListener"
-      ]
-    },
-    {
-      "id": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "module": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
-      "plane": "audio",
-      "thread": "js",
-      "lang": "code",
-      "exports": [
-        "UseCorePianoNotesDetectionOptions",
-        "useCorePianoNotesDetection"
-      ],
-      "jsOnly": [
-        "useCorePianoNotesDetection"
-      ]
-    },
-    {
       "id": "src/motion/scenes/PianoMaster/index.ts",
       "module": "src/motion/scenes/PianoMaster",
       "plane": "motion",
       "thread": "any",
       "lang": "code",
       "barrel": true,
-      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here.",
+      "purpose": "The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it.",
       "exports": [
         "CoreNotesLook",
         "CorePiano",
@@ -3665,32 +3665,14 @@
   ],
   "edges": [
     {
-      "from": "android/app/src/main/jni/OboeInput.cpp",
-      "to": "android/app/src/main/jni/OboeInput.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "android/app/src/main/jni/OboeInput.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "android/app/src/main/jni/OboeInput.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "from": "android/app/src/main/jni/OnLoad.cpp",
+      "to": "packages/CoreEngine/android/OboeInput.h",
       "kind": "imports",
       "approx": true
     },
     {
       "from": "android/app/src/main/jni/OnLoad.cpp",
-      "to": "android/app/src/main/jni/OboeInput.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "android/app/src/main/jni/OnLoad.cpp",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
+      "to": "packages/CoreEngine/bindings/NativePianoEngine.h",
       "kind": "imports",
       "approx": true
     },
@@ -3730,40 +3712,318 @@
       "kind": "imports"
     },
     {
-      "from": "ios/PianoAcademyStudio/IosAudioInput.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
+      "from": "packages/CoreEngine/android/OboeInput.cpp",
+      "to": "packages/CoreEngine/android/OboeInput.h",
       "kind": "imports",
       "approx": true
     },
     {
-      "from": "ios/PianoAcademyStudio/IosAudioInput.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
+      "from": "packages/CoreEngine/android/OboeInput.h",
+      "to": "packages/CoreEngine/cpp/legacy/AudioInput.h",
       "kind": "imports",
       "approx": true
     },
     {
-      "from": "ios/PianoAcademyStudio/IosAudioInput.mm",
-      "to": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "from": "packages/CoreEngine/android/OboeInput.h",
+      "to": "packages/CoreEngine/cpp/legacy/SampleRing.h",
       "kind": "imports",
       "approx": true
     },
     {
-      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
-      "to": "ios/PianoAcademyStudio/IosAudioInput.h",
+      "from": "packages/CoreEngine/bindings/NativePianoEngine.cpp",
+      "to": "packages/CoreEngine/bindings/NativePianoEngine.h",
       "kind": "imports",
       "approx": true
     },
     {
-      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
-      "to": "ios/PianoAcademyStudio/NativePianoEngineProvider.h",
+      "from": "packages/CoreEngine/bindings/NativePianoEngine.h",
+      "to": "packages/CoreEngine/cpp/legacy/Engine.h",
       "kind": "imports",
       "approx": true
     },
     {
-      "from": "ios/PianoAcademyStudio/NativePianoEngineProvider.mm",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
+      "from": "packages/CoreEngine/cpp/legacy/Calibration.h",
+      "to": "packages/CoreEngine/cpp/legacy/Goertzel.h",
       "kind": "imports",
       "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Calibration.h",
+      "to": "packages/CoreEngine/cpp/legacy/Onset.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Calibration.h",
+      "to": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/Goertzel.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/Mpm.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/Onset.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "to": "packages/CoreEngine/cpp/legacy/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/AudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/Calibration.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/LiveKeys.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Engine.h",
+      "to": "packages/CoreEngine/cpp/legacy/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/LiveKeys.h",
+      "to": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Mpm.h",
+      "to": "packages/CoreEngine/cpp/legacy/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/Onset.h",
+      "to": "packages/CoreEngine/cpp/legacy/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+      "to": "packages/CoreEngine/cpp/legacy/Fft.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+      "to": "packages/CoreEngine/cpp/legacy/Goertzel.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/cpp/legacy/PolyEstimator.h",
+      "to": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/IosAudioInput.h",
+      "to": "packages/CoreEngine/cpp/legacy/AudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/IosAudioInput.h",
+      "to": "packages/CoreEngine/cpp/legacy/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/IosAudioInput.mm",
+      "to": "packages/CoreEngine/ios/IosAudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+      "to": "packages/CoreEngine/bindings/NativePianoEngine.cpp",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+      "to": "packages/CoreEngine/ios/IosAudioInput.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/ios/NativePianoEngineProvider.mm",
+      "to": "packages/CoreEngine/ios/NativePianoEngineProvider.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/liveKeys.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/mockAudioEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/index.ts",
+      "to": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/liveKeys.ts",
+      "to": "packages/CoreEngine/src/corePianoNotesDetectionLook.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/liveKeys.ts",
+      "to": "packages/CoreEngine/src/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/liveKeys.ts",
+      "to": "packages/CoreEngine/src/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/liveKeys.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "packages/CoreEngine/src/mockAudioEngine.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "packages/CoreEngine/src/noteEventBus.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "packages/CoreEngine/src/pianoEngine.ts",
+      "to": "packages/CoreEngine/bindings/NativePianoEngine.h",
+      "kind": "calls-native",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/pianoEngine.ts",
+      "to": "packages/CoreEngine/src/mockAudioEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/pianoEngine.ts",
+      "to": "packages/CoreEngine/src/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/pianoEngine.ts",
+      "to": "packages/CoreEngine/src/specs/NativePianoEngine.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "packages/CoreEngine/src/pianoEngine.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports",
+      "typeOnly": true
+    },
+    {
+      "from": "packages/CoreEngine/src/specs/NativePianoEngine.ts",
+      "to": "packages/CoreEngine/bindings/NativePianoEngine.h",
+      "kind": "calls-native",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "to": "packages/CoreEngine/src/liveKeys.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "to": "packages/CoreEngine/src/noteEventBus.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "to": "packages/CoreEngine/src/pianoEngine.ts",
+      "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+      "to": "packages/CoreEngine/src/types.ts",
+      "kind": "imports"
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
@@ -4731,266 +4991,6 @@
       "kind": "imports"
     },
     {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/corePianoNotesDetectionLook.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/mockAudioEngine.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-      "kind": "calls-native",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports",
-      "typeOnly": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/AudioInput.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Calibration.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/SampleRing.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/LiveKeys.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Cascade.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Mpm.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Engine.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Onset.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Fft.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/Goertzel.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PolyEstimator.h",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/PianoProfile.h",
-      "kind": "imports",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs/NativePianoEngine.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.h",
-      "kind": "calls-native",
-      "approx": true
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/liveKeys.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/noteEventBus.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/pianoEngine.ts",
-      "kind": "imports"
-    },
-    {
-      "from": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/useCorePianoNotesDetection.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/types.ts",
-      "kind": "imports"
-    },
-    {
       "from": "src/motion/scenes/PianoMaster/index.ts",
       "to": "src/motion/scenes/PianoMaster/CoreNotes/index.ts",
       "kind": "imports"
@@ -5093,7 +5093,7 @@
     },
     {
       "from": "src/screens/CalibrationScreen/calibrationGuide.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "packages/CoreEngine/src/index.ts",
       "kind": "imports"
     },
     {
@@ -5103,12 +5103,12 @@
     },
     {
       "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
+      "to": "packages/CoreEngine/src/index.ts",
       "kind": "imports"
     },
     {
       "from": "src/screens/CalibrationScreen/CalibrationScreen.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "src/motion/scenes/PianoMaster/CorePiano/index.ts",
       "kind": "imports"
     },
     {
@@ -5158,7 +5158,7 @@
     },
     {
       "from": "src/screens/CalibrationScreen/calibrationView.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "packages/CoreEngine/src/index.ts",
       "kind": "imports"
     },
     {
@@ -5968,7 +5968,7 @@
     },
     {
       "from": "src/screens/LessonScreen/EngineDiagnostics.tsx",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "packages/CoreEngine/src/index.ts",
       "kind": "imports"
     },
     {
@@ -6059,7 +6059,7 @@
     },
     {
       "from": "src/screens/LessonScreen/micStatusMessages.ts",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/index.ts",
+      "to": "packages/CoreEngine/src/index.ts",
       "kind": "imports",
       "typeOnly": true
     },
@@ -6082,7 +6082,7 @@
   "moduleEdges": [
     {
       "from": "android",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "to": "packages/CoreEngine",
       "kinds": [
         "imports"
       ]
@@ -6113,13 +6113,6 @@
     {
       "from": "index.js",
       "to": "App.tsx",
-      "kinds": [
-        "imports"
-      ]
-    },
-    {
-      "from": "ios",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -6512,6 +6505,13 @@
     },
     {
       "from": "src/screens/CalibrationScreen",
+      "to": "packages/CoreEngine",
+      "kinds": [
+        "imports"
+      ]
+    },
+    {
+      "from": "src/screens/CalibrationScreen",
       "to": "src/motion/scenes/PianoMaster",
       "kinds": [
         "imports",
@@ -6521,13 +6521,6 @@
     {
       "from": "src/screens/CalibrationScreen",
       "to": "src/motion/scenes/PianoMaster/CorePiano",
-      "kinds": [
-        "imports"
-      ]
-    },
-    {
-      "from": "src/screens/CalibrationScreen",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
       "kinds": [
         "imports"
       ]
@@ -6555,17 +6548,17 @@
     },
     {
       "from": "src/screens/LessonScreen",
-      "to": "src/motion/scenes/PianoMaster",
+      "to": "packages/CoreEngine",
       "kinds": [
-        "imports",
-        "renders"
+        "imports"
       ]
     },
     {
       "from": "src/screens/LessonScreen",
-      "to": "src/motion/scenes/PianoMaster/CorePianoNotesDetection",
+      "to": "src/motion/scenes/PianoMaster",
       "kinds": [
-        "imports"
+        "imports",
+        "renders"
       ]
     },
     {
@@ -6604,6 +6597,11 @@
       "id": "audio-no-ui",
       "type": "forbid-imports",
       "description": "Audio code has no UI imports."
+    },
+    {
+      "id": "engine-imports-no-app",
+      "type": "forbid-imports",
+      "description": "The note engine package imports nothing from the app (UI Phase 1, dependency rule 1)."
     },
     {
       "id": "motion-no-js-hop",

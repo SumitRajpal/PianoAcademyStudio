@@ -38,6 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Scenarios
-        run: bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh scenarios
+        run: bash packages/CoreEngine/test/run.sh scenarios
       - name: Threads under ThreadSanitizer
-        run: bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh engine
+        run: bash packages/CoreEngine/test/run.sh engine

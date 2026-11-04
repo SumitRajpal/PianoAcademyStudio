@@ -111,7 +111,7 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 # Note engine desktop test builds
-src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/.build/
+packages/CoreEngine/test/.build/
 
 # Claude Code: personal and local files (the repo is public)
 .claude/settings.local.json

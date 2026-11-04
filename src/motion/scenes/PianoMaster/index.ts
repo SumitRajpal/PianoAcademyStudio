@@ -1,5 +1,5 @@
 /**
- * @purpose The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here.
+ * @purpose The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it.
  */
 
 export {

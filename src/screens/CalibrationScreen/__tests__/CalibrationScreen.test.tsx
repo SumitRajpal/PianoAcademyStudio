@@ -15,7 +15,7 @@ import {
   CALIBRATION_STATE,
   mockAudioEngine,
   noteEventBus,
-} from '../../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import { CalibrationScreen, calibrationView, KEYBOARD_CHOICES } from '..';
 
 function texts(root: ReactTestInstance): string {

@@ -25,7 +25,7 @@ How this Claude setup works and why: [docs/claude-setup/DESIGN.md](docs/claude-s
 
 - A compact map is loaded at session start. `/arch` answers who-uses, deps, impact, path, hot-path and check.
 - Planes are assigned by role in `scripts/architecture/config.mjs`:
-  - AUDIO: the CorePianoNotesDetection engine and the native mic input
+  - AUDIO: the note engine package (`packages/CoreEngine`, imported as `@pianoacademy/core-engine`) and the native mic input
   - SYNC: the LiveKeys table and the note event bus
   - MOTION: PianoMaster's visuals and the game scenes
   - SHARED, PLATFORM, APP
@@ -51,7 +51,7 @@ The hooks run these automatically on what changed; run them yourself when you ne
 
 - `npm run typecheck` · `npm run lint` · `npm test` (Jest, with Skia rendering headless)
 - `npm run test:tooling`: the architecture scripts and the Claude hooks
-- The note engine's regression gate: `src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh scenarios` (and `run.sh engine` for ThreadSanitizer after threading changes)
+- The note engine's regression gate: `packages/CoreEngine/test/run.sh scenarios` (and `run.sh engine` for ThreadSanitizer after threading changes)
 - Visual checks: `DESIGN_OUT=/tmp/lesson.png npx jest scripts/design`, scored with `node scripts/design/compare.mjs`. EggHatch frames: `EGG_TIME=… EGG_OUT=… npx jest scripts/design/__tests__/eggHatchRender.test.ts`. After any visual change, render the frames and look at them before reporting.
 
 ## Where things go

@@ -25,7 +25,7 @@ import {
   useCorePianoNotesDetection,
   type DetectedNoteEvent,
   type PianoProfile,
-} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import { noteName, parseNote } from '../../shared/piano';
 import { ENGINE_DIAGNOSTICS_LOOK } from './engineDiagnosticsLook';
 import { STATUS_MESSAGES } from './micStatusMessages';

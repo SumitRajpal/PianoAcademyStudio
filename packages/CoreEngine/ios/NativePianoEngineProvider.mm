@@ -1,6 +1,6 @@
 #import "NativePianoEngineProvider.h"
 #import "IosAudioInput.h"
-#include "../../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared/NativePianoEngine.cpp"
+#include "../bindings/NativePianoEngine.cpp"
 
 #if __has_include(<ReactCommon/RCTTurboModule.h>)
 

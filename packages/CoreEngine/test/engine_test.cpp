@@ -15,8 +15,8 @@
 #include <thread>
 #include <vector>
 
-#include "../shared/Engine.h"
-#include "../shared/LiveKeys.h"
+#include "../cpp/legacy/Engine.h"
+#include "../cpp/legacy/LiveKeys.h"
 #include "PianoSynth.h"
 
 using namespace piano;

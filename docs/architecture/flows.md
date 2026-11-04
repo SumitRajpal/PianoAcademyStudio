@@ -22,12 +22,11 @@ mic -> audio/capture -> audio/detection -> sync/events
 
 ## key-lights
 
-A played note lights its key within one frame, without touching the JS thread: the C++ engine publishes into the lock-free LiveKeys table, and the engine's UI-thread frame callback (`useLiveKeys`) hands each changed key to the key sink it was given, which writes PianoMaster's key state that CorePiano draws. The lesson screen's `EngineDiagnostics` hands the engine that sink (`usePianoKeySink`) when it mounts; the calibration screen wires its keyboard the same way. Details: [note-events.md](../note-events.md).
+A played note lights its key within one frame, without touching the JS thread: the engine package hears the mic through its own iOS and Android input, its C++ core publishes into the lock-free LiveKeys table, and the engine's UI-thread frame callback (`useLiveKeys`) hands each changed key to the key sink it was given, which writes PianoMaster's key state that CorePiano draws. The lesson screen's `EngineDiagnostics` hands the engine that sink (`usePianoKeySink`) when it mounts; the calibration screen wires its keyboard the same way. Details: [note-events.md](../note-events.md).
 
 ```flow
-mic -> ios -> motion/scenes/PianoMaster/CorePianoNotesDetection
-  -> [screens/LessonScreen] -> motion/scenes/PianoMaster
-  -> motion/scenes/PianoMaster/CorePiano -> screen
+mic -> packages/CoreEngine -> [screens/LessonScreen]
+  -> motion/scenes/PianoMaster -> motion/scenes/PianoMaster/CorePiano -> screen
 ```
 
 ## calibration (js ok)
@@ -35,6 +34,6 @@ mic -> ios -> motion/scenes/PianoMaster/CorePianoNotesDetection
 Each strike during calibration reaches the screen through the JS event bus (`noteEventBus`), which checks it and flashes Correct or Wrong on the keyboard. This path crosses the JS thread on purpose: the 700 ms flashes are not frame-critical.
 
 ```flow
-mic -> ios -> motion/scenes/PianoMaster/CorePianoNotesDetection
-  -> screens/CalibrationScreen -> motion/scenes/PianoMaster/CorePiano -> screen
+mic -> packages/CoreEngine -> screens/CalibrationScreen
+  -> motion/scenes/PianoMaster/CorePiano -> screen
 ```

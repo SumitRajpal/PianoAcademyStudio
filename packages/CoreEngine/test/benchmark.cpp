@@ -8,12 +8,12 @@
 #include <thread>
 #include <vector>
 
-#include "../shared/Calibration.h"
-#include "../shared/Cascade.h"
-#include "../shared/Goertzel.h"
-#include "../shared/Mpm.h"
-#include "../shared/PolyEstimator.h"
-#include "../shared/SampleRing.h"
+#include "../cpp/legacy/Calibration.h"
+#include "../cpp/legacy/Cascade.h"
+#include "../cpp/legacy/Goertzel.h"
+#include "../cpp/legacy/Mpm.h"
+#include "../cpp/legacy/PolyEstimator.h"
+#include "../cpp/legacy/SampleRing.h"
 
 using namespace piano;
 

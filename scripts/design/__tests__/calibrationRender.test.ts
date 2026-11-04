@@ -19,7 +19,7 @@ import {
   CALIBRATION_STATE,
   type CalibrationProgressEvent,
   type PianoProfile,
-} from '../../../src/motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import {
   drawBlackPianoKeyLight,
   drawCorePianoBlackLayer,

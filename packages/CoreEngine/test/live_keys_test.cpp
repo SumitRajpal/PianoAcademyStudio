@@ -1,4 +1,4 @@
-// Live keys test: the key table and the event ring (shared/LiveKeys.h).
+// Live keys test: the key table and the event ring (cpp/legacy/LiveKeys.h).
 // First the rules on one thread, then real concurrency: one writer publishes
 // a long, fast stream of notes while readers on other threads read keys,
 // follow changes and drain events, one of them so slowly that the ring laps
@@ -14,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-#include "../shared/LiveKeys.h"
+#include "../cpp/legacy/LiveKeys.h"
 
 using namespace piano;
 

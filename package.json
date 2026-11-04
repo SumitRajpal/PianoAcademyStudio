@@ -2,6 +2,9 @@
   "name": "PianoAcademyStudio",
   "version": "0.0.1",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -10,7 +13,7 @@
     "test": "jest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:tooling": "node --test \"scripts/architecture/__tests__/*.test.mjs\" \".claude/hooks/__tests__/*.test.mjs\"",
-    "test:engine": "bash src/motion/scenes/PianoMaster/CorePianoNotesDetection/test/run.sh scenarios",
+    "test:engine": "bash packages/CoreEngine/test/run.sh scenarios",
     "arch:build": "node scripts/architecture/build.mjs",
     "arch:check": "node scripts/architecture/check.mjs",
     "arch:query": "node scripts/architecture/query.mjs",
@@ -65,7 +68,7 @@
   "codegenConfig": {
     "name": "AppSpecs",
     "type": "modules",
-    "jsSrcsDir": "src/motion/scenes/PianoMaster/CorePianoNotesDetection/specs",
+    "jsSrcsDir": "packages/CoreEngine/src/specs",
     "android": {
       "javaPackageName": "com.pianoacademystudio.specs"
     },

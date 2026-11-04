@@ -26,10 +26,10 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-PianoAcademyStudio.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PianoAcademyStudio.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = PianoAcademyStudio/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = PianoAcademyStudio/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		A10000012CA4567400000001 /* IosAudioInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IosAudioInput.h; path = PianoAcademyStudio/IosAudioInput.h; sourceTree = "<group>"; };
-		A10000012CA4567400000002 /* IosAudioInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IosAudioInput.mm; path = PianoAcademyStudio/IosAudioInput.mm; sourceTree = "<group>"; };
-		A10000012CA4567400000004 /* NativePianoEngineProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativePianoEngineProvider.h; path = PianoAcademyStudio/NativePianoEngineProvider.h; sourceTree = "<group>"; };
-		A10000012CA4567400000005 /* NativePianoEngineProvider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NativePianoEngineProvider.mm; path = PianoAcademyStudio/NativePianoEngineProvider.mm; sourceTree = "<group>"; };
+		A10000012CA4567400000001 /* IosAudioInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IosAudioInput.h; path = ../packages/CoreEngine/ios/IosAudioInput.h; sourceTree = SOURCE_ROOT; };
+		A10000012CA4567400000002 /* IosAudioInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IosAudioInput.mm; path = ../packages/CoreEngine/ios/IosAudioInput.mm; sourceTree = SOURCE_ROOT; };
+		A10000012CA4567400000004 /* NativePianoEngineProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativePianoEngineProvider.h; path = ../packages/CoreEngine/ios/NativePianoEngineProvider.h; sourceTree = SOURCE_ROOT; };
+		A10000012CA4567400000005 /* NativePianoEngineProvider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NativePianoEngineProvider.mm; path = ../packages/CoreEngine/ios/NativePianoEngineProvider.mm; sourceTree = SOURCE_ROOT; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -279,7 +279,9 @@
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared",
+					"$(SRCROOT)/../packages/CoreEngine/cpp/legacy",
+					"$(SRCROOT)/../packages/CoreEngine/bindings",
+					"$(SRCROOT)/../packages/CoreEngine/ios",
 				);
 				INFOPLIST_FILE = PianoAcademyStudio/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -314,7 +316,9 @@
 				DEVELOPMENT_TEAM = RXD73XFMX9;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../src/motion/scenes/PianoMaster/CorePianoNotesDetection/shared",
+					"$(SRCROOT)/../packages/CoreEngine/cpp/legacy",
+					"$(SRCROOT)/../packages/CoreEngine/bindings",
+					"$(SRCROOT)/../packages/CoreEngine/ios",
 				);
 				INFOPLIST_FILE = PianoAcademyStudio/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;

@@ -10,7 +10,7 @@ import {
   type CalibrationOptions,
   type CalibrationProgressEvent,
   type PianoProfile,
-} from '../../motion/scenes/PianoMaster/CorePianoNotesDetection';
+} from '@pianoacademy/core-engine';
 import { noteName, parseNote, PIANO_RANGES } from '../../shared/piano';
 
 export type KeyboardChoice = {

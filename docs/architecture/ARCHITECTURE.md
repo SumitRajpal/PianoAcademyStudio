@@ -22,10 +22,11 @@
 | Module | Kind | Plane | Thread | Purpose | Uses | Used by |
 |---|---|---|---|---|---|---|
 | `App.tsx` | entry | app | js | Root component: safe-area provider, hidden status bar, and the two screens: calibration first (every launch), then the lesson with real-time acoustic pitch detection. | `motion/scenes/PianoMaster`, `screens/CalibrationScreen`, `screens/LessonScreen` | `index.js` |
-| `android` | platform | platform | native | Android app project: Gradle build, MainActivity, manifest and native Android code | `motion/scenes/PianoMaster/CorePianoNotesDetection` | — |
+| `android` | platform | platform | native | Android app project: Gradle build, MainActivity, manifest and native Android code | `packages/CoreEngine` | — |
 | `index.js` | entry | app | js | Native entry point: registers the root App component with React Native. | `App.tsx` | — |
-| `ios` | platform | platform | native | iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code | `motion/scenes/PianoMaster/CorePianoNotesDetection` | — |
-| `motion/scenes/PianoMaster` | scene | motion | any | The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The engine still sits in this folder (CorePianoNotesDetection) until it moves to packages/CoreEngine; import it from its own index, never from here. | `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `App.tsx`, `screens/CalibrationScreen`, `screens/LessonScreen` |
+| `ios` | platform | platform | native | iOS app project: Xcode project, AppDelegate, Info.plist and native iOS code | — | — |
+| `packages/CoreEngine` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `screens/CalibrationScreen`, `screens/LessonScreen` |
+| `motion/scenes/PianoMaster` | scene | motion | any | The piano's single source of truth on screen, in two parts: CorePiano (the keyboard, any range: 48 keys by default, 88, 108 or any other) and CoreNotes (the sheet music above it). Also owns the key state (which keys are lit, in which role) that lessons write to, and the key sink through which the note engine lights keys on the UI thread. The note engine is a separate package (@pianoacademy/core-engine); PianoMaster never imports it. | `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `App.tsx`, `screens/CalibrationScreen`, `screens/LessonScreen` |
 | `motion/scenes/PianoMaster/CoreNotes` | module | motion | ui | The sheet music above the piano, drawn with Skia and SMuFL music fonts: the music symbols (one folder each under symbols/), the score that places notes and rests on the staff, and the lesson design's own parts (staff paper, duration bars, playhead). | `motion/scenes/PianoMaster/CoreNotes/DurationBar`, `motion/scenes/PianoMaster/CoreNotes/Playhead`, `motion/scenes/PianoMaster/CoreNotes/StaffPaper`, `motion/scenes/PianoMaster/CoreNotes/symbols`, `motion/scenes/PianoMaster/shared`, `shared/piano` | `motion/scenes/PianoMaster` |
 | `motion/scenes/PianoMaster/CoreNotes/DurationBar` | module | motion | ui | The duration bar: the see-through bar after a note showing how long to hold it. Part of the lesson design, not a music symbol. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CoreNotes` |
 | `motion/scenes/PianoMaster/CoreNotes/Playhead` | module | motion | ui | The playhead: the big see-through vertical line marking where the music is now. Part of the lesson design, not a music symbol. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CoreNotes` |
@@ -49,10 +50,9 @@
 | `motion/scenes/PianoMaster/CorePiano/PianoKeyMarker` | module | motion | ui | The dot under a marked piano key, such as middle C. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CorePiano` |
 | `motion/scenes/PianoMaster/CorePiano/PianoKeybed` | module | motion | ui | The keybed under the piano keys: the colour that shows through the gaps between the keys and the frame around them. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CorePiano` |
 | `motion/scenes/PianoMaster/CorePiano/WhitePianoKey` | module | motion | ui | The one white piano key: how it looks at rest and when lit. CorePiano draws it at every white key position. | `motion/scenes/PianoMaster/shared` | `motion/scenes/PianoMaster/CorePiano` |
-| `motion/scenes/PianoMaster/CorePianoNotesDetection` | engine | audio | audio | Acoustic note detection: the C++ engine (mic, pitch, calibration) and its TypeScript side. Detected keys go to the key sink the screen hands over, from a lock-free native key table read on the UI thread; JS listeners get every note in order. It speaks MIDI numbers and imports nothing from the app. | — | `android`, `ios`, `screens/CalibrationScreen`, `screens/LessonScreen` |
 | `motion/scenes/PianoMaster/shared` | module | motion | ui | What more than one part of PianoMaster uses: the key state (which keys are lit, in which role), the lit-key colours, the key shape, gradients, paint helpers, picture recording and the look units; and for the music symbols, SMuFL glyph drawing, staff line positions and the notation ink. | `shared/piano` | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CoreNotes/DurationBar`, `motion/scenes/PianoMaster/CoreNotes/Playhead`, `motion/scenes/PianoMaster/CoreNotes/StaffPaper`, `motion/scenes/PianoMaster/CoreNotes/symbols/Barline` +17 |
-| `screens/CalibrationScreen` | screen | app | js | The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson. | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/CorePianoNotesDetection`, `screens/LessonScreen`, `shared/piano`, `shared/typography` | `App.tsx` |
-| `screens/LessonScreen` | screen | app | js | The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape; and the lesson's connection to the note engine, with its diagnostics overlay and the microphone messages. | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CorePianoNotesDetection`, `shared/piano`, `shared/typography` | `App.tsx`, `screens/CalibrationScreen` |
+| `screens/CalibrationScreen` | screen | app | js | The calibration screen shown at every launch: the lesson's layout with the questions on its white paper and the user's keyboard below, lighting the key to play and checking each strike; Save goes on to the lesson. | `packages/CoreEngine`, `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CorePiano`, `screens/LessonScreen`, `shared/piano`, `shared/typography` | `App.tsx` |
+| `screens/LessonScreen` | screen | app | js | The lesson screen: background, top bar, staff and keyboard laid out exactly as the reference design, full screen in landscape; and the lesson's connection to the note engine, with its diagnostics overlay and the microphone messages. | `packages/CoreEngine`, `motion/scenes/PianoMaster`, `shared/piano`, `shared/typography` | `App.tsx`, `screens/CalibrationScreen` |
 | `screens/game/EggHatch` | screen | app | js | The egg-hatch screen: a paper-cut night forest where seven note ghosts (C D E F G A B) orbit an enchanted egg, crack it right where they strike, and a chick hatches in a burst of god light. Every scene element is its own atom under entities/; drawn with React Native Skia v3 + Reanimated 4. | — | — |
 | `shared/piano` | module | shared | any | The piano model: notes, MIDI numbers, frequencies, keyboards of any size and key positions. Pure code, usable from any thread. | — | `motion/scenes/PianoMaster`, `motion/scenes/PianoMaster/CoreNotes`, `motion/scenes/PianoMaster/CorePiano`, `motion/scenes/PianoMaster/CorePiano/PianoKeyLabel`, `motion/scenes/PianoMaster/shared`, `screens/CalibrationScreen` +1 |
 | `shared/typography` | module | shared | any | The system fonts (SF Pro and SF Pro Rounded) and their metrics, so text can be placed by its baseline. React Native font family for SF Pro Rounded on iOS. | — | `motion/scenes/PianoMaster/CorePiano/PianoKeyLabel`, `screens/CalibrationScreen`, `screens/LessonScreen` |
@@ -64,33 +64,33 @@ Solid arrows are imports (labelled when a component is rendered); dashed arrows 
 ```mermaid
 flowchart LR
   subgraph plane_audio["AUDIO · audio"]
-    m28["motion/scenes/PianoMaster/CorePianoNotesDetection"]
+    m4["packages/CoreEngine"]
   end
   subgraph plane_motion["MOTION · ui"]
-    m4["motion/scenes/PianoMaster"]
-    m5["motion/scenes/PianoMaster/CoreNotes"]
-    m6["motion/scenes/PianoMaster/CoreNotes/DurationBar"]
-    m7["motion/scenes/PianoMaster/CoreNotes/Playhead"]
-    m8["motion/scenes/PianoMaster/CoreNotes/StaffPaper"]
-    m9["motion/scenes/PianoMaster/CoreNotes/symbols"]
-    m10["motion/scenes/PianoMaster/CoreNotes/symbols/Barline"]
-    m11["motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine"]
-    m12["motion/scenes/PianoMaster/CoreNotes/symbols/Notehead"]
-    m13["motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote"]
-    m14["motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest"]
-    m15["motion/scenes/PianoMaster/CoreNotes/symbols/Staff"]
-    m16["motion/scenes/PianoMaster/CoreNotes/symbols/Stem"]
-    m17["motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline"]
-    m18["motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature"]
-    m19["motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef"]
-    m20["motion/scenes/PianoMaster/CorePiano"]
-    m21["motion/scenes/PianoMaster/CorePiano/BlackPianoKey"]
-    m22["motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows"]
-    m23["motion/scenes/PianoMaster/CorePiano/PianoFrameShadow"]
-    m24["motion/scenes/PianoMaster/CorePiano/PianoKeyLabel"]
-    m25["motion/scenes/PianoMaster/CorePiano/PianoKeyMarker"]
-    m26["motion/scenes/PianoMaster/CorePiano/PianoKeybed"]
-    m27["motion/scenes/PianoMaster/CorePiano/WhitePianoKey"]
+    m5["motion/scenes/PianoMaster"]
+    m6["motion/scenes/PianoMaster/CoreNotes"]
+    m7["motion/scenes/PianoMaster/CoreNotes/DurationBar"]
+    m8["motion/scenes/PianoMaster/CoreNotes/Playhead"]
+    m9["motion/scenes/PianoMaster/CoreNotes/StaffPaper"]
+    m10["motion/scenes/PianoMaster/CoreNotes/symbols"]
+    m11["motion/scenes/PianoMaster/CoreNotes/symbols/Barline"]
+    m12["motion/scenes/PianoMaster/CoreNotes/symbols/LedgerLine"]
+    m13["motion/scenes/PianoMaster/CoreNotes/symbols/Notehead"]
+    m14["motion/scenes/PianoMaster/CoreNotes/symbols/QuarterNote"]
+    m15["motion/scenes/PianoMaster/CoreNotes/symbols/QuarterRest"]
+    m16["motion/scenes/PianoMaster/CoreNotes/symbols/Staff"]
+    m17["motion/scenes/PianoMaster/CoreNotes/symbols/Stem"]
+    m18["motion/scenes/PianoMaster/CoreNotes/symbols/SystemicBarline"]
+    m19["motion/scenes/PianoMaster/CoreNotes/symbols/TimeSignature"]
+    m20["motion/scenes/PianoMaster/CoreNotes/symbols/TrebleClef"]
+    m21["motion/scenes/PianoMaster/CorePiano"]
+    m22["motion/scenes/PianoMaster/CorePiano/BlackPianoKey"]
+    m23["motion/scenes/PianoMaster/CorePiano/BlackPianoKeyShadows"]
+    m24["motion/scenes/PianoMaster/CorePiano/PianoFrameShadow"]
+    m25["motion/scenes/PianoMaster/CorePiano/PianoKeyLabel"]
+    m26["motion/scenes/PianoMaster/CorePiano/PianoKeyMarker"]
+    m27["motion/scenes/PianoMaster/CorePiano/PianoKeybed"]
+    m28["motion/scenes/PianoMaster/CorePiano/WhitePianoKey"]
     m29["motion/scenes/PianoMaster/shared"]
   end
   subgraph plane_shared["SHARED · any"]
@@ -108,83 +108,82 @@ flowchart LR
     m31["screens/LessonScreen"]
     m32["screens/game/EggHatch"]
   end
-  m1 --> m28
-  m0 --> m4
+  m1 --> m4
+  m0 --> m5
   m0 -->|renders| m30
   m0 -->|renders| m31
   m2 --> m0
-  m3 --> m28
-  m4 --> m5
-  m4 --> m20
-  m4 --> m29
-  m4 --> m33
   m5 --> m6
-  m5 --> m7
-  m5 --> m8
-  m5 --> m9
+  m5 --> m21
   m5 --> m29
   m5 --> m33
+  m6 --> m7
+  m6 --> m8
+  m6 --> m9
+  m6 --> m10
   m6 --> m29
+  m6 --> m33
   m7 --> m29
   m8 --> m29
-  m9 --> m10
-  m9 --> m11
-  m9 --> m12
-  m9 --> m13
-  m9 --> m14
-  m9 --> m15
-  m9 --> m16
-  m9 --> m17
-  m9 --> m18
-  m9 --> m19
-  m10 --> m29
+  m9 --> m29
+  m10 --> m11
+  m10 --> m12
+  m10 --> m13
+  m10 --> m14
+  m10 --> m15
+  m10 --> m16
+  m10 --> m17
+  m10 --> m18
+  m10 --> m19
+  m10 --> m20
   m11 --> m29
   m12 --> m29
-  m13 --> m11
-  m13 --> m12
-  m13 --> m16
   m13 --> m29
+  m14 --> m12
+  m14 --> m13
+  m14 --> m17
   m14 --> m29
   m15 --> m29
   m16 --> m29
   m17 --> m29
   m18 --> m29
   m19 --> m29
-  m20 --> m21
-  m20 --> m22
-  m20 --> m23
-  m20 --> m26
-  m20 -->|renders| m24
-  m20 --> m25
-  m20 --> m27
   m20 --> m29
-  m20 --> m33
+  m21 --> m22
+  m21 --> m23
+  m21 --> m24
+  m21 --> m27
+  m21 -->|renders| m25
+  m21 --> m26
+  m21 --> m28
   m21 --> m29
+  m21 --> m33
   m22 --> m29
   m23 --> m29
-  m26 --> m29
   m24 --> m29
-  m24 --> m33
-  m24 --> m34
-  m25 --> m29
   m27 --> m29
+  m25 --> m29
+  m25 --> m33
+  m25 --> m34
+  m26 --> m29
+  m28 --> m29
   m29 --> m33
-  m30 -->|renders| m4
-  m30 --> m20
-  m30 --> m28
+  m30 --> m4
+  m30 -->|renders| m5
+  m30 --> m21
   m30 --> m31
   m30 --> m33
   m30 --> m34
-  m31 -->|renders| m4
-  m31 --> m28
+  m31 --> m4
+  m31 -->|renders| m5
   m31 --> m33
   m31 --> m34
 ```
 
 ## 4. Flows
 
-- **key-lights:** mic → ios → motion/scenes/PianoMaster/CorePianoNotesDetection → [screens/LessonScreen] → motion/scenes/PianoMaster → motion/scenes/PianoMaster/CorePiano → screen
-- **calibration:** mic → ios → motion/scenes/PianoMaster/CorePianoNotesDetection → screens/CalibrationScreen → motion/scenes/PianoMaster/CorePiano → screen
+- **key-lights:** mic → packages/CoreEngine → [screens/LessonScreen] → motion/scenes/PianoMaster → motion/scenes/PianoMaster/CorePiano → screen
+- **calibration:** mic → packages/CoreEngine → screens/CalibrationScreen → motion/scenes/PianoMaster/CorePiano → screen
 
 ## 5. Rules
 
@@ -194,6 +193,7 @@ flowchart LR
 | Features and the note engine are imported only through their public index.ts. | ✓ |
 | Motion code may not import features, screens, state stores or audio; it uses other motion code, sync/ and shared/. | ✓ |
 | Audio code has no UI imports. | ✓ |
+| The note engine package imports nothing from the app (UI Phase 1, dependency rule 1). | ✓ |
 | Code that runs every frame in motion never hands work back to the JS thread. | ✓ |
 | Motion code takes durations and easing from its look or design file (xLook.ts, *Design.ts), not hard-coded numbers. | ✓ |
 | Code on the UI or audio thread never imports JS-thread code. | ✓ |
@@ -208,16 +208,46 @@ android/app/src/main/
     MainActivity.kt
     MainApplication.kt
   jni/
-    OboeInput.cpp
-    OboeInput.h
     OnLoad.cpp
 index.js
 ios/PianoAcademyStudio/
   AppDelegate.swift
-  IosAudioInput.h
-  IosAudioInput.mm
-  NativePianoEngineProvider.h
-  NativePianoEngineProvider.mm
+packages/CoreEngine/
+  android/
+    OboeInput.cpp
+    OboeInput.h
+  bindings/
+    NativePianoEngine.cpp
+    NativePianoEngine.h
+  cpp/legacy/
+    AudioInput.h
+    Calibration.h
+    Cascade.h
+    Engine.h
+    Fft.h
+    Goertzel.h
+    LiveKeys.h
+    Mpm.h
+    Onset.h
+    PianoProfile.h
+    PolyEstimator.h
+    SampleRing.h
+  ios/
+    IosAudioInput.h
+    IosAudioInput.mm
+    NativePianoEngineProvider.h
+    NativePianoEngineProvider.mm
+  src/
+    corePianoNotesDetectionLook.ts
+    index.ts
+    liveKeys.ts
+    mockAudioEngine.ts
+    noteEventBus.ts
+    pianoEngine.ts
+    specs/
+      NativePianoEngine.ts
+    types.ts
+    useCorePianoNotesDetection.ts
 src/
   motion/scenes/PianoMaster/
     CoreNotes/
@@ -319,32 +349,6 @@ src/
       index.ts
       layoutCorePiano.ts
       usePianoKeyLights.ts
-    CorePianoNotesDetection/
-      corePianoNotesDetectionLook.ts
-      index.ts
-      liveKeys.ts
-      mockAudioEngine.ts
-      noteEventBus.ts
-      pianoEngine.ts
-      shared/
-        AudioInput.h
-        Calibration.h
-        Cascade.h
-        Engine.h
-        Fft.h
-        Goertzel.h
-        LiveKeys.h
-        Mpm.h
-        NativePianoEngine.cpp
-        NativePianoEngine.h
-        Onset.h
-        PianoProfile.h
-        PolyEstimator.h
-        SampleRing.h
-      specs/
-        NativePianoEngine.ts
-      types.ts
-      useCorePianoNotesDetection.ts
     index.ts
     shared/
       index.ts

@@ -12,7 +12,7 @@ mkdir -p "$BUILD"
 cd "$DIR"
 
 CXX="${CXX:-clang++}"
-FLAGS=(-std=c++20 -Wall -Wextra -pthread -I../shared)
+FLAGS=(-std=c++20 -Wall -Wextra -pthread -I../cpp/legacy)
 
 benchmark() {
   echo "Compiling benchmark..."

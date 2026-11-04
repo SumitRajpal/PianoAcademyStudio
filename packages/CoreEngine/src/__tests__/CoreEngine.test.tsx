@@ -67,7 +67,7 @@ function fakeShared<T>(value: T) {
 }
 
 /**
- * The native key table's rules in JS (see shared/LiveKeys.h): a version per
+ * The native key table's rules in JS (see cpp/legacy/LiveKeys.h): a version per
  * change, and changes(since) as the host object returns them.
  */
 function fakeLiveKeys() {
