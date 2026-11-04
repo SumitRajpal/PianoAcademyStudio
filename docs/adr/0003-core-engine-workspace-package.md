@@ -1,8 +1,8 @@
 # 0003. The note engine becomes a workspace package; the app compiles its native code
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-04
-- **Decided by:** proposed by Claude, waiting for the owner (part of [migration step 2](../specs/migration-step-2-move-the-engine.md))
+- **Decided by:** the owner, approving [migration step 2's spec](../specs/migration-step-2-move-the-engine.md) on 2026-11-04
 
 ## Context
 
@@ -15,7 +15,7 @@ UI Phase 1 puts everything detection-related in one local native package, `packa
 
 ## Decision
 
-Option 1, proposed and waiting for the owner. The import name is `@pianoacademy/core-engine`, unless the owner names another.
+Option 1. The import name is `@pianoacademy/core-engine`.
 
 ## Consequences
 

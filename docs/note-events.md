@@ -1,7 +1,9 @@
 # Note events: from the mic to every consumer
 
 How a detected note reaches the keyboard and the rest of the app. The code is
-in `src/motion/scenes/PianoMaster/CorePianoNotesDetection/`.
+in the engine package, `packages/CoreEngine/` (imported as
+`@pianoacademy/core-engine`): the C++ in `cpp/legacy/` and `bindings/`, the
+TypeScript in `src/`.
 
 ```text
 mic ─▶ audio thread ─(lock-free sample ring)─▶ analysis thread (C++)
@@ -14,7 +16,7 @@ mic ─▶ audio thread ─(lock-free sample ring)─▶ analysis thread (C++)
    key sink → PianoState → CorePiano redraws               → noteEventBus → listeners
 ```
 
-## The two shared structures (`shared/LiveKeys.h`)
+## The two shared structures (`cpp/legacy/LiveKeys.h`)
 
 - **LiveKeys**: what each key is doing now: down, velocity, cents, time of the
   last change, and a strike counter. Indexed by MIDI number, so any keyboard

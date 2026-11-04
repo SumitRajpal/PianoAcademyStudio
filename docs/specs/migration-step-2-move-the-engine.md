@@ -1,6 +1,6 @@
 # Feature: Migration step 2, move the engine into its package
 
-- **Status:** Draft, waiting for the owner's approval
+- **Status:** Built on 4 November 2026 on `claude/chore-setup`; waiting for the owner's iPhone check, which covers steps 1 and 2. Approved the same day with every recommendation: a source move (1a) and `@pianoacademy/core-engine` (2a)
 - **Owner's request:** 4 November 2026: "Reshape then Harness": migration steps 1 and 2, then the engine's Phase 0 harness. Step 2, as approved in [UI Phase 1, Migration plan](../../documentation/04-ui-phase-1-structure.md#migration-plan): "Create the package with npm workspaces and move the C++, tests, spec, TypeScript side and the iOS and Android audio code into it, with the codegen config. Point `config.mjs` at the new path. Once Phase 3's spike passes, the bindings move to Nitro HybridObjects. Gates: the engine's scenario gate, ThreadSanitizer, and keys still lighting on the iPhone."
 
 ## Goal
@@ -94,6 +94,24 @@ Paths that follow the move:
 3. The calibration screen opens on the keyboard you calibrated last time, which shows the saved profile still loads.
 
 Android is paused: its paths are updated but not built. Say if you'd like an Android build.
+
+### Results (4 November 2026, cloud workspace)
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | Clean |
+| `npm test` | 126 of 129, as after step 1; the engine's suite now runs from `packages/CoreEngine/src/__tests__/` |
+| `npm run test:tooling` | 38 of 38: the 35 from step 1, plus 3 for the package (one module imported by its name; no app imports; only through its index) |
+| `npm run arch:check` | Passes. `packages/CoreEngine` is the engine module (AUDIO), uses no app module, and is used by the two screens and by Android's `OnLoad.cpp`. The flows now start `mic -> packages/CoreEngine`, because the package owns the mic input; the app's `ios` folder no longer includes any engine file |
+| Engine gate | `run.sh scenarios`: 46 of 46. `run.sh engine`: ThreadSanitizer runs pass with GCC (this workspace's clang lacks the TSan runtime), and the optimised runs pass with clang. The script's optimised step doesn't compile under GCC, because `engine_test.cpp` uses clang's `__has_feature`; on your Mac's clang the whole script runs |
+| Native paths | All 17 engine paths in the Xcode project, the CMake file and the provider's include resolve |
+| Golden frames | All 7 byte-identical |
+
+Three details settled while building:
+
+- The package isn't listed under `dependencies`. npm links every workspace package anyway, and leaving it out keeps React Native's autolinking away from its `ios/` and `android/` folders, which the app compiles itself.
+- "Imports nothing from the app" is a rule of its own, `engine-imports-no-app`. `audio-no-ui` keeps its wording and now also watches the package.
+- The lockfile change is only the 17 workspace lines. The npm here would also have dropped 19 `"peer": true` markers your npm writes, so those were kept.
 
 ### Delivery
 

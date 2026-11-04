@@ -8,8 +8,8 @@ The plan lives in [documentation/](../documentation/README.md): the engine maste
 
 ### Lane A: reshape the repository (UI Phase 1, migration plan)
 
-- [ ] Step 1: untangle in place. [Spec](specs/migration-step-1-untangle-in-place.md) and [ADR 0002](adr/0002-engine-output-through-sinks.md) built on 2026-11-04; waiting for the owner's iPhone check
-- [ ] Step 2: move the engine into `packages/CoreEngine/`; the bindings move to Nitro once Phase 3's spike passes on the iPhone. [Spec](specs/migration-step-2-move-the-engine.md) and [ADR 0003](adr/0003-core-engine-workspace-package.md) written; waiting for the owner's approval
+- [ ] Step 1: untangle in place. [Spec](specs/migration-step-1-untangle-in-place.md) and [ADR 0002](adr/0002-engine-output-through-sinks.md); built on 2026-11-04, waiting for the owner's iPhone check
+- [ ] Step 2: move the engine into `packages/CoreEngine/`; the bindings move to Nitro once Phase 3's spike passes on the iPhone. [Spec](specs/migration-step-2-move-the-engine.md) and [ADR 0003](adr/0003-core-engine-workspace-package.md); built on 2026-11-04, waiting for the owner's iPhone check (one build covers steps 1 and 2)
 - [ ] Step 3: build the layers: PianoStage, LessonKit, the route folders, navigation
 - [ ] Step 4: rules and docs: Phase 1's rules in `config.mjs`, flows, glossary, CLAUDE.md
 

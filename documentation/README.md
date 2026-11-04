@@ -20,6 +20,7 @@ Background and working files:
 | File | What it is |
 | --- | --- |
 | [research/engine-comparison-report.md](research/engine-comparison-report.md) | The research report that started Reevo 2: Apex v1, Apex v2 and Reevo compared, the 26 cases audited, a maths-first design |
+| [research/Low-Latency React Native Note Engine-2.pdf](<research/Low-Latency React Native Note Engine-2.pdf>) and [the v2.0 Apex DOCX](research/Low-Latency_React_Native_Note_Engine_v2.0_Apex.docx) | The Apex v2.0 engine design that today's v1.2 engine came from; moved here from the engine's folder in migration step 2 |
 | [bench/audit_calcs.py](bench/audit_calcs.py) | Re-derives every number in the engine re-audit. `python3 audit_calcs.py`, about a minute |
 | [bench/calibration_calcs.py](bench/calibration_calcs.py) | Re-derives every number in the calibration engine. `python3 calibration_calcs.py`, a few minutes |
 

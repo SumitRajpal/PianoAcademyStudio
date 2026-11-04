@@ -223,8 +223,8 @@ The code grew differently from the proposal in 3.3, and the owner chose to keep 
 
 | Plane | Real code |
 |---|---|
-| SYNC | `CorePianoNotesDetection/liveKeys.ts` and `noteEventBus.ts`, and `shared/LiveKeys.h`: the lock-free key table the UI thread reads every frame, and the JS event bus |
-| AUDIO | the rest of `src/motion/scenes/PianoMaster/CorePianoNotesDetection/` (the C++ engine and its TypeScript side), `ios/…/IosAudioInput`, `NativePianoEngineProvider`, `android/app/src/main/jni/` |
+| SYNC | the engine package's `src/liveKeys.ts` and `src/noteEventBus.ts`, and `cpp/legacy/LiveKeys.h`: the lock-free key table the UI thread reads every frame, and the JS event bus |
+| AUDIO | the rest of the engine package, `packages/CoreEngine/` (the C++ engine, its binding, its iOS and Android audio input, and its TypeScript side), and the app's `android/app/src/main/jni/` that registers it |
 | MOTION | `src/motion/**` (PianoMaster: CorePiano, CoreNotes, shared key state) and the game scenes' `scene/`, `entities/`, `shared/` and `*Design.ts` |
 | SHARED | `src/shared/` (the piano model, typography) |
 | PLATFORM | `ios/`, `android/` |
@@ -242,8 +242,8 @@ The graph links the iOS and Android native code to the engine through `#include`
 
 Real flows, written in `docs/architecture/flows.md` and checked against the code:
 
-- **key-lights:** mic → ios → CorePianoNotesDetection → PianoMaster/shared → CorePiano → screen. No JS on the way.
-- **calibration (js ok):** mic → ios → CorePianoNotesDetection → PianoMaster → CalibrationScreen → CorePiano → screen. This flow crosses the JS thread on purpose; its 700 ms flashes aren't frame-critical.
+- **key-lights:** mic → packages/CoreEngine → [screens/LessonScreen] → PianoMaster → CorePiano → screen. No JS on the way: the lesson screen only hands the engine its key sink when it mounts.
+- **calibration (js ok):** mic → packages/CoreEngine → CalibrationScreen → CorePiano → screen. This flow crosses the JS thread on purpose; its 700 ms flashes aren't frame-critical.
 
 ## 4. Architecture graph (Phase 1)
 
