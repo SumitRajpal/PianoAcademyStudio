@@ -2,6 +2,8 @@
 
 Oct 28, 2026 · @sumit
 
+**Status (4 Nov 2026):** merged into master v1.6. The main difference from this audit: D1 caps the waiting shift at 3.38 nats (threshold 12.73), which allows one phantom per 30 minutes of waiting, against its own gate of at most one per hour. The master uses the gate's own level instead: without an attack cue a waiting key's threshold stays at or above ln(675,000) = 13.42 nats, a shift of at most 2.69 nats on 88 keys (2.32 on 61). The master also renames N1–N18 to R1–R18, because N1–N11 are its neural steps. The text below is unchanged history.
+
 **Version:** audit v1.0, based on master v1.5 (Reevo 2 — Piano Detection Engine: End-to-End Implementation Plan, 28 Oct 2026). It re-derives every number in sections 1–16 of the master, re-grades the 26 cases and the 28 cases beyond them, and adds the cases, combinations and physical limits the master does not yet name. Where the two pasted summaries disagree with the master, the master wins and the drift is listed in section 2.
 
 ## Verdict at a glance

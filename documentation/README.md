@@ -6,12 +6,12 @@ Every plan document for Piano Academy Studio lives in this folder: the Reevo 2 e
 
 | # | File | Document | Version | Status |
 | --- | --- | --- | --- | --- |
-| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.5 | The plan everything builds on |
-| 2 | [02-engine-re-audit.md](02-engine-re-audit.md) | Reevo 2 Engine Re-Audit: Maths, Capabilities and Cases | v1.0, based on master v1.5 | Not merged yet |
-| 3 | [03-calibration-engine.md](03-calibration-engine.md) | Reevo 2 Calibration Engine | v1.0, based on master v1.5 | Not merged yet |
-| 4 | [04-ui-phase-1-structure.md](04-ui-phase-1-structure.md) | UI Implementation Plan — Phase 1: Structure | v1.5, based on master v1.4 | Merged into master v1.2–v1.5 |
-| 5 | [05-ui-phase-2-app-flow.md](05-ui-phase-2-app-flow.md) | UI Implementation Plan — Phase 2: App flow | v1.2, based on master v1.3 | Merged into master v1.2 |
-| 6 | [06-ui-phase-3-engine-to-ui.md](06-ui-phase-3-engine-to-ui.md) | UI Implementation Plan — Phase 3: Engine to UI communication | v1.3, based on master v1.4 | Merged into master v1.2 and v1.5 |
+| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.6 | The plan everything builds on |
+| 2 | [02-engine-re-audit.md](02-engine-re-audit.md) | Reevo 2 Engine Re-Audit: Maths, Capabilities and Cases | v1.0, based on master v1.5 | Merged into master v1.6 |
+| 3 | [03-calibration-engine.md](03-calibration-engine.md) | Reevo 2 Calibration Engine | v1.0, based on master v1.5 | Merged into master v1.6; it replaced section 8 |
+| 4 | [04-ui-phase-1-structure.md](04-ui-phase-1-structure.md) | UI Implementation Plan — Phase 1: Structure | v1.6, based on master v1.6 | Merged into master v1.2–v1.5; updated for v1.6 |
+| 5 | [05-ui-phase-2-app-flow.md](05-ui-phase-2-app-flow.md) | UI Implementation Plan — Phase 2: App flow | v1.3, based on master v1.6 | Merged into master v1.2; updated for v1.6 |
+| 6 | [06-ui-phase-3-engine-to-ui.md](06-ui-phase-3-engine-to-ui.md) | UI Implementation Plan — Phase 3: Engine to UI communication | v1.4, based on master v1.6 | Merged into master v1.2 and v1.5; updated for v1.6 |
 | 7 | [07-ui-phase-4-lesson-internals.md](07-ui-phase-4-lesson-internals.md) | UI Implementation Plan — Phase 4: Lesson internals | v1.2, based on master v1.4 | Merged into master v1.3 and v1.5 |
 | 8 | [08-ui-phase-5-visual-motion.md](08-ui-phase-5-visual-motion.md) | UI Implementation Plan — Phase 5: Visual and motion design | v1.0, based on master v1.3 | Merged into master v1.4 |
 
@@ -72,6 +72,11 @@ Agreed with Sumit on 22 October 2026; the home of the master moved to this folde
 
 - The Two-Octave Strategy Audit v1.0 (28 October 2026) was set aside on 4 November 2026. It is not part of the plan, and nothing from it is merged. The calibration engine still names it as one of its sources; read those mentions as history.
 
+**Labels in the master**
+
+- The re-audit's new cases N1–N18 are R1–R18 in the master, because N1–N11 are the neural lane's steps (master 14.0).
+- The calibration engine's gaps G1–G38 are CG1–CG38 in the master, so they cannot be read as note names.
+
 ## Master change log
 
 | Version | Date | Source | Sections changed |
@@ -82,3 +87,4 @@ Agreed with Sumit on 22 October 2026; the home of the master moved to this folde
 | v1.3 | 28 Oct 2026 | UI Implementation Plan: Phase 4 Lesson internals v1.0 | 3.2, 4, 6.2, 11.1, 11.2, 11.5, 12.1, 12.2, 16.3, 17 |
 | v1.4 | 28 Oct 2026 | UI Implementation Plan: Phase 5 Visual and motion design v1.0 | 4, 12.3, 17 |
 | v1.5 | 28 Oct 2026 | UI Implementation Plan: Phase 4 Lesson internals v1.2 (the backing is a FLAC decoded by react-native-audio-api; the engine still plays it) | 6.1, 11.2, 12.1, 17 |
+| v1.6 | 4 Nov 2026 | Engine Re-Audit v1.0 and Calibration Engine v1.0, without the set-aside two-octave audit. Phase 1 to v1.6, Phase 2 to v1.3 and Phase 3 to v1.4 to match | 1, 2.2, 2.4–2.9, 3.1, 4, 5.2, 5.4, 6.1, 6.6, 7.3, 7.4, 8 (replaced), 9.1–9.6, 9.8, 9.9, 9.11, 10.2–10.4, 10.6, 10.7, 11.1, 11.3, 11.5, 13.2–13.4, 14.4, 14.5, 14.8, 14.10, 15, 16.1–16.3, 17 |

@@ -2,6 +2,8 @@
 
 Oct 29, 2026 · @sumit
 
+**Status (4 Nov 2026):** merged into master v1.6, without the two-octave strategy audit, which was set aside (see the README); the focus scan stays. The master renames G1–G38 to CG1–CG38, so they cannot be read as note names. The text below is unchanged history.
+
 **Version:** calibration design v1.0, based on master v1.5 (28 Oct 2026), the engine re-audit v1.0 and the two-octave strategy audit v1.0. It replaces master section 8 and the calibration parts of 2.4, 2.6, 6.6, 7.3, 7.4, 9.1–9.9, 10.4 and 10.7; nothing is merged until you agree (Merge into master).
 
 ## Verdict at a glance

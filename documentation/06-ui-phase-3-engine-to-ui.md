@@ -1,4 +1,4 @@
-# UI Implementation Plan — Phase 3: Engine to UI communication v1.3 (based on master v1.4)
+# UI Implementation Plan — Phase 3: Engine to UI communication v1.4 (based on master v1.6)
 
 Oct 28, 2026 · @sumit
 
@@ -12,7 +12,7 @@ Phase 3 fixes how the engine talks to the screens: four shared structures with o
 - **The staff keeps time with what's heard.** The clock is a straight line that each frame evaluates at its own display time.
 - **The bindings move to Nitro.** They're rewritten here anyway, and MMKV brings Nitro into the app regardless; a spike on the iPhone gates the switch.
 
-With Phases 1 and 2, this completes the plan's design. The three documents merged into master v1.2 on 28 October 2026. Phase 4 brought this one to v1.1: the guided clock, three new commands and the loop fields. Phase 5 brought it to v1.2: the glow's fall rate and release fade. Phase 4's backing change brought it to v1.3: loadBacking takes decoded samples.
+With Phases 1 and 2, this completes the plan's design. The three documents merged into master v1.2 on 28 October 2026. Phase 4 brought this one to v1.1: the guided clock, three new commands and the loop fields. Phase 5 brought it to v1.2: the glow's fall rate and release fade. Phase 4's backing change brought it to v1.3: loadBacking takes decoded samples. Master v1.6, which merged the engine re-audit and the calibration engine, brought it to v1.4 on 4 November 2026: the status codes and their tiers below.
 
 ## Decisions
 
@@ -158,8 +158,10 @@ Every event in the ring uses one 48-byte record: the master's format (§12.2) pl
 | Status | Tier (Phase 2) |
 | --- | --- |
 | Interrupted, route changed, microphone refused, transpose suspected | Pauses the lesson |
-| Noisy room, microphone overloaded, neural engine off for heat, timing off on Bluetooth | Notice while playing |
-| Calibration needed, piano mismatch | Message after the lesson |
+| Noisy room or noisy register, microphone overloaded, microphone blocked, nothing heard, wind on microphone, processing detected, neural engine off for heat or low-power mode, timing off on Bluetooth | Notice while playing |
+| Re-scan needed, piano mismatch, unisons need tuning | Message after the lesson |
+
+Master v1.6 replaced "calibration needed" with the targeted fixes of §8.12, so a status names what to redo. "Noise state changed" is a status too, but it goes to telemetry and never to the screen (§10.7).
 
 ## Bindings: why Nitro
 
@@ -213,7 +215,7 @@ One item stays open; none blocks the build plan.
 
 ## Merge into master
 
-Merged into master v1.2 on 28 October 2026, together with Phases 1 and 2.
+Merged into master v1.2 on 28 October 2026, together with Phases 1 and 2. The v1.4 update follows master v1.6 and changes nothing further in the master.
 
 | Master section | Change |
 | --- | --- |
