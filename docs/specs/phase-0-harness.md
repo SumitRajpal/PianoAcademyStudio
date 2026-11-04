@@ -1,6 +1,6 @@
 # Feature: Phase 0, the evaluation harness
 
-- **Status:** Draft, waiting for the owner's approval
+- **Status:** Slice 1 built on 4 November 2026 on `claude/chore-setup`. Approved the same day with every recommendation: the Python scorer with mir\_eval (1a), recordings outside the repository (2a), and a developer recording mode in the app for slice 2 (3a)
 - **Owner's request:** 4 November 2026: "Reshape then Harness": migration steps 1 and 2 (built), then the engine's Phase 0 harness. Master section 5: "Nothing is tuned until a labelled recording corpus and an offline test harness exist. Phase 0 builds both and measures v1.2, which becomes the bar every later phase must beat."
 
 ## Goal
@@ -47,7 +47,7 @@ This spec asks to build slice 1 now. Slices 2 and 3 get their own approval when 
   - Each metric per cell (register, loudness, distance, instrument, background), with bootstrap 95% intervals over takes.
   - `compare` fails when a gate metric gets worse by more than its interval (5.6).
   - Display latency and the phone's processing time need the phone, so they wait for slice 2. The runner reports the computer's compute time per hop only as a sanity check.
-- **Synthetic takes** (`tools/synth_take`): labelled takes rendered by `test/PianoSynth.h`: a scale, chords, fast repeats, soft notes under a loud one, noise. They test the pipeline end to end and serve as golden recordings until real ones exist.
+- **Synthetic takes** (`tools/synth`): labelled takes rendered by `test/PianoSynth.h`: a scale, chords, fast repeats, soft notes under a loud one, noise. They test the pipeline end to end and serve as golden recordings until real ones exist.
 - **Determinism:** the same take and configuration always give byte-identical events. A test runs everything twice.
 - **Commands:**
   - `npm run harness:replay -- <take>` replays a take.
@@ -76,6 +76,23 @@ This spec asks to build slice 1 now. Slices 2 and 3 get their own approval when 
   - The rejection observer leaves the events unchanged.
 - **Gates:** the scenario gate (46 of 46) and every existing check. ThreadSanitizer only if threading code changes; slice 1 doesn't plan to.
 - **On the phone:** nothing in slice 1.
+
+## Slice 1 results (4 November 2026)
+
+| Check | Result |
+| --- | --- |
+| Harness tests (`npm run harness:test`) | C++: 22 of 22 (every golden take deterministic; the same events as the scenario driver; the rejection log changes no decision; WAV files). Python: 21 of 21 |
+| Engine gate | 46 of 46 with the rejection observer in the cascade |
+| `npm run harness:check` | Passes against the recorded baseline; a deliberate regression (rise gate 6 → 20 dB) fails it |
+| Determinism | Byte-identical events and rejections on every run |
+
+Settled while building:
+
+- **False notes are ghosts.** A detection that matches no played note even 250 ms late counts as false. A late note counts against the detection rate, not twice.
+- **Golden takes are compared take by take** (`compare --per-take`). Seven takes give bootstrap intervals too wide to catch a regression (the deliberate one passed the interval rule), and the takes are deterministic. The interval rule stays for the recorded corpus.
+- **Velocity is scored by rank for now:** the rank correlation of detected and labelled velocity. The error in dB and the dynamic-level confusion table need each instrument's velocity-to-level curve, which slice 3's recordings measure.
+- **The log names the code's gates.** v1.2's gates differ from master 5.5's list; [the harness guide](../harness.md) has both. Section 5.5 should be corrected at the next master update.
+- **The guide:** [docs/harness.md](../harness.md), with v1.2's synthetic baseline and what it already shows.
 
 ## Delivery
 

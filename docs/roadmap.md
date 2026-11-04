@@ -15,7 +15,7 @@ The plan lives in [documentation/](../documentation/README.md): the engine maste
 
 ### Lane B: the Reevo 2 DSP engine (master sections 5–13)
 
-- [ ] Phase 0: recording rig, corpus and ground truth, metrics, the desktop harness, the v1.2 rejection log and baseline (master 5). [Spec](specs/phase-0-harness.md) and [ADR 0004](adr/0004-evaluation-harness.md) written for slice 1 (runner, scorer, rejection log, synthetic takes); waiting for the owner's approval
+- [ ] Phase 0: recording rig, corpus and ground truth, metrics, the desktop harness, the v1.2 rejection log and baseline (master 5). [Spec](specs/phase-0-harness.md), [ADR 0004](adr/0004-evaluation-harness.md) and [guide](harness.md). Slice 1 (runner, scorer, rejection log, synthetic takes) built on 2026-11-04; next: slice 2, the app's developer recording mode, then slice 3, the PSR-E343 rig and your recordings
 - [ ] Phase 1: capture hardening, in parallel (6)
 - [ ] Phases 2–5: front end, calibration engine, evidence and decisions, offline through the harness, then live (7–10). Calibration follows its own build order (8.13)
 - [ ] Phase 6: modes: learning, then practice with Jingle Bells, then free play (11)

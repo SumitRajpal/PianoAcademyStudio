@@ -1,8 +1,8 @@
 # 0004. The evaluation harness: a C++ replay runner, a scorer, recordings outside git
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-04
-- **Decided by:** proposed by Claude, waiting for the owner (part of the [Phase 0 harness spec](../specs/phase-0-harness.md))
+- **Decided by:** the owner, approving the [Phase 0 harness spec](../specs/phase-0-harness.md) on 2026-11-04
 
 ## Context
 
@@ -16,7 +16,7 @@ Master section 5 makes measurement come first: a labelled corpus, a desktop harn
 
 ## Decision
 
-Proposed: the C++ runner, the Python scorer with mir\_eval, and recordings outside git, with synthetic golden takes in git. Waiting for the owner.
+The C++ runner, the Python scorer with mir\_eval, and recordings outside git; the synthetic golden takes are rendered on demand, and only their baseline report is committed.
 
 ## Consequences
 
