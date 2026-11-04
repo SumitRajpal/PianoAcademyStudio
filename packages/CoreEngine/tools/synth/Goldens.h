@@ -1,8 +1,8 @@
 #pragma once
 
-// The synthetic golden takes: labelled recordings rendered by the scenario
-// suite's piano synthesiser (test/PianoSynth.h), with its phone-microphone
-// roll-off and room noise. They test the harness end to end and stand in for
+// The synthetic golden takes: labelled recordings rendered by the piano
+// synthesiser in test/PianoSynth.h, with its phone-microphone roll-off and
+// room noise. They test the harness end to end and stand in for
 // the golden recordings of master 5.6 until real ones exist. Deterministic:
 // the same take always renders the same samples.
 
@@ -24,7 +24,6 @@ struct GoldenTake {
   double durationSec{0.0};
   unsigned seed{1};
   std::string background{"quiet"};
-  bool polyphony{false};
   std::vector<synth::Strike> strikes;
   /** Lesson takes: from tMs on, these keys are expected. */
   std::vector<std::pair<double, std::vector<int>>> expected;
@@ -69,7 +68,7 @@ inline std::vector<GoldenTake> goldenTakes() {
     GoldenTake t = take("ladder", "C2, C4 and C6 at five levels from pp to ff, three strikes each, 1 s apart", 0.0, 12);
     double at = 0.5;
     for (int k : {36, 60, 84}) {
-      for (double level : {0.02, 0.05, 0.12, 0.3, 0.6}) {
+      for (double level : {0.013, 0.033, 0.08, 0.2, 0.4}) {  // ff peaks at 0.84, below the clip flag
         for (int i = 0; i < 3; ++i) {
           t.strikes.push_back({k, at, at + 0.6, level});
           at += 1.0;
@@ -94,8 +93,7 @@ inline std::vector<GoldenTake> goldenTakes() {
     takes.push_back(t);
   }
   {
-    GoldenTake t = take("chords", "C4-E4-G4 triads and C3+C4 octaves, chord mode on", 10.0, 14);
-    t.polyphony = true;
+    GoldenTake t = take("chords", "C4-E4-G4 triads and C3+C4 octaves", 10.0, 14);
     for (double at : {0.5, 2.0, 3.5}) {
       for (int k : {60, 64, 67}) t.strikes.push_back({k, at, at + 1.0, 0.12});
     }
@@ -141,7 +139,7 @@ inline std::vector<GoldenTake> goldenTakes() {
   return takes;
 }
 
-/** The take's audio, rendered as the scenario suite renders its tests. */
+/** The take's audio: its strikes and other sounds, then the phone microphone and room noise. */
 inline std::vector<float> renderGolden(const GoldenTake& t) {
   std::mt19937 rng(t.seed);
   std::vector<float> pcm = synth::silence(t.durationSec);

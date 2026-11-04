@@ -14,7 +14,8 @@ give intervals too wide to catch a regression.
 
 A take is a folder holding labels.json and meta.json (and audio.wav, for the
 runner). A run is a folder with the same name holding events.jsonl,
-rejections.jsonl and run.json, as the replay runner writes them.
+rejections.jsonl and run.json, as the runner writes them; the runner arrives
+with Reevo 2's first stage.
 Times are in seconds; keys are MIDI numbers.
 """
 

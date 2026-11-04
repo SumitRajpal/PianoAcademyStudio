@@ -113,10 +113,10 @@ class MissCauses(unittest.TestCase):
         t = take([(60, 1.0, 1.5), (64, 2.0, 2.5), (67, 3.0, 3.5)])
         r = run(
             [('on', 64, 2.12), ('off', 64, 2.5)],
-            rejections=[(1.01, 60, 'pitch', 0.7, 0.88), (1.02, 60, 'rise', 3.0, 6.0), (2.5, 67, 'rise', 1, 6)],
+            rejections=[(1.01, 60, 'threshold', 9.0, 16.1), (1.02, 60, 'pure-tone', 3.0, 6.0), (2.5, 67, 'pure-tone', 1, 6)],
         )
         causes = score.take_counts(t, r)['missCauses']
-        self.assertEqual(causes, {'rise': 1, 'late': 1, 'no candidate': 1})
+        self.assertEqual(causes, {'pure-tone': 1, 'late': 1, 'no candidate': 1})
 
     def test_a_strike_near_miss_explains_only_its_own_onset(self):
         t = take([(60, 1.0, 1.5), (62, 2.0, 2.5)])
@@ -215,7 +215,7 @@ class Files(unittest.TestCase):
                 f.write(json.dumps({'type': 'on', 'midi': 60, 't': 1.01}) + '\n')
                 f.write(json.dumps({'type': 'off', 'midi': 60, 't': 1.5}) + '\n')
             with open(os.path.join(rdir, 'run.json'), 'w') as f:
-                json.dump({'durationSec': 3.0, 'engine': 'legacy'}, f)
+                json.dump({'durationSec': 3.0, 'engine': 'test'}, f)
             report = score.report(os.path.join(d, 'takes'), os.path.join(d, 'runs'), boot=100, seed=1)
             self.assertEqual(report['takes'], 1)
             self.assertAlmostEqual(report['overall']['detectionRate']['value'], 1.0)

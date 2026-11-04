@@ -32,26 +32,6 @@ struct NoteEvent {
   double tMs{0.0};
 };
 
-/**
- * Why the cascade turned a candidate down: the harness's rejection log
- * (master 5.5). `gate` is a static name such as "pitch" or "rise";
- * `midi` is -1 when no key was found.
- */
-struct Rejection {
-  double tMs{0.0};
-  int midi{-1};
-  const char* gate{""};
-  float measured{0.0f};
-  float threshold{0.0f};
-};
-
-/** Receives every rejection. None on the phone; the desktop harness sets one. */
-class RejectionObserver {
-public:
-  virtual ~RejectionObserver() = default;
-  virtual void reject(const Rejection& r) noexcept = 0;
-};
-
 struct CascadeConfig {
   int sampleRate{48000};
   int hopSize{256};                   // 5.333 ms per hop @ 48 kHz
@@ -168,9 +148,6 @@ public:
   }
   const PianoProfile& getProfile() const noexcept { return profile_; }
 
-  /** Reports every rejected candidate to `observer` (null: off, the default; costs nothing then). */
-  void setRejectionObserver(RejectionObserver* observer) noexcept { rejections_ = observer; }
-
   /** True once after online refinement changed the profile. */
   bool takeProfileDirty() noexcept {
     const bool d = profileDirty_;
@@ -249,11 +226,6 @@ public:
     const OnsetResult on = onset_.process(w1024_.data() + 1024 - OnsetDetector::kFrame);
     const bool loud = hopDb >= gateDb();
     const bool strike = loud && (on.onset || (silenceHops_ >= 3 && hopDb >= gateDb() + 10.0f));
-    // Nearly a strike: loud, flux at least half its threshold, and outside the
-    // onset detector's 6-hop refractory period after the last strike.
-    if (rejections_ != nullptr && loud && !strike && on.flux >= 0.5f * on.threshold && hopsSinceOnset_ >= 6) {
-      reject(tMs, -1, "onset", on.flux, on.threshold);
-    }
     if (strike) {
       PIANO_CASCADE_TRACE("[t=%.0f] strike #%d (flux %.1f / thr %.1f)\n", tMs, onsetSerial_ + 1, on.flux, on.threshold);
       ++onsetSerial_;
@@ -634,9 +606,6 @@ private:
       }
     }
     if (!r.valid) {
-      if (rejections_ != nullptr) {
-        reject(tMs, -1, "pitch", r.clarity, longWindow ? config_.mpmClarityLong : config_.mpmClarityShort);
-      }
       candidate_ = {};
       lastPeriod_ = 0.0f;
       return;
@@ -647,30 +616,16 @@ private:
     const float f = correctOctaveUp(windowed_.data(), n, r.frequency);
     const int midi = profile_.nearestKey(f);
     if (midi < 21 || midi > 108 || hopsSinceOnset_ > strikeWindowFor(midi) || findRinging(midi) >= 0) {
-      if (rejections_ != nullptr) {
-        if (midi < 21 || midi > 108) {
-          reject(tMs, midi, "key-range", static_cast<float>(midi), midi < 21 ? 21.0f : 108.0f);
-        } else if (hopsSinceOnset_ > strikeWindowFor(midi)) {
-          reject(tMs, midi, "strike-window", static_cast<float>(hopsSinceOnset_), static_cast<float>(strikeWindowFor(midi)));
-        } else {
-          reject(tMs, midi, "ringing", 1.0f, 0.0f);
-        }
-      }
       candidate_ = {};
       return;
     }
     if (strict() && !profile_.inRange(midi)) {
-      if (rejections_ != nullptr) {
-        reject(tMs, midi, "calibrated-range", static_cast<float>(midi),
-               static_cast<float>(midi < profile_.lowestMidi ? profile_.lowestMidi : profile_.highestMidi));
-      }
       candidate_ = {};
       return;
     }
     const float rise = riseSinceStrike(win1024_.data(), 1024, midi);
     PIANO_CASCADE_TRACE("[t=%.0f]   hop+%d mpm f=%.1f -> %d rise %.1f dB\n", tMs, hopsSinceOnset_, f, midi, rise);
     if (rise < config_.newNoteRiseDb) {
-      if (rejections_ != nullptr) reject(tMs, midi, "rise", rise, config_.newNoteRiseDb);
       candidate_ = {};
       return;
     }
@@ -685,21 +640,13 @@ private:
     // (a whole bin, in the top octave), where an unwindowed Goertzel is near null.
     if (!Goertzel::verifyHarmonics(vbuf, vn, profile_.keyHz(midi), sr, config_.goertzelVerifyRatio, profile_.keyB(midi))) {
       PIANO_CASCADE_TRACE("[t=%.0f]   %d fails harmonic verification\n", tMs, midi);
-      if (rejections_ != nullptr) {
-        reject(tMs, midi, "harmonics", harmonicShare(vbuf, vn, profile_.keyHz(midi), profile_.keyB(midi)),
-               config_.goertzelVerifyRatio);
-      }
       candidate_ = {};
       return;
     }
     const float cents = fineCents(windowed_.data(), n, midi);
-    if (!countCandidate(midi, cents)) {
-      if (rejections_ != nullptr) reportCountRejection(tMs, midi);
-      return;
-    }
+    if (!countCandidate(midi, cents)) return;
     if (!passesGates(f, n, midi, cents, true)) {
       PIANO_CASCADE_TRACE("[t=%.0f]   %d fails a fingerprint gate (transient %d)\n", tMs, midi, isTransient(midi) ? 1 : 0);
-      if (rejections_ != nullptr) reportGateRejection(tMs, f, n, midi, cents, true);
       return;
     }
     confirm(out, tMs, midi, cents);
@@ -714,9 +661,7 @@ private:
     int midi = newEnergySalience(2048, nowMag2048_.data(), preMag2048_.data(), best, second, floor);
     int n = 2048;
     bool ok = midi >= 0 && best >= 1.25f * second && hasNewEnergy(2048, nowMag2048_.data(), midi, floor);
-    bool bass = false;  // for the rejection log only
     if (midi >= 0 && midi < 48) {
-      bass = true;
       // Bass partials sit a few bins apart even at 4096 samples, so salience
       // cannot pick a bass key; it only verifies. MPM proposes the key once the
       // long window holds enough of the strike.
@@ -742,14 +687,10 @@ private:
     PIANO_CASCADE_TRACE("[t=%.0f]   hop+%d salience best %d (%.2f) second %.2f floor %.2f ok %d\n", tMs, hopsSinceOnset_, midi,
                         best, second, floor, ok ? 1 : 0);
     if (!ok) {
-      if (rejections_ != nullptr) reportOverlapRejection(tMs, midi, bass, best, second, floor);
       candidate_ = {};
       return;
     }
     if (hopsSinceOnset_ > strikeWindowFor(midi)) {
-      if (rejections_ != nullptr) {
-        reject(tMs, midi, "strike-window", static_cast<float>(hopsSinceOnset_), static_cast<float>(strikeWindowFor(midi)));
-      }
       candidate_ = {};
       return;
     }
@@ -761,21 +702,14 @@ private:
     // or clap under the ringing notes dies within a few hops.
     const float added = sal_[static_cast<std::size_t>(midi)];
     if (candidate_.midi == midi && candidate_.onset == onsetSerial_ && added < 0.8f * candidateEnergy_) {
-      if (rejections_ != nullptr) reject(tMs, midi, "energy-faded", added, 0.8f * candidateEnergy_);
       candidate_ = {};
       return;
     }
     candidateEnergy_ = added;
     // windowed_ holds the Hann-windowed current window (magnitudeSpectrum).
     const float cents = fineCents(windowed_.data(), n, midi);
-    if (!countCandidate(midi, cents)) {
-      if (rejections_ != nullptr) reportCountRejection(tMs, midi);
-      return;
-    }
-    if (!passesGates(profile_.keyHz(midi), n, midi, cents, !restrike)) {
-      if (rejections_ != nullptr) reportGateRejection(tMs, profile_.keyHz(midi), n, midi, cents, !restrike);
-      return;
-    }
+    if (!countCandidate(midi, cents)) return;
+    if (!passesGates(profile_.keyHz(midi), n, midi, cents, !restrike)) return;
     confirm(out, tMs, midi, cents);
   }
 
@@ -787,87 +721,6 @@ private:
       candidate_ = {midi, 1, cents, onsetSerial_};
     }
     return candidate_.count >= config_.confirmHops && lastConfirmedOnset_ != onsetSerial_;
-  }
-
-  // ---- rejection log (only with an observer; never changes a decision) --------------
-
-  void reject(double tMs, int midi, const char* gate, float measured, float threshold) const noexcept {
-    if (rejections_ != nullptr) rejections_->reject({tMs, midi, gate, measured, threshold});
-  }
-
-  // The attack drop isTransient() judges.
-  float transientDrop(int midi) const noexcept {
-    return midi < 48 ? peakSinceOnsetDb_ - levelDb_ : peakHopSinceOnsetDb_ - hopDb_;
-  }
-
-  // The share Goertzel::verifyHarmonics compares with its minimum.
-  float harmonicShare(const float* x, int N, float f0, float B) const noexcept {
-    if (N <= 0 || f0 <= 0.0f) return 0.0f;
-    float frameEnergy = 0.0f;
-    for (int i = 0; i < N; ++i) frameEnergy += x[i] * x[i];
-    if (frameEnergy < 1e-7f) return 0.0f;
-    const int sr = config_.sampleRate;
-    const float e1 = Goertzel::magnitudeSquared(x, N, Goertzel::inharmonicPartial(f0, 1, B), sr);
-    const float e2 = Goertzel::magnitudeSquared(x, N, Goertzel::inharmonicPartial(f0, 2, B), sr);
-    return (std::sqrt(e1) + 0.5f * std::sqrt(e2)) / std::sqrt(static_cast<float>(N) * frameEnergy);
-  }
-
-  // countCandidate() said no: either still confirming (not a rejection), or
-  // this strike already gave its one note.
-  void reportCountRejection(double tMs, int midi) const noexcept {
-    if (candidate_.count >= config_.confirmHops && lastConfirmedOnset_ == onsetSerial_) {
-      reject(tMs, midi, "one-per-strike", 1.0f, 0.0f);
-    }
-  }
-
-  // passesGates() said no: which gate, in its order, and by how much.
-  void reportGateRejection(double tMs, float f, int n, int midi, float cents, bool checkTone) const noexcept {
-    if (checkTone && f < config_.overtoneGateSoftMaxHz) {
-      float minRatio = strict() ? profile_.minOvertoneRatio : config_.minOvertoneRatio;
-      if (f >= config_.overtoneGateMaxHz) minRatio *= 0.3f;
-      const float ratio = overtoneRatio(windowed_.data(), n, midi);
-      if (ratio < minRatio) {
-        reject(tMs, midi, "pure-tone", ratio, minRatio);
-        return;
-      }
-    }
-    if (isTransient(midi)) {
-      reject(tMs, midi, "transient", transientDrop(midi), config_.maxAttackDropDb);
-      return;
-    }
-    const float window = profile_.keySource[static_cast<std::size_t>(midi)] == kKeyModel ? config_.gridLockModelCents
-                                                                                          : config_.gridLockMeasuredCents;
-    reject(tMs, midi, "cents", std::fabs(cents), window);
-  }
-
-  // The overlap path found no new note: which of its tests failed.
-  void reportOverlapRejection(double tMs, int midi, bool bass, float best, float second, float floor) const noexcept {
-    if (midi < 0) {
-      reject(tMs, -1, bass ? "pitch" : "new-energy", best, 1.25f * second);
-      return;
-    }
-    if (bass && (midi < 21 || midi > 108)) {
-      reject(tMs, midi, "key-range", static_cast<float>(midi), midi < 21 ? 21.0f : 108.0f);
-      return;
-    }
-    const float added = sal_[static_cast<std::size_t>(midi)];
-    if (bass) {
-      const float need = std::max(2.0f * floor, 0.04f * keySalience(4096, nowMag4096_.data(), nullptr, midi));
-      if (added < need) {
-        reject(tMs, midi, "new-energy", added, need);
-      } else {
-        reject(tMs, midi, "competitor", added, 0.6f * best);
-      }
-      return;
-    }
-    if (best < 1.25f * second) {
-      reject(tMs, midi, "competitor", best, 1.25f * second);
-      return;
-    }
-    const bool hardStrikeOnActive = midi == activeMidi_ && strikeFlux_ >= 3.0f * strikeThreshold_;
-    const float need = std::max(4.0f * floor, (hardStrikeOnActive ? 0.04f : 0.12f) *
-                                                  keySalience(2048, nowMag2048_.data(), nullptr, midi));
-    reject(tMs, midi, "new-energy", added, need);
   }
 
   // Stage 3 fingerprint gates on a confirmed candidate. windowed_ holds the
@@ -967,23 +820,9 @@ private:
             noteOnset_[mm] = onsetSerial_;
             absentHops_[mm] = 0;
             emit(out, NoteEvent::NoteOn, m, 0.0f, velocityFor(peakSinceOnsetDb_), tMs);
-          } else if (rejections_ != nullptr && presentHops_[mm] >= config_.confirmHops) {
-            reject(tMs, m, "transient", transientDrop(m), config_.maxAttackDropDb);
           }
         } else {
           presentHops_[mm] = 0;
-          if (rejections_ != nullptr) {
-            if (fresh) {
-              if (score < config_.expectedOnScore) {
-                reject(tMs, m, "expected-score", score, config_.expectedOnScore);
-              } else {
-                reject(tMs, m, "rise", riseSinceStrike(windowed_.data(), n, m), config_.newNoteRiseDb);
-              }
-            } else if (hopsSinceOnset_ == strikeWindowFor(m) + 1) {
-              // The strike's window closed without this expected key.
-              reject(tMs, m, "strike-window", static_cast<float>(hopsSinceOnset_), static_cast<float>(strikeWindowFor(m)));
-            }
-          }
         }
         continue;
       }
@@ -1075,7 +914,6 @@ private:
 
   CascadeConfig config_;
   PianoProfile profile_;
-  RejectionObserver* rejections_{nullptr};  // the harness's rejection log; null on the phone
   Mpm mpm_;
   PolyEstimator poly_;
   OnsetDetector onset_;

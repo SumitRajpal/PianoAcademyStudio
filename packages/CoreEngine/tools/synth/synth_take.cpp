@@ -1,5 +1,5 @@
 // Renders the synthetic golden takes as take folders: audio.wav, labels.json,
-// meta.json, and expected.txt and replay.args where a take needs them.
+// meta.json, and expected.txt for a lesson take.
 //
 //   synth_take <out-folder> [take-name ...]     (no names: every golden take)
 
@@ -56,7 +56,6 @@ int main(int argc, char** argv) {
         exp << '\n';
       }
     }
-    if (t.polyphony) std::ofstream(dir / "replay.args") << "--polyphony\n";
     ++written;
   }
   std::printf("%d takes in %s\n", written, out.string().c_str());
