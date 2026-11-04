@@ -248,6 +248,17 @@ packages/CoreEngine/
       NativePianoEngine.ts
     types.ts
     useCorePianoNotesDetection.ts
+  tools/
+    common/
+      Wav.h
+    replay/
+      Replay.h
+      replay.cpp
+    synth/
+      Goldens.h
+      synth_take.cpp
+    test/
+      replay_test.cpp
 src/
   motion/scenes/PianoMaster/
     CoreNotes/

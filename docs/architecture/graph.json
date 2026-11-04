@@ -184,7 +184,13 @@
         "packages/CoreEngine/src/pianoEngine.ts",
         "packages/CoreEngine/src/specs/NativePianoEngine.ts",
         "packages/CoreEngine/src/types.ts",
-        "packages/CoreEngine/src/useCorePianoNotesDetection.ts"
+        "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
+        "packages/CoreEngine/tools/common/Wav.h",
+        "packages/CoreEngine/tools/replay/Replay.h",
+        "packages/CoreEngine/tools/replay/replay.cpp",
+        "packages/CoreEngine/tools/synth/Goldens.h",
+        "packages/CoreEngine/tools/synth/synth_take.cpp",
+        "packages/CoreEngine/tools/test/replay_test.cpp"
       ],
       "packages": [
         "react",
@@ -1178,6 +1184,48 @@
       "jsOnly": [
         "useCorePianoNotesDetection"
       ]
+    },
+    {
+      "id": "packages/CoreEngine/tools/common/Wav.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/tools/replay/Replay.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/tools/replay/replay.cpp",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/tools/synth/Goldens.h",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/tools/synth/synth_take.cpp",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
+    },
+    {
+      "id": "packages/CoreEngine/tools/test/replay_test.cpp",
+      "module": "packages/CoreEngine",
+      "plane": "audio",
+      "thread": "audio",
+      "lang": "c-family"
     },
     {
       "id": "src/motion/scenes/PianoMaster/CoreNotes/DurationBar/drawDurationBar.ts",
@@ -4024,6 +4072,66 @@
       "from": "packages/CoreEngine/src/useCorePianoNotesDetection.ts",
       "to": "packages/CoreEngine/src/types.ts",
       "kind": "imports"
+    },
+    {
+      "from": "packages/CoreEngine/tools/replay/replay.cpp",
+      "to": "packages/CoreEngine/tools/common/Wav.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/replay/replay.cpp",
+      "to": "packages/CoreEngine/tools/replay/Replay.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/replay/Replay.h",
+      "to": "packages/CoreEngine/cpp/legacy/Cascade.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/replay/Replay.h",
+      "to": "packages/CoreEngine/cpp/legacy/PianoProfile.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/replay/Replay.h",
+      "to": "packages/CoreEngine/cpp/legacy/SampleRing.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/synth/synth_take.cpp",
+      "to": "packages/CoreEngine/tools/common/Wav.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/synth/synth_take.cpp",
+      "to": "packages/CoreEngine/tools/synth/Goldens.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/test/replay_test.cpp",
+      "to": "packages/CoreEngine/tools/common/Wav.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/test/replay_test.cpp",
+      "to": "packages/CoreEngine/tools/replay/Replay.h",
+      "kind": "imports",
+      "approx": true
+    },
+    {
+      "from": "packages/CoreEngine/tools/test/replay_test.cpp",
+      "to": "packages/CoreEngine/tools/synth/Goldens.h",
+      "kind": "imports",
+      "approx": true
     },
     {
       "from": "src/motion/scenes/PianoMaster/CoreNotes/coreNotesLook.ts",
