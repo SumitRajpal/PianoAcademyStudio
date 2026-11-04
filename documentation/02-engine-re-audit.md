@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · @sumit
 
-**Status (4 Nov 2026):** merged into master v1.6. The main difference from this audit: D1 caps the waiting shift at 3.38 nats (threshold 12.73), which allows one phantom per 30 minutes of waiting, against its own gate of at most one per hour. The master uses the gate's own level instead: without an attack cue a waiting key's threshold stays at or above ln(675,000) = 13.42 nats, a shift of at most 2.69 nats on 88 keys (2.32 on 61). The master also renames N1–N18 to R1–R18, because N1–N11 are its neural steps. The text below is unchanged history.
+**Status (4 Nov 2026):** merged into master v1.6. The main difference from this audit: D1 caps the waiting shift at 3.38 nats (threshold 12.73), which allows one phantom per 30 minutes of waiting, against its own gate of at most one per hour. The master uses the gate's own level instead: without an attack cue a waiting key's threshold stays at or above ln(675,000) = 13.42 nats, a shift of at most 2.69 nats on 88 keys (2.32 on 61). The master also renames N1–N18 to R1–R18, because N1–N11 are its neural steps. The text below is unchanged history, except that on 4 November 2026 two phrases stopped naming the app's current engine, as the master v1.8 follows Reevo 2 only.
 
 **Version:** audit v1.0, based on master v1.5 (Reevo 2 — Piano Detection Engine: End-to-End Implementation Plan, 28 Oct 2026). It re-derives every number in sections 1–16 of the master, re-grades the 26 cases and the 28 cases beyond them, and adds the cases, combinations and physical limits the master does not yet name. Where the two pasted summaries disagree with the master, the master wins and the drift is listed in section 2.
 
@@ -36,7 +36,7 @@ This audit checks master v1.5 against itself, against physics and against a re-d
 - **Audited:** sections 1–16 of the master (project snapshot, 28 Oct 2026), its 26-case table, its 28 beyond-cases and the versioning rules.
 - **Re-derived:** every number in the master, by a Python script (numpy and scipy): windows, leakage, τ, Cramér–Rao bounds, CUSUM thresholds, priors, combinatorics, velocity levels, octave beating, release lag, gate statistics and covering arrays.
 - **Looked up:** the Android compatibility rules for the VOICE\_RECOGNITION source, and whether 54-key keyboards are sold (Sources, end of section 11).
-- **Not audited:** the v1.2 code in the GitHub repo, and the UI plans except where the master quotes them.
+- **Not audited:** the app's code in the GitHub repo, and the UI plans except where the master quotes them.
 
 | Evidence grade | Meaning | In this audit |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ Every capability the engine needs exists on paper, and every gate is still a pro
 | One dB scale | Tones divided by N²/8, noise 3σ²/N per bin | Exact for Hann and low-delay frames alike (coherent gain 0.5, Σw² = 3N/8) | A |
 | Partial frequencies | Phase vocoder per partial, weighted by its Cramér–Rao bound | Neighbours 162–458 σ apart at 20 dB SNR | A |
 | Joint Itakura–Saito model | All candidate keys fitted at once on sparse supports | Up to 64 templates, about 0.3 M operations per hop | A; local refits are approximate (D11) |
-| Non-piano alternatives | Transient, pure tone and harmonic source, charged for searched parameters | Replace v1.2's fixed gates | A |
+| Non-piano alternatives | Transient, pure tone and harmonic source, charged for searched parameters | Replace fixed gates | A |
 | Harmonic-interval test | Own click, power excess, calibrated beating, priors | Beating 9.6 dB peak to peak with the upper note 6 dB softer | B: power-excess z overstated (D5) |
 | Per-key CUSUM with τ | Evidence divided by τ; thresholds from a false-alarm budget | τ = 1.92 / 3.85 / 7.70; faint clickless bass note 330 ms | A |
 | Priors | Threshold shifts, never masks | −6.8 / −1.1 / +1.6 nats | C (D1, D9) |

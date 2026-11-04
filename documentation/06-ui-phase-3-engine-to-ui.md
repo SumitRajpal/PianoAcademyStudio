@@ -1,4 +1,4 @@
-# UI Implementation Plan — Phase 3: Engine to UI communication v1.4 (based on master v1.6)
+# UI Implementation Plan — Phase 3: Engine to UI communication v1.5 (based on master v1.8)
 
 Oct 28, 2026 · @sumit
 
@@ -56,7 +56,7 @@ Each structure lives in the engine's C++ core and is written only by the DSP thr
 
 A held key's yellow follows the sound: bright on a firm strike, fading as the note decays, flashing back on a re-strike, and never dimmer than mid yellow, so it's always visible.
 
-- **Level, from the engine:** the key's sound between its noise floor (0) and its calibrated fortissimo (1), from the joint model's amplitude (§9.3, §8.5). Until Reevo 2's joint model runs, today's engine approximates it from the strike's velocity and a decay.
+- **Level, from the engine:** the key's sound between its noise floor (0) and its calibrated fortissimo (1), from the joint model's amplitude (§9.3, §8.5).
 - **Glow, in the UI:** glow = floor + (1 − floor) × level while the key is down. The floor is 0.55, today's `softestLevel`: mid yellow.
 
 | Moment | What the key does |
@@ -150,7 +150,7 @@ Every event in the ring uses one 48-byte record: the master's format (§12.2) pl
 | `onsetSample`, `timeMs` | The 64-bit sample position, and the latency-corrected time (§10.3) |
 | `velocity`, `dynamicLevel` | 0 to 1, and the dynamic level the measured error allows (§2.9) |
 | `confidence` | The probability that the note is real and is this key |
-| `source` | dsp, neural, fused or legacy |
+| `source` | dsp, neural or fused |
 | `flags` | Tentative, release observable, acoustic end, outside focus |
 | `expectedId`, `verdict`, `offsetMs`, `tier` | Verdicts only: the lesson note judged; correct, wrong, missed or unclear; early or late in ms; perfect, good or late; whether a wrong key came first; the loop pass (Phase 4) |
 | `status` | Status events only: one of the codes below |
@@ -215,7 +215,7 @@ One item stays open; none blocks the build plan.
 
 ## Merge into master
 
-Merged into master v1.2 on 28 October 2026, together with Phases 1 and 2. The v1.4 update follows master v1.6 and changes nothing further in the master.
+Merged into master v1.2 on 28 October 2026, together with Phases 1 and 2. The v1.4 update follows master v1.6 and changes nothing further in the master. The v1.5 update follows master v1.8, which follows Reevo 2 only: `source` loses legacy. It changes nothing further in the master.
 
 | Master section | Change |
 | --- | --- |

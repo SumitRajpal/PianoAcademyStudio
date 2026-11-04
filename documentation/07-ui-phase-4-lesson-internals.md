@@ -1,4 +1,4 @@
-# UI Implementation Plan — Phase 4: Lesson internals v1.2 (based on master v1.4)
+# UI Implementation Plan — Phase 4: Lesson internals v1.3 (based on master v1.8)
 
 Oct 28, 2026 · @sumit
 
@@ -232,7 +232,7 @@ type AttemptRecord = {
   durationMs: number;
   settings: ResolvedSettings;   // preset, checklist, showNotes, looping, playhead
   profileId: string;
-  engine: 'dsp' | 'neural' | 'fused' | 'legacy';
+  engine: 'dsp' | 'neural' | 'fused';
   verdicts: {
     expectedId: number;
     verdict: 'correct' | 'wrong' | 'missed' | 'unclear';
@@ -313,7 +313,7 @@ Three items stay open; none blocks the build plan.
 
 ## Merge into master
 
-Merged into master v1.3 on 28 October 2026, after the owner's yes. The changes to Phases 1–3 are made: Phase 1 is v1.3, Phases 2 and 3 are v1.1.
+Merged into master v1.3 on 28 October 2026, after the owner's yes. The changes to Phases 1–3 are made: Phase 1 is v1.3, Phases 2 and 3 are v1.1. The v1.3 update follows master v1.8, which follows Reevo 2 only: the attempt record's `engine` loses legacy. It changes nothing further in the master.
 
 | Master section | Change |
 | --- | --- |

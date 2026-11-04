@@ -1,4 +1,4 @@
-# UI Implementation Plan — Phase 1: Structure v1.6 (based on master v1.6)
+# UI Implementation Plan — Phase 1: Structure v1.7 (based on master v1.8)
 
 Oct 23, 2026 · @sumit
 
@@ -13,7 +13,7 @@ Phase 1 fixes the app's structure: where each module lives, what it may use, how
 - **FeedbackDetection.** CoreEngine matches each played note against the timeline once, and that verdict colours the note within a frame.
 - **Settings are declarative.** Each is declared once, and all of them show on one Settings page.
 
-Phase 2 settled the app flow in its own document, [UI Implementation Plan — Phase 2](https://claude.ai/artifact/7cWZX9oLsfPML9rmjFWjic), and brought this one to v1.1 on 28 October 2026: the Results route, a live timeline and bass clef for Free2Play, and the first build's path. Phase 3 settled engine and UI communication and brought this one to v1.2: Nitro specs in the engine package, and the switch to Nitro in migration step 2. Phase 4 settled lesson internals and brought it to v1.3: three lesson settings, the grading credit, flow and wait for guided lessons, and three first-build lessons. Phase 5 brought it to v1.4: the Reduce Motion setting, the motion spec for results, and an indigo note to play now. Phase 4's backing change brought it to v1.5: the backing is a FLAC decoded by react-native-audio-api in LessonKit/Backing. Master v1.6, which merged the engine re-audit and the calibration engine, brought it to v1.6 on 4 November 2026: the calibration folder now holds profile v3, four layers each swapped on its own (§8.11).
+Phase 2 settled the app flow in its own document, [UI Implementation Plan — Phase 2](https://claude.ai/artifact/7cWZX9oLsfPML9rmjFWjic), and brought this one to v1.1 on 28 October 2026: the Results route, a live timeline and bass clef for Free2Play, and the first build's path. Phase 3 settled engine and UI communication and brought this one to v1.2: Nitro specs in the engine package, and the switch to Nitro in migration step 2. Phase 4 settled lesson internals and brought it to v1.3: three lesson settings, the grading credit, flow and wait for guided lessons, and three first-build lessons. Phase 5 brought it to v1.4: the Reduce Motion setting, the motion spec for results, and an indigo note to play now. Phase 4's backing change brought it to v1.5: the backing is a FLAC decoded by react-native-audio-api in LessonKit/Backing. Master v1.6, which merged the engine re-audit and the calibration engine, brought it to v1.6 on 4 November 2026: the calibration folder now holds profile v3, four layers each swapped on its own (§8.11). Master v1.8, which follows Reevo 2 only, brought it to v1.7 the same day: `legacy/` holds the app's current core only until Reevo 2 replaces it (§12.5).
 
 ## Decisions
 
@@ -77,7 +77,7 @@ PianoAcademyStudio/
 │       │   ├── modes/              priors, score follower, echo canceller, matcher §11
 │       │   ├── neural/             features, model interface, fusion               §14
 │       │   ├── live/               LiveKeys, NoteEventRing, verdict table
-│       │   └── legacy/             today's v1.2 core, until Reevo 2 wins           §12.5
+│       │   └── legacy/             the current core, until Reevo 2 replaces it     §12.5
 │       ├── bindings/               the only C++ that sees React Native
 │       ├── ios/  android/          audio I/O, model runtimes, module registration
 │       ├── src/                    TypeScript; index.ts is the only door

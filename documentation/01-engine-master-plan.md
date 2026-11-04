@@ -4,7 +4,7 @@ Oct 22, 2026 · @sumit
 
 ## 1. Scope, decisions and success targets
 
-Reevo 2 is one microphone-only engine for acoustic pianos and digital keyboards on iOS and Android. It keeps Reevo's structure, replaces its scoring core, and runs DSP, neural or both from one configuration.
+Reevo 2 is one microphone-only engine for acoustic pianos and digital keyboards on iOS and Android. It is the only engine in this plan. It runs DSP evidence, neural evidence or both from one configuration, through one decision layer.
 
 ### Decisions fixed in the discussion
 
@@ -14,11 +14,11 @@ Reevo 2 is one microphone-only engine for acoustic pianos and digital keyboards 
 | Input | Microphone only. MIDI is used only in the lab, as ground truth | User scope |
 | Platforms | iOS (minimum iPhone 13 Pro Max) and Android (minimum device still open). Built for both from the start; tested on iOS first | User scope |
 | Engine scope | One full-size engine that listens to every key the instrument has. "Two octaves around middle C" is a lesson focus setting, not a separate engine | Every note's overtones span 3+ octaves, so a model with missing keys produces ghost notes (2.8) |
-| Base | New evidence core inside Reevo's structure, on v1.2's proven capture code. v1.2 stays selectable as a legacy engine until the new one beats it | Both older scoring cores fail the maths (2.2) |
+| Base | A new engine on the app's existing capture code. The app's current detection and calibration stay only until Reevo 2 replaces them in Phase 7 (12.5) | Energy-at-bin scoring fails the maths (2.2), so the evidence core is new; the capture code already works on the phone |
 | Engine package | CoreEngine, a local native package in the app repository (packages/CoreEngine/), holds everything detection-related: the C++ core, its bindings, the iOS and Android audio code and the TypeScript API. It exports data and commands, never UI | Its C++ core still builds alone for the desktop harness (5.6) and Python (14.3); the app's screens wire it to the UI |
 | Modes | Learning (no backing), Practice (30-second backing song; first song: Jingle Bells chorus), Free play. In the app they run as GuidedLesson, PracticeLesson and Free2Play | User scope |
 | Grading | Right key first, then timing. Dynamics and note length optional. All declared in the configuration | User priority |
-| Engines | DSP, neural, fused or legacy, chosen by one switch; all share one decision layer | Fair comparison and a safe fallback |
+| Evidence | DSP, neural or fused, chosen by one switch; all share one decision layer | Fair comparison, with DSP as the fallback (14.11) |
 | Calibration | Four layers with their own lifetimes: instrument, placement, noise and route. Each is measured, checked while playing and refreshed on its own (8) | A fan, a moved phone or a new route costs seconds, not a new calibration |
 | Use | Personal and non-commercial | MAESTRO (CC BY-NC-SA 4.0) may be used for training; IDMT-PIANO-MM (CC BY-NC-ND 4.0, for evaluation) is used as a test set |
 
@@ -26,7 +26,7 @@ Note names use scientific pitch: middle C = C4 = MIDI 60 = 261.63 Hz (Yamaha man
 
 ### Success targets (release gates)
 
-These are proposals. Phase 0 measures the baseline and Phase 8 confirms or adjusts them.
+These are proposals. Phase 8 confirms or adjusts them on held-out recordings (13).
 
 | Metric | Gate | Where the number comes from |
 | --- | --- | --- |
@@ -87,11 +87,11 @@ Neighbouring keys are 5.95% apart in frequency (2^(1/12) − 1). A Hann window's
 | Bass (A0–F2) | 4096 | 85.3 ms | 11.7 Hz | 0.010 Hz | A0: 1.64 Hz = 162 σ |
 | Bass refinement | 8192 | 170.7 ms | 5.9 Hz | 0.004 Hz | A0: 1.64 Hz = 458 σ |
 
-In energy, neighbouring fundamentals sit 0.14–0.44 bins apart in the bass tier, 0.23–0.94 in the middle tier and 0.50–1.88 in the treble tier below G6, and A0 beats A♯0 by just 0.1 dB under Reevo's scoring rule. Energy separates A0 from A♯0 only from partial 15 up with N = 4096, or from partial 8 up with N = 8192.
+In energy, neighbouring fundamentals sit 0.14–0.44 bins apart in the bass tier, 0.23–0.94 in the middle tier and 0.50–1.88 in the treble tier below G6, and scoring energy over each key's 3-bin footprint separates A0 from A♯0 by just 0.1 dB. Energy separates A0 from A♯0 only from partial 15 up with N = 4096, or from partial 8 up with N = 8192.
 
 A fit with known frequencies does better than peak-picking. Peak-picking needs two separate hills, about 2 bins apart; calibration already knows both partials' frequencies, so a fit of the two complex atoms needs only their shapes to differ. With Hann weighting their correlation ρ is 0.85 at half a bin and 0.50 at one bin, so A0 and A♯0 separate from partial 4 in the 4096 frame (ρ ≤ 0.85, variance × 2.97) and from partial 2 in the 8192 frame: about half the wait, where those partials stand above the noise.
 
-**Decision:** a note is identified by the measured frequencies of its partials. Simultaneous neighbours are separated by the joint model (9.3), the 8192 refinement for A0–B1 and, for adjacent bass keys, the known-frequency complex fit (9.8). Energy-at-bin scoring is retired.
+**Decision:** a note is identified by the measured frequencies of its partials. Simultaneous neighbours are separated by the joint model (9.3), the 8192 refinement for A0–B1 and, for adjacent bass keys, the known-frequency complex fit (9.8). Energy-at-bin scoring is not used.
 
 ### 2.3 How fast a window sees a new note
 
@@ -289,51 +289,30 @@ t\_play is when the app sent the beat to the speaker, and L\_rt is the measured 
 
 **Decision:** timing is graded from timestamps, never from when the engine made its decision. Round-trip latency is measured for each audio route, and each register's bias is corrected.
 
-## 3. Architecture: Reevo's structure with a new evidence core
+## 3. Architecture: a shared front end, DSP and neural evidence, one decision layer
 
-Reevo 2 keeps Reevo's skeleton and replaces its scoring core. Audio flows through one shared front end into a DSP and a neural evidence engine, and one decision layer turns evidence into notes.
+Audio flows through one shared front end into a DSP and a neural evidence engine, and one decision layer turns evidence into notes.
 
 &#91;embedded content: Reevo 2 architecture · 8 stages, 3 side inputs\]
 
 Audio flows top to bottom. The calibration profile, configuration and priors feed in from the right, and the engine switch decides whether DSP, neural or fused evidence reaches the single decision layer.
 
-### 3.1 What Reevo 2 keeps from Reevo, and what changes
+### 3.1 The engine's parts
 
-| Reevo element | In Reevo 2 | Why |
+| Part | In Reevo 2 | Why |
 | --- | --- | --- |
-| Three Hann tiers (1024, 2048, 4096) on a 256-sample hop | Kept, plus low-delay frames and an 8192 bass frame | 2.2, 2.3 |
-| Energy over 3-bin footprints; greedy peeling of 4 notes per hop | Replaced by partial frequencies and the joint Itakura–Saito model | 2.2, 9.3 |
-| Per-key states IDLE, PENDING, ACTIVE, RETRIGGER, RELEASE | Kept; transitions now driven by CUSUM on evidence in nats | 2.4, 10.1 |
-| 539-float calibration profile with lock-free double-buffer swap | Kept as profile v3: four layers (about 216 KB), each swapped on its own through the same double buffer | 8.11 |
-| Least-squares inharmonicity fit (f\_k/k)² = f0² + f0²B k² | Kept, with long windows, many partials, weights and a robust loss | 8.7 |
-| Split-bridge log-linear B | Kept; the break is located rather than assumed at C3 | 8.8 |
-| Fixed 12 dB/s decay and −30 dB/s release rule | Replaced by per-key two-slope decay and the observability map | 2.7, 8.6 |
-| Whistle centroid gate and 50-cent clap test | Replaced by non-piano templates | 9.4 |
-| Voice pool with an explicit NoteOff when a voice is stolen | Kept, raised from 10 to 32 voices | 10.5 |
-| Lock-free ring, telemetry (avgUs, maxUs, lateHops), mic latency offset | Kept; catch-up replaces fast-forward, and latency is measured per route | 6.3, 6.6 |
-| Atomic expected-notes bitmask | Kept as the transport, now carrying priors instead of a mask | 2.5, 11.1 |
-| JSI host object with zero-copy event buffer | Replaced by Nitro HybridObjects written in C++ once a spike passes (12.1); the event ring stays, and DSP moved off the JavaScript thread | 12.1 |
-
-### 3.2 The common currency: evidence frames
-
-Every engine writes the same record for every key and hop: onset, sustain and release evidence in nats (log-likelihood ratios against "not in this state"), a validity flag and its source. Each value is already divided by its τ (2.4), so it means the same whichever engine wrote it. The decision layer reads nothing else.
-
-That single contract is what makes the engine switch safe, lets fused mode simply add evidence (14.9), and makes comparisons fair: same thresholds, same false-alarm budget, only the evidence differs.
-
-**The output contract.** What leaves the engine is just as fixed: four structures, each written only by the DSP thread and read without locks. The UI thread reads the tables every frame, and JavaScript follows the ring in batches (6.4, 12.1).
-
-| Structure | Holds | Read by |
-| --- | --- | --- |
-| LiveKeys | One slot per MIDI key: down, strike count, velocity, cents, onset time, level (0 at the key's noise floor, 1 at its calibrated fortissimo), note id and confidence | The UI thread every frame |
-| VerdictTable | One row per expected note: pending, correct, wrong, missed or unclear; the key played; how early or late in ms; perfect, good or late; whether a wrong key came first. Its header holds the lesson cursor and the loop pass, and a loop resets its section's rows at each pass | The UI thread every frame; JavaScript once more when the lesson finishes |
-| Clock | Song time and stream time, each a straight line: a position, a rate and the host time of that position (6.2) | The UI thread every frame |
-| Event ring | The last 256 events in order, as 48-byte records (12.2) | JavaScript, woken once per batch; the UI thread in free play |
-
-LiveKeys and the VerdictTable each count their changes, so a reader that sees the same count skips all work, and a reader the ring has lapped rebuilds from the tables. setScore allocates the VerdictTable before the engine starts, so nothing is allocated while playing.
-
-### 3.3 Threads
-
-Four threads share data only through single-producer queues: the audio callback, the DSP thread, the neural thread and the JavaScript thread. The app's UI thread also reads the output structures (3.2) every frame, without locks. Their roles, priorities and wake-ups are in 6.4.
+| Analysis frames | Three Hann tiers (1024, 2048, 4096) on a 256-sample hop, plus low-delay frames and an 8192 bass frame | 2.2, 2.3 |
+| Note evidence | Partial frequencies and the joint Itakura–Saito model; no energy-at-bin scoring and no greedy peeling of notes | 2.2, 9.3 |
+| Per-key states | IDLE, PENDING, ACTIVE, RETRIGGER and RELEASE, with transitions driven by CUSUM on evidence in nats | 2.4, 10.1 |
+| Calibration profile | Profile v3: four layers (about 216 KB), each swapped into the engine on its own through a lock-free double buffer | 8.11 |
+| Inharmonicity | The least-squares fit (f\_k/k)² = f0² + f0²B k², over long windows, with many partials, weights and a robust loss | 8.7 |
+| The bass break | Split-bridge log-linear B, with the break located rather than assumed at C3 | 8.8 |
+| Decay and release | Per-key two-slope decay and the observability map; no fixed decay or release rule | 2.7, 8.6 |
+| Non-piano sounds | Non-piano templates; no fixed whistle or clap gate | 9.4 |
+| Voices | A pool of 32 voices, with an explicit NoteOff when a voice is stolen | 10.5 |
+| Capture | A lock-free ring with catch-up, telemetry (avgUs, maxUs, lateHops), and latency measured per route | 6.3, 6.6 |
+| Expected notes | An atomic transport that carries priors, not a yes-or-no mask | 2.5, 11.1 |
+| Bindings | Nitro HybridObjects written in C++ once a spike passes, an event ring, and DSP off the JavaScript thread | 12.1 |
 
 ## 4. The single configuration
 
@@ -342,7 +321,7 @@ All behaviour comes from one versioned configuration object, shared by iOS and A
 How it works:
 
 - The React Native side edits the configuration. The engine validates it against a schema (types and allowed ranges) and rejects invalid values with a reason.
-- The engine applies a new configuration atomically at the next hop boundary, using Reevo's double-buffer swap, so audio never stops.
+- The engine applies a new configuration atomically at the next hop boundary, using a lock-free double-buffer swap, so audio never stops.
 - The configuration is stored with the calibration profile it was used with, so every recorded result can be reproduced.
 - **One registry in the app.** Every setting, the engine's and the app's own, is declared once and shown on one Settings page. A value starts at its default, then the lesson's JSON, then the student's choice, and each setting's setBy lists which of those layers may change it. Measured values show read-only, and screens send the engine plain values.
 
@@ -399,7 +378,6 @@ How it works:
 | intervalTest | on | Keys covered by a sounding key's partials are judged once per strike (9.5) |
 | tiers | 1024, 2048, 4096, plus 8192 for A0–B1 after an onset | Resolution limits (2.2) |
 | lowDelayFrames | on for the 2048 and 4096 tiers | 7.6 ms and 17.7 ms sooner first detection (2.3) |
-| legacyEngine | v1.2 available | A/B comparison until the new engine wins |
 | transposeWatchRun | set in the harness (5.6) | A run of notes all off by the same whole number of semitones raises transpose suspected instead of wrong notes (11.1) |
 | pianoMismatchWindow | set in the harness (5.6) | Confident notes that keep missing the profile's partials by more than 3σ over this window raise piano mismatch (10.7) |
 
@@ -455,7 +433,7 @@ How it works:
 
 | Parameter | Default | Origin |
 | --- | --- | --- |
-| rejectionLog | on in development builds | Shows why each candidate note was rejected (Phase 0) |
+| rejectionLog | on in development builds | Shows why each candidate note was rejected (5.5) |
 | telemetry | on | Processing time, late hops, latency and false-note counters |
 | detectabilityMap | on | For every key and dynamic, the predicted time to each threshold in this room (8.10) |
 | healthStatistics | on | Frequency innovations, template remainder, tilt, noise state, θ\* and decay residuals, each in units of its own noise (8.12) |
@@ -476,9 +454,9 @@ Read only by the app, never by the engine; its defaults are design choices, not 
 | looping | off | Set by the lesson's JSON. The student may repeat a section (11.2) |
 | reduceMotion | system | Set by the student. On or off overrides the phone's Reduce Motion; each animation's calm version is in the motion settings file (12.3) |
 
-## 5. Phase 0 — Measure first: corpus, ground truth, metrics, v1.2 baseline
+## 5. Phase 0 — Measure first: corpus, ground truth, metrics and the harness
 
-Nothing is tuned until a labelled recording corpus and an offline test harness exist. Phase 0 builds both and measures v1.2, which becomes the bar every later phase must beat.
+Nothing is tuned until a labelled recording corpus and an offline test harness exist. Phase 0 builds both, and every later phase is measured with them against the gates in section 1.
 
 ### 5.1 Metrics, defined once
 
@@ -546,25 +524,16 @@ n = \frac{1.96^2\,p\,(1-p)}{e^2} = \frac{3.84 \times 0.97 \times 0.03}{0.02^2} =
 - Passing a gate needs more than estimating it. A cell passes only when its 95% interval clears the gate (13.3): with 300 notes that means at most 3 misses, so a truly 99%-accurate engine clears all 12 detection cells only 0.5% of the time. Cells are therefore sized for power: about 950 notes when the engine is truly at 99%, 1,850 at 98.5%. The alternative is a pooled test, where 3,600 notes clear 97% with 96% probability at a true 98%, with a cell failing only when it is significantly below the gate after a Holm correction.
 - The PSR-E343 self-play rig labels about 22,000 notes in 1.5 h of playback, so these counts are affordable on the digital keyboard; the acoustic piano needs a person or a player piano.
 - Showing at most 6 false notes per hour needs at least 0.5 h of clean audio per noise condition; at most 1 per hour needs 3 h.
-- Engines are compared on the same notes with McNemar's paired test (13.5).
+- Evidence modes are compared on the same notes with McNemar's paired test (13.5).
 
-### 5.5 v1.2 rejection log and baseline
+### 5.5 Rejection log and miss causes
 
-- Add a log to v1.2 recording, for every candidate onset and every expected note not detected, which gate rejected it and by how much (measured value against threshold).
-- The gates are v1.2's own, as its code has them. They are not the five-layer fingerprint of the Apex v2.0 design v1.2 came from ([research/](research/)): v1.2 never built its timbre-similarity, loudness-window or pitch-stability layers, and its calibrated loudness range only scales velocity.
-  - **Strike:** the energy gate, the flux onset, and the window in which a note must confirm after its strike (64 ms; 150 ms below C3, which waits for the 4096-sample window).
-  - **Pitch:** out of silence, McLeod pitch (clarity 0.88, or 0.80 on the 4096-sample window). Over ringing notes, the key whose partials gained the most new energy since the strike; it fails when it added too little, another key gained more, or its energy died within a few hops.
-  - **Verification:** Goertzel harmonics (a 10% share of the frame), then the calibrated fingerprint: key range, the cents grid (±25 cents on measured keys, ±40 on modelled ones), the note's own partials rising at least 6 dB with the strike, overtones present (rejects whistles) and string-like decay (rejects knocks).
-  - **Confirmation:** 2 agreeing hops. Single-note free play takes one note per strike and none on a key already ringing. Lessons need the expected key's score within its strike window.
-  - **Not logged:** hops under the energy gate (silence), candidates still confirming, re-strikes waiting for a knock to die away, and chord mode, whose blind estimator has no per-key gates. A miss with no logged gate counts as "no candidate".
-- Run v1.2 offline on the whole corpus. Publish its metrics (5.1) and a histogram of miss causes.
-- The six suspects from the discussion each map to v1.2's gates: re-strikes (flux onset), soft notes under loud ones (new energy, and another key gaining more), soft notes (energy gate, flux onset), unstable attacks (cents grid), digital loudness layers (overtones present, against the minimum calibration measured) and late or out-of-step notes (strike window, expected score).
-- The histogram shows which problems these two instruments actually have, and sets the test priorities for Phases 4 and 5.
-- The app repository's [harness guide](../docs/harness.md) lists each gate with what it measures.
+- The engine's rejection log (4, Diagnostics) records, for every candidate key and every expected note not detected, what held it back and by how much: the threshold it did not reach (10.2) or the explanation that fitted better (9.4), with the value reached and the value needed.
+- The harness publishes each build's metrics (5.1) on the whole corpus with a histogram of miss causes per cell, and the histogram sets the test priorities of the work that follows.
 
 ### 5.6 The evaluation harness
 
-- The C++ engine core compiles for desktop as well as mobile. A command-line runner replays any recording through any engine and configuration and writes the events.
+- The C++ engine core compiles for desktop as well as mobile. A command-line runner replays any recording through the engine in any configuration and writes the events.
 - A scorer computes every metric in 5.1, with bootstrap confidence intervals over takes.
 - Runs are deterministic: the same audio and configuration always give identical events.
 - Every change runs against the full corpus. A change that worsens a gate metric by more than its confidence interval fails.
@@ -574,12 +543,11 @@ n = \frac{1.96^2\,p\,(1-p)}{e^2} = \frac{3.84 \times 0.97 \times 0.03}{0.02^2} =
 
 - [ ] At least 300 notes per register × loudness cell on both instruments, and at least 0.5 h of audio per noise condition.
 - [ ] Labels synchronised to within 2 ms, verified on sync notes.
-- [ ] The harness reproduces v1.2's live results on the same recordings.
-- [ ] v1.2 baseline metrics and miss-cause histogram published.
+- [ ] The scorer computes every metric in 5.1, checked on takes with known answers.
 
 ## 6. Phase 1 — Capture, sample clock and threading (Android and iOS)
 
-Phase 1 delivers a capture layer that never loses a sample, stamps every sample with a 64-bit counter and measures each device's latency. v1.2's proven capture code is the starting point.
+Phase 1 delivers a capture layer that never loses a sample, stamps every sample with a 64-bit counter and measures each device's latency. The app's existing capture code is the starting point.
 
 ### 6.1 Audio session setup
 
@@ -610,7 +578,7 @@ In practice mode every output buffer sent to the speaker is also copied into a r
 
 - A single-producer, single-consumer ring holds 2^16 = 65,536 samples: 1.37 s at 48 kHz, 256 KB. It survives any system stall up to a second without loss.
 - The DSP thread processes every pending hop in order. A hop costs well under 1 ms of its 5.33 ms, so a 200 ms stall (37.5 hops) is cleared in about 37 ms, more than 5 times faster than real time.
-- Only a stall longer than the ring (over 1.3 s) drops audio. The counter then advances by exactly the dropped samples and a discontinuity is emitted, so later timestamps stay true. This replaces Reevo's fast-forward, which dropped audio after 21 ms of backlog and shifted every later timestamp.
+- Only a stall longer than the ring (over 1.3 s) drops audio. The counter then advances by exactly the dropped samples and a discontinuity is emitted, so later timestamps stay true. Audio is never fast-forwarded: dropping it after a short backlog would shift every later timestamp.
 - The audio callback only copies samples and publishes the write counter. It takes no locks, allocates no memory and makes no system calls (a condition-variable notify can enter the kernel, so none is used).
 
 ### 6.4 Threads and scheduling
@@ -627,7 +595,7 @@ Threads share data only through single-producer queues: input ring, reference ri
 
 ### 6.5 Clipping and microphone overload
 
-- Digital clipping: any raw sample with |x| ≥ 0.985 sets the clip flag, as in Reevo.
+- Digital clipping: any raw sample with |x| ≥ 0.985 sets the clip flag.
 - The microphone capsule usually overloads first. UNPROCESSED maps 94 dB SPL to −36 dBFS, so full scale is about 130 dB SPL, while phone MEMS microphones overload between 120 and 135 dB SPL.
 - Overload shows as flat-topped waveforms (4 or more consecutive samples within 0.1% of the hop's peak) or a jump in the hop's crest factor.
 - The UI is told to suggest moving the phone further away, and evidence from the affected hops is down-weighted, because distortion creates fake partials.
@@ -669,7 +637,7 @@ Phase 2 turns each 5.33 ms hop into the measurements every engine shares: multi-
 - There is no other filter and no gain in the signal path, because thresholds are relative to noise (2.6).
 - Hops flagged for clipping or overload (6.5) carry the flag forward.
 
-### 7.2 Multi-resolution frames (Reevo's three tiers, extended)
+### 7.2 Multi-resolution frames
 
 | Tier | Keys scored | Frames every hop | Purpose |
 | --- | --- | --- | --- |
@@ -680,7 +648,7 @@ Phase 2 turns each 5.33 ms hop into the measurements every engine shares: multi-
 
 - All frames end at the newest sample, so every tier describes the present.
 - A key is scored, for all its partials, in its own tier's frames. The tier is chosen by the gap to the neighbouring key, not by the partial's frequency.
-- The FFTs cost about 0.2 million butterfly operations per hop (39 million per second), a small share of one core with Accelerate or NEON, reusing Reevo's SIMD radix-2 code.
+- The FFTs cost about 0.2 million butterfly operations per hop (39 million per second), a small share of one core with Accelerate or NEON and a SIMD radix-2 FFT.
 - Each spectrum is stored as power in tone units (divided by N²/8) together with its phase, which 7.3 and 7.5 need.
 
 ### 7.3 Partial frequency estimation (phase vocoder)
@@ -914,7 +882,6 @@ I_{\mathrm{off}} = \sum_h \frac{S_h^2}{\sigma_{L,h}^2}
 ```
 
 - A robust Huber loss, solved by iterative reweighting, rejects phantom partials and longitudinal string modes. The fit's covariance gives the (c, B) covariance that each key carries (8.8).
-- This is Reevo's least-squares idea, upgraded from 6 partials read 25 ms after onset to long windows, many partials and proper weights.
 
 **Unison doublets.** Two or three strings slightly apart make each partial a doublet: beating, double decay and a wandering phase-vocoder frequency. Calibration has no latency budget, so the hold is analysed per partial with a matrix pencil (Hua and Sarkar 1990) on the heterodyned, decimated band, fitting one, two or three damped exponentials, the order chosen by minimum description length and checked against the FFT fit.
 
@@ -1011,7 +978,7 @@ A C4-like key in the middle tier, partials 28 dB down to −1 dB over the noise 
 
 ### 8.11 Profile v3 layout and storage
 
-Reevo's 539-float profile becomes a versioned profile of four layers, about 216 KB in all, each checksummed and swapped into the engine on its own through the existing lock-free double buffer.
+The profile is versioned and has four layers, about 216 KB in all, each checksummed and swapped into the engine on its own through a lock-free double buffer.
 
 | Layer | Contents | Size |
 | --- | --- | --- |
@@ -1088,14 +1055,14 @@ These replace a single "calibration needed" status; the statuses that ask for th
 
 ## 9. Phase 4 — DSP evidence engine
 
-The DSP engine turns the front end's measurements into evidence: for every key and hop, how much more likely the sound is with that key's onset, sustain or release than without, in nats. Its scoring core replaces Reevo's energy-at-bin matching and greedy peeling.
+The DSP engine turns the front end's measurements into evidence: for every key and hop, how much more likely the sound is with that key's onset, sustain or release than without, in nats. It never scores energy at bins or peels notes off greedily (2.2).
 
 ### 9.1 Candidates, with no ranking cut
 
 - Peaks are the local maxima in each tier's spectra with per-bin SNR of at least 6 dB.
 - A key becomes a candidate when at least 2 of its first 8 calibrated partials match a peak within tolerance: its prediction window, the curve's uncertainty plus the key's own scatter with Student-t tails (8.8), plus the frequency estimate's own σ. In the top octave, where higher partials leave the microphone's useful band, 1 partial is enough.
 - Also always included: every sounding key; the ±1, ±2 and ±12 neighbours of each candidate (the usual confusions); and, in lessons, the expected keys and their typical mistakes.
-- That gives typically 10–30 keys per hop. Nothing is cut by rank: Reevo's and Apex v2's limit of 4 notes per hop is what caused chords to ping-pong at 4th to 6th place.
+- That gives typically 10–30 keys per hop. Nothing is cut by rank: a limit of 4 notes per hop makes the 4th to 6th notes of a chord ping-pong in and out.
 
 ### 9.2 Frequency evidence
 
@@ -1147,7 +1114,7 @@ Three alternative templates compete in the same fit:
 | Harmonic source | Exact harmonics (B = 0), free f0 from 70 to 1,000 Hz, allowed to glide | Speech, singing, counting aloud, other instruments |
 
 - A key's evidence is its gain over the best alternative explanation of the same bins. A whistle at C5's pitch is better explained as a pure tone: no partials, no hammer click, no string decay. Speech is better explained by exact gliding harmonics than by stiff-string partials with B > 0.
-- These replace the fixed gates of v1.2 and Reevo. Reevo's clap test alone rejected real notes on 71 of 88 keys.
+- No fixed gates are used: a sound is rejected only when another explanation fits it better.
 - Two more piano-specific terms join the evidence: a hammer click at onset (9.5), and a decay over the first 100 ms that matches the key's calibrated λ1.
 - Searched parameters are charged. An alternative that searches a parameter, such as the harmonic source's f0 or the pure tone's frequency, fits any spectrum slightly better by chance. Its gain is charged the log of the number of distinguishable settings it searched (an Occam factor), with the exact charge fitted in the evidence calibration (9.9). Without the charge the harmonic source would edge out real digital-keyboard notes, whose partials are nearly harmonic; with it, an alternative must explain the bins clearly better, not just as well.
 - Catalogued tonal lines (8.2) are known in advance, so their bounded atoms explain them without a search and without an Occam charge; only a new tone goes through the pure-tone alternative.
@@ -1231,7 +1198,7 @@ The test must also beat three other causes of extra energy on j's partials, each
 
 ## 10. Phase 5 — Decision layer: per-key states, thresholds, timestamps, velocity
 
-Each key runs Reevo's five-state machine, now driven by CUSUM statistics on evidence in nats. A NoteOn carries the estimated onset time, never the moment the decision was made.
+Each key runs a five-state machine driven by CUSUM statistics on evidence in nats. A NoteOn carries the estimated onset time, never the moment the decision was made.
 
 &#91;embedded content: Per-key state machine · 5 states, 9 transitions\]
 
@@ -1393,9 +1360,9 @@ The three modes share one engine and differ only in their priors and in what the
 - [ ] Echo cancellation of at least 15 dB on the test phones, speaker route.
 - [ ] Free play meets the gates in section 1 on the corpus.
 
-## 12. Phase 7 — Integration: JSI bridge, events, persistence, legacy toggle
+## 12. Phase 7 — Integration: JSI bridge, events, persistence, replacing today's engine
 
-Integration keeps Reevo's zero-copy event buffer and, once a spike passes, replaces its hand-written JSI host object with Nitro HybridObjects (12.1). Two principles hold: JavaScript only reads finished events and never runs DSP, and the screen never waits for JavaScript, because the UI thread reads the engine's tables itself. One C++ core serves iOS, Android and the desktop test harness.
+Integration uses a zero-copy event buffer and, once a spike passes, Nitro HybridObjects in place of a hand-written JSI host object (12.1). Two principles hold: JavaScript only reads finished events and never runs DSP, and the screen never waits for JavaScript, because the UI thread reads the engine's tables itself. One C++ core serves iOS, Android and the desktop test harness.
 
 ### 12.1 The JSI surface
 
@@ -1415,7 +1382,7 @@ Integration keeps Reevo's zero-copy event buffer and, once a spike passes, repla
 | loadProfile(id), exportProfile(), importProfile() | Profile management (8.11) |
 | getTelemetry(), getDiagnostics() | Processing time, late hops, noise level, rejection log |
 
-In Reevo, pollEvents ran the DSP inside the JavaScript animation frame. Here nothing is polled: the DSP thread writes the tables and the event ring (6.4), the UI thread reads the tables every frame, and JavaScript is woken once per batch.
+Nothing is polled: the DSP thread writes the tables and the event ring (6.4), the UI thread reads the tables every frame, and JavaScript is woken once per batch.
 
 The objects are Nitro HybridObjects written in C++ (12.6), callable from the UI thread's worklets as well as from JavaScript, with their TypeScript types generated from one spec. They replace the TurboModule and its hand-written host object once a spike on the iPhone passes (12.7); if it fails, the TurboModule stays, with the host object rewritten on jsi::NativeState.
 
@@ -1429,7 +1396,7 @@ The objects are Nitro HybridObjects written in C++ (12.6), callable from the UI 
 | onsetSample, timeMs | 64-bit sample position and the latency-corrected time in ms (2.10) |
 | velocity, dynamicLevel | 0–1, and the level index allowed by the velocity error (2.9) |
 | confidence | Probability that the note is real and is this key |
-| source | dsp, neural, fused or legacy |
+| source | dsp, neural or fused |
 | flags | Tentative, release observable, acoustic end, outside focus |
 | expectedId, verdict, offsetMs, tier | Verdicts only: the lesson note judged; correct, wrong, missed or unclear; how early or late in ms; perfect, good or late; whether a wrong key came first; the loop pass |
 | status | Status events only: the status code, whose tier is in 10.7 |
@@ -1453,16 +1420,16 @@ Events are fixed 48-byte records in a ring of the last 256 events. JavaScript is
 - Lesson content (chapters, lessons and media) is bundled with the app now and will come from Firebase later, behind one content source. A lesson's revision number marks saved results and caches as stale when its content changes.
 - Calibration audio snippets are kept for neural adaptation (14.8), and the user can delete them.
 
-### 12.5 Legacy engine toggle
+### 12.5 Replacing today's engine
 
-- Setting evidence to legacy routes audio to v1.2 unchanged. Its events are converted to the format above, marked with source legacy.
-- The user can A/B both engines on their own piano until Phase 8 shows the new engine wins (13.5). v1.2 is then removed.
+- Integration puts Reevo 2 where the app's current detection and calibration code runs today, and deletes that code. The capture code stays (6).
+- Until then that code gets no new work, and this plan neither measures nor compares against it.
 
 ### 12.6 One core, two platforms
 
 - The shared C++ core holds the front end, evidence, decisions, calibration and grading. Platform shells handle only audio input and output (Oboe and AAudio on Android, RemoteIO on iOS), thermal state and storage.
 - The bindings are C++ as well: Nitro HybridObjects shared by iOS and Android, with generated registration in place of the hand-written iOS provider and Android OnLoad.cpp. Only the bindings see React Native, and all of it lives in the CoreEngine package (1).
-- Android builds with CMake and the NDK for arm64-v8a with NEON. iOS builds for arm64 with Accelerate (vDSP). Reevo's SIMD radix-2 FFT stays, with a scalar fallback for the desktop harness (5.6).
+- Android builds with CMake and the NDK for arm64-v8a with NEON. iOS builds for arm64 with Accelerate (vDSP). The FFT is a SIMD radix-2 FFT, with a scalar fallback for the desktop harness (5.6).
 
 ### 12.7 Exit criteria
 
@@ -1470,11 +1437,11 @@ Events are fixed 48-byte records in a ring of the last 256 events. JavaScript is
 - [ ] Nitro spike: a C++ Clock HybridObject read from the frame callback on the iPhone works from the UI runtime, costs no more per frame than today's host object, and leaves the core's ThreadSanitizer tests unchanged.
 - [ ] A configuration swap while playing causes no glitch and no stuck note.
 - [ ] iOS, Android and the desktop harness give identical keys on the corpus, with timestamps within 1 sample.
-- [ ] The legacy toggle switches engines without restarting the app.
+- [ ] The app runs Reevo 2 alone: the current detection and calibration code is deleted (12.5).
 
 ## 13. Phase 8 — DSP validation and release gate
 
-The DSP engine becomes the default only when it meets every gate in section 1 on held-out recordings and beats v1.2 in a paired test. Everything here runs automatically in the harness (5.6).
+Reevo 2 ships with DSP evidence only when it meets every gate in section 1 on held-out recordings. Everything here runs automatically in the harness (5.6).
 
 ### 13.1 Fit the evidence models on a clean split
 
@@ -1538,16 +1505,16 @@ The covering-array configurations (5.2) test combinations; these directed tests 
 | Devices whose input source still processes, for the gain and suppression detectors | 24, 26 |
 | Calibration repeated in every noise condition, for profile repeatability | 9, 23 |
 
-### 13.5 A/B against v1.2 (paired)
+### 13.5 Paired comparisons
 
-Both engines run on exactly the same notes, so the right test is McNemar's on the notes where they disagree. b counts notes the new engine detected and v1.2 missed, and c the reverse:
+Two evidence modes, such as DSP and fused (14.11), run on exactly the same notes, so the right test is McNemar's on the notes where they disagree. b counts notes the first detected and the second missed, and c the reverse:
 
 ```latex
 \chi^2 = \frac{\left(|b - c| - 1\right)^2}{b + c}, \qquad \text{significant at } p < 0.05 \text{ when } \chi^2 > 3.84
 ```
 
-- The new engine replaces v1.2 when it is significantly better on detection and not worse on false notes.
-- False notes are compared with an exact conditional test: given the total count, the split between the two engines is binomial with p = 0.5 if their rates are equal.
+- One replaces the other only when it is significantly better on detection and not worse on false notes.
+- False notes are compared with an exact conditional test: given the total count, the split between the two is binomial with p = 0.5 if their rates are equal.
 
 ### 13.6 Soak, thermal and battery
 
@@ -1562,9 +1529,8 @@ Every change reruns the full corpus and all directed tests. A change fails if an
 
 - [ ] All section 1 gates met on the test split, cell by cell, with confidence intervals.
 - [ ] False notes per hour verified on recorded noise in every condition.
-- [ ] Significantly better than v1.2 on detection (McNemar, p < 0.05) and not worse on false notes.
 - [ ] Soak and thermal tests passed on all test phones.
-- [ ] DSP becomes the default engine and v1.2 is removed.
+- [ ] Reevo 2 ships with DSP evidence as the app's engine.
 
 ## 14. Phase 9 — Neural model, step by step
 
@@ -1596,14 +1562,14 @@ Why add it at all: hand-written likelihood models never fully match real rooms, 
 
 ### 14.2 Task formulation
 
-- For every key and frame the network picks one of 5 mutually exclusive states: off, onset, sustain, re-onset, offset. These are Reevo's states and the decision layer's states, as in Kwon et al.'s multi-state formulation (2020).
+- For every key and frame the network picks one of 5 mutually exclusive states: off, onset, sustain, re-onset, offset. These are the decision layer's states (10.1), as in Kwon et al.'s multi-state formulation (2020).
 - Output per key: a 5-way softmax, so probabilities sum to 1 and impossible combinations (onset with offset) cannot occur. Independent sigmoids would allow them.
 - Extra heads: velocity, regressed on onset frames; the onset's position inside its frame (0 to 1), regressed as in Kong et al. (2021), for sub-frame timestamps in neural-only mode; and a global sustain-pedal probability.
 - Labels come from MIDI. The onset frame holds the note-on; a re-onset is a note-on on a key already sounding; the offset is the key release with the pedal up, or the pedal release or acoustic end with it down, matching 9.6.
 
 ### 14.3 Input features, shared with the DSP front end
 
-- The network reads the multi-resolution spectra the front end already computes (7.2), mapped onto one pitch axis at 4 bins per semitone over A0–C8 (352 bins). Each band takes its values from the tier that suits its frequency, as in Reevo's zones.
+- The network reads the multi-resolution spectra the front end already computes (7.2), mapped onto one pitch axis at 4 bins per semitone over A0–C8 (352 bins). Each band takes its values from the tier that suits its frequency (7.2).
 - Two channels per bin: (1) log power relative to that bin's calibrated noise, i.e. per-bin SNR, clipped to −10…80 dB; (2) the phase-vocoder frequency deviation from the band centre in cents (7.3), zeroed below 6 dB SNR. Magnitude alone throws away the frequency precision that separates neighbours by more than 100 σ (2.2); the second channel hands it to the network.
 - **Calibration-aware harmonic stacking:** for harmonics h ∈ {0.5, 1, 2, 3, 4, 5, 6, 7, 8}, a copy of the axis is sampled at each key's calibrated partial frequency f\_{k,h} (8.8). Every partial of a key then lines up on that key's bins, so a small convolution sees the whole harmonic pattern (after Basic Pitch's harmonic stacking, Bittner et al. 2022). Plain h × f0 stacking would misalign partial 8 by 22 cents at B = 4 × 10⁻⁴ and far more in the treble.
 - 9 harmonics × 2 channels = 18 input channels, one frame every 10.67 ms.
@@ -1730,7 +1696,7 @@ The network's probabilities p′ reflect the class weighting used in training, w
 - Statistics: McNemar on paired notes (13.5) and bootstrap confidence intervals for F1 and timestamp error.
 - **Decision rule, lessons:** maximise recall of ±1-semitone mistakes, subject to at most 1 false accusation per 100 notes and the latency gates.
 - **Decision rule, free play:** maximise note F1 at 50 ms, subject to at most 6 false notes per hour and the latency gates.
-- The best engine that passes becomes the default for that mode, and DSP remains the fallback. Doc 1's evidence suggests fused will win in free play and noisy rooms, and DSP may suffice for lessons; the data decide.
+- The best engine that passes becomes the default for that mode, and DSP remains the fallback. Published results suggest fused will win in free play and noisy rooms, and DSP may suffice for lessons; the data decide.
 
 ### 14.12 Improvement loop
 
@@ -1900,12 +1866,12 @@ Phase boxes are equal in width, not durations. The DSP release gate is Phase 8 (
 
 ### 16.1 Order of work
 
-1. Build the Phase 0 rig and corpus, and add the rejection log to v1.2.
+1. Build the Phase 0 rig, corpus and harness.
 2. Harden capture (Phase 1) in parallel.
 3. Build Phases 2–5 offline on recordings through the harness, then run them live. Phase 3, the calibration engine, follows its own build order (8.13): noise statistics, the tonal-line catalogue and the processing checks first; line removal, per-room evidence recalibration and the two-microphone spike last, each only where Phase 0 shows its gain.
 4. Phase 6 in this order: learning mode, then practice mode with Jingle Bells, then free play.
-5. Integrate (Phase 7) with the legacy toggle, so v1.2 and the new engine can be compared on the piano.
-6. Pass the Phase 8 gate: DSP becomes the default and v1.2 is removed.
+5. Integrate (Phase 7): Reevo 2 replaces the app's current detection and calibration (12.5).
+6. Pass the Phase 8 gate: Reevo 2 ships with DSP evidence.
 7. Run N1–N2 as soon as Phase 2 and the Phase 0 rig exist, then N3–N9, then the N10 gate. Personal or paid use (16.3) is settled before N2, because it decides the training data.
 
 ### 16.2 Risks and fallbacks
@@ -1970,12 +1936,10 @@ Every plan document lives in the repository's documentation/ folder beside this 
 
 - [Reevo 2 Engine Re-Audit v1.0](02-engine-re-audit.md) (based on master v1.5; merged into v1.6): the line-by-line maths audit, defects D1–D12, opportunities O1–O5, the new cases R1–R18 (its N1–N18), case combinations and the unobservables. [bench/audit\_calcs.py](bench/audit_calcs.py) re-derives every number.
 - [Reevo 2 Calibration Engine v1.0](03-calibration-engine.md) (based on master v1.5; merged into v1.6): the four layers, the noise layer, null calibration, the keyboard model, the protocol, the health monitor and profile v3; its gaps G1–G38 are CG1–CG38 in section 15. [bench/calibration\_calcs.py](bench/calibration_calcs.py) re-derives every number.
-- [Piano Note Detection Engines: Comparing Apex v1, Apex v2 and Reevo, With a Maths-First Hybrid Design](research/engine-comparison-report.md) (research report): engine audit, mobile audio facts, published accuracy and latency figures.
-- Ultimate Piano Detection Engine Design (earlier design conversation): the 26 cases, Reevo's structure and code.
-- [UI Implementation Plan — Phase 1: Structure](04-ui-phase-1-structure.md) (v1.6): the CoreEngine package, lesson JSON with millisecond timing, FeedbackDetection and the settings registry.
+- [UI Implementation Plan — Phase 1: Structure](04-ui-phase-1-structure.md) (v1.7): the CoreEngine package, lesson JSON with millisecond timing, FeedbackDetection and the settings registry.
 - [UI Implementation Plan — Phase 2: App flow](05-ui-phase-2-app-flow.md) (v1.3): screens, when the microphone runs, lesson states, calibration timing and the profile checks.
-- [UI Implementation Plan — Phase 3: Engine to UI communication](06-ui-phase-3-engine-to-ui.md) (v1.4): the four output structures, the clock, the event record and the Nitro bindings.
-- [UI Implementation Plan — Phase 4: Lesson internals](07-ui-phase-4-lesson-internals.md) (v1.2): lesson controllers, flow and wait, looping, grading credit and the attempt record.
+- [UI Implementation Plan — Phase 3: Engine to UI communication](06-ui-phase-3-engine-to-ui.md) (v1.5): the four output structures, the clock, the event record and the Nitro bindings.
+- [UI Implementation Plan — Phase 4: Lesson internals](07-ui-phase-4-lesson-internals.md) (v1.3): lesson controllers, flow and wait, looping, grading credit and the attempt record.
 - [UI Implementation Plan — Phase 5: Visual and motion design](08-ui-phase-5-visual-motion.md) (v1.0): the lesson page frame, result colours and shapes, motion timings, transitions and Reduce Motion.
 
 ### Literature
@@ -2015,9 +1979,9 @@ Every plan document lives in the repository's documentation/ folder beside this 
 - Kong, Q., Li, B., Song, X., Wan, Y., Wang, Y. (2021). High-resolution piano transcription with pedals by regressing onset and offset times. IEEE/ACM TASLP 29.
 - Hawthorne, C. et al. (2019). Enabling factorized piano music modeling and generation with the MAESTRO dataset. ICLR.
 - Bittner, R. M. et al. (2022). A lightweight instrument-agnostic model for polyphonic note transcription and multipitch estimation. ICASSP.
-- Mobile-AMT: real-time polyphonic piano transcription for in-the-wild recordings. EUSIPCO 2024 (Yamaha); augmentation results as summarised in the research report.
-- Hu et al. (2025). Causal piano transcription and low-delay asymmetric windows. ISMIR; as summarised in the research report.
-- François (2025). Resonate: per-sample resonator analysis. ICMC; as summarised in the research report.
+- Mobile-AMT: real-time polyphonic piano transcription for in-the-wild recordings. EUSIPCO 2024 (Yamaha); its augmentation results.
+- Hu et al. (2025). Causal piano transcription and low-delay asymmetric windows. ISMIR.
+- François (2025). Resonate: per-sample resonator analysis. ICMC.
 - Perez, E. et al. (2018). FiLM: visual reasoning with a general conditioning layer. AAAI.
 - Guo, C. et al. (2017). On calibration of modern neural networks. ICML.
 - Loshchilov, I., Hutter, F. (2019). Decoupled weight decay regularization. ICLR.

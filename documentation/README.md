@@ -6,21 +6,19 @@ Every plan document for Piano Academy Studio lives in this folder: the Reevo 2 e
 
 | # | File | Document | Version | Status |
 | --- | --- | --- | --- | --- |
-| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.7 | The plan everything builds on |
+| 1 | [01-engine-master-plan.md](01-engine-master-plan.md) | Reevo 2(V1) — Piano Detection Engine: End-to-End Implementation Plan (the master) | v1.8 | The plan everything builds on |
 | 2 | [02-engine-re-audit.md](02-engine-re-audit.md) | Reevo 2 Engine Re-Audit: Maths, Capabilities and Cases | v1.0, based on master v1.5 | Merged into master v1.6 |
 | 3 | [03-calibration-engine.md](03-calibration-engine.md) | Reevo 2 Calibration Engine | v1.0, based on master v1.5 | Merged into master v1.6; it replaced section 8 |
-| 4 | [04-ui-phase-1-structure.md](04-ui-phase-1-structure.md) | UI Implementation Plan — Phase 1: Structure | v1.6, based on master v1.6 | Merged into master v1.2–v1.5; updated for v1.6 |
+| 4 | [04-ui-phase-1-structure.md](04-ui-phase-1-structure.md) | UI Implementation Plan — Phase 1: Structure | v1.7, based on master v1.8 | Merged into master v1.2–v1.5; updated for v1.6 and v1.8 |
 | 5 | [05-ui-phase-2-app-flow.md](05-ui-phase-2-app-flow.md) | UI Implementation Plan — Phase 2: App flow | v1.3, based on master v1.6 | Merged into master v1.2; updated for v1.6 |
-| 6 | [06-ui-phase-3-engine-to-ui.md](06-ui-phase-3-engine-to-ui.md) | UI Implementation Plan — Phase 3: Engine to UI communication | v1.4, based on master v1.6 | Merged into master v1.2 and v1.5; updated for v1.6 |
-| 7 | [07-ui-phase-4-lesson-internals.md](07-ui-phase-4-lesson-internals.md) | UI Implementation Plan — Phase 4: Lesson internals | v1.2, based on master v1.4 | Merged into master v1.3 and v1.5 |
+| 6 | [06-ui-phase-3-engine-to-ui.md](06-ui-phase-3-engine-to-ui.md) | UI Implementation Plan — Phase 3: Engine to UI communication | v1.5, based on master v1.8 | Merged into master v1.2 and v1.5; updated for v1.6 and v1.8 |
+| 7 | [07-ui-phase-4-lesson-internals.md](07-ui-phase-4-lesson-internals.md) | UI Implementation Plan — Phase 4: Lesson internals | v1.3, based on master v1.8 | Merged into master v1.3 and v1.5; updated for v1.8 |
 | 8 | [08-ui-phase-5-visual-motion.md](08-ui-phase-5-visual-motion.md) | UI Implementation Plan — Phase 5: Visual and motion design | v1.0, based on master v1.3 | Merged into master v1.4 |
 
 Background and working files:
 
 | File | What it is |
 | --- | --- |
-| [research/engine-comparison-report.md](research/engine-comparison-report.md) | The research report that started Reevo 2: Apex v1, Apex v2 and Reevo compared, the 26 cases audited, a maths-first design |
-| [research/Low-Latency React Native Note Engine-2.pdf](<research/Low-Latency React Native Note Engine-2.pdf>) and [the v2.0 Apex DOCX](research/Low-Latency_React_Native_Note_Engine_v2.0_Apex.docx) | The Apex v2.0 engine design that today's v1.2 engine came from; moved here from the engine's folder in migration step 2 |
 | [bench/audit_calcs.py](bench/audit_calcs.py) | Re-derives every number in the engine re-audit. `python3 audit_calcs.py`, about a minute |
 | [bench/calibration_calcs.py](bench/calibration_calcs.py) | Re-derives every number in the calibration engine. `python3 calibration_calcs.py`, a few minutes |
 
@@ -89,4 +87,5 @@ Agreed with Sumit on 22 October 2026; the home of the master moved to this folde
 | v1.4 | 28 Oct 2026 | UI Implementation Plan: Phase 5 Visual and motion design v1.0 | 4, 12.3, 17 |
 | v1.5 | 28 Oct 2026 | UI Implementation Plan: Phase 4 Lesson internals v1.2 (the backing is a FLAC decoded by react-native-audio-api; the engine still plays it) | 6.1, 11.2, 12.1, 17 |
 | v1.6 | 4 Nov 2026 | Engine Re-Audit v1.0 and Calibration Engine v1.0, without the set-aside two-octave audit. Phase 1 to v1.6, Phase 2 to v1.3 and Phase 3 to v1.4 to match | 1, 2.2, 2.4–2.9, 3.1, 4, 5.2, 5.4, 6.1, 6.6, 7.3, 7.4, 8 (replaced), 9.1–9.6, 9.8, 9.9, 9.11, 10.2–10.4, 10.6, 10.7, 11.1, 11.3, 11.5, 13.2–13.4, 14.4, 14.5, 14.8, 14.10, 15, 16.1–16.3, 17 |
-| v1.7 | 4 Nov 2026 | Phase 0 harness, slice 1 ([harness guide](../docs/harness.md)): v1.2's code checked against 5.5. The section listed the Apex v2.0 design's five-layer fingerprint, most of which v1.2 never built; it now lists v1.2's own gates | 5.5 |
+| v1.7 | 4 Nov 2026 | Phase 0 harness, slice 1: section 5.5's list of rejection gates checked against the app's engine code and corrected | 5.5 |
+| v1.8 | 4 Nov 2026 | The owner's decision to follow Reevo 2 only ([spec](../docs/specs/reevo-2-only.md)): no earlier engine design in the plan, and the app's current engine only until Phase 7 replaces it, with no baseline, legacy switch or A/B test. Phase 1 to v1.7, Phase 3 to v1.5 and Phase 4 to v1.3 to match | 1, 2.2, 3, 3.1, 4, 5, 5.4–5.7, 6, 6.3, 6.5, 7.2, 8.7, 8.11, 9, 9.1, 9.4, 10, 12, 12.1, 12.2, 12.5–12.7, 13, 13.5, 13.8, 14.2, 14.3, 14.11, 16.1, 17 |
