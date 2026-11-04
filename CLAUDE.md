@@ -2,7 +2,7 @@
 
 A piano-learning app: React Native 0.87 (bare CLI, New Architecture, Hermes), TypeScript. It has two equal pillars:
 
-- **Listening:** a C++ note engine hears the piano through the mic: onsets, pitch, chords, calibration. Reevo 2, planned in [documentation/](documentation/README.md), is the only engine being built. v1.2 (`packages/CoreEngine/cpp/legacy`), which the app runs today, is the baseline and comparison fallback until Phase 8 removes it.
+- **Listening:** a C++ note engine hears the piano through the mic: onsets, pitch, chords, calibration. Reevo 2, planned in [documentation/](documentation/README.md), is the only engine the plan follows. The app's current engine (`packages/CoreEngine/cpp/legacy`) gets no new work and runs only until Reevo 2 replaces it in Phase 7.
 - **Motion:** advanced 2D animation at 120 fps that moves in sync with the sound.
 
 How this Claude setup works and why: [docs/claude-setup/DESIGN.md](docs/claude-setup/DESIGN.md).
@@ -51,7 +51,8 @@ The hooks run these automatically on what changed; run them yourself when you ne
 
 - `npm run typecheck` · `npm run lint` · `npm test` (Jest, with Skia rendering headless)
 - `npm run test:tooling`: the architecture scripts and the Claude hooks
-- The note engine's regression gate: `packages/CoreEngine/test/run.sh scenarios` (and `run.sh engine` for ThreadSanitizer after threading changes)
+- The current engine's regression gate, until Phase 7: `packages/CoreEngine/test/run.sh scenarios` (and `run.sh engine` for ThreadSanitizer after threading changes)
+- `npm run harness:test`: the evaluation harness (the scorer and the golden takes, [docs/harness.md](docs/harness.md))
 - Visual checks: `DESIGN_OUT=/tmp/lesson.png npx jest scripts/design`, scored with `node scripts/design/compare.mjs`. EggHatch frames: `EGG_TIME=… EGG_OUT=… npx jest scripts/design/__tests__/eggHatchRender.test.ts`. After any visual change, render the frames and look at them before reporting.
 
 ## Where things go

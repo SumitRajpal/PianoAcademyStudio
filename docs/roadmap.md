@@ -4,9 +4,9 @@ Phases of the Claude setup ([DESIGN.md](claude-setup/DESIGN.md)) and the app's i
 
 ## Implementation (from 2026-11-04)
 
-The plan lives in [documentation/](../documentation/README.md): the Reevo 2 engine master v1.7 and the five UI phases. On 4 November 2026 the owner chose the order: reshape the repository first (lane A, steps 1 and 2), then build the engine's Phase 0 harness (lane B). The master's own order of work is its section 16.1.
+The plan lives in [documentation/](../documentation/README.md): the Reevo 2 engine master v1.8 and the five UI phases. On 4 November 2026 the owner chose the order: reshape the repository first (lane A, steps 1 and 2), then build the engine's Phase 0 harness (lane B). The master's own order of work is its section 16.1.
 
-Reevo 2 is the only engine being built (the owner, 4 November 2026). Its DSP evidence (lane B) and neural evidence (lane C) feed one decision layer. v1.2, the engine the app runs today, gets no new detection work: Phase 0 measures it as the bar Reevo 2 must beat, Phase 7 keeps it as the legacy toggle for comparing the two on the piano, and Phase 8 removes it (master 1, 12.5 and 13.5).
+Reevo 2 is the only engine the plan follows (the owner, 4 November 2026; [spec](specs/reevo-2-only.md)): no earlier engine design, no baseline and no legacy switch. Its DSP evidence (lane B) and neural evidence (lane C) feed one decision layer. The app's current engine gets no new work and runs only until Phase 7 replaces it (master 12.5).
 
 ### Lane A: reshape the repository (UI Phase 1, migration plan)
 
@@ -17,12 +17,13 @@ Reevo 2 is the only engine being built (the owner, 4 November 2026). Its DSP evi
 
 ### Lane B: Reevo 2 with DSP evidence (master sections 5–13)
 
-- [ ] Phase 0: recording rig, corpus and ground truth, metrics, the desktop harness, the v1.2 rejection log and baseline (master 5). [Spec](specs/phase-0-harness.md), [ADR 0004](adr/0004-evaluation-harness.md) and [guide](harness.md). Slice 1 (runner, scorer, rejection log, synthetic takes) built on 2026-11-04; next: slice 2, the app's developer recording mode, then slice 3, the PSR-E343 rig and your recordings
+- [x] Reevo 2 only: the plan, its documents and the harness follow Reevo 2 alone (master v1.8). [Spec](specs/reevo-2-only.md); built on 2026-11-04
+- [ ] Phase 0: recording rig, corpus and ground truth, metrics and the desktop harness (master 5). [Spec](specs/phase-0-harness.md), [ADR 0004](adr/0004-evaluation-harness.md) and [guide](harness.md). Slice 1 built on 2026-11-04: the scorer and the synthetic golden takes; the runner arrives with Reevo 2's first stage. Next: slice 2, the app's developer recording mode, then slice 3, the PSR-E343 rig and your recordings
 - [ ] Phase 1: capture hardening, in parallel (6)
 - [ ] Phases 2–5: front end, calibration engine, evidence and decisions, offline through the harness, then live (7–10). Calibration follows its own build order (8.13)
 - [ ] Phase 6: modes: learning, then practice with Jingle Bells, then free play (11)
-- [ ] Phase 7: integration beside the legacy v1.2 engine (12)
-- [ ] Phase 8: the release gate; DSP becomes the default and v1.2 is removed (13)
+- [ ] Phase 7: integration; Reevo 2 replaces the app's current engine (12)
+- [ ] Phase 8: the release gate; Reevo 2 ships with DSP evidence (13)
 
 ### Lane C: Reevo 2's neural evidence (master section 14)
 

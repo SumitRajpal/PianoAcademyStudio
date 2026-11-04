@@ -16,12 +16,12 @@ Unchanged, and checked as in [step 1](migration-step-1-untangle-in-place.md): ca
 | Today | After step 2 |
 | --- | --- |
 | The engine's TypeScript in `src/motion/scenes/PianoMaster/CorePianoNotesDetection/`, with `specs/` and `__tests__/` | `packages/CoreEngine/src/`, files as they are; `src/index.ts` is the only door |
-| Its C++ core in `shared/` (v1.2) | `packages/CoreEngine/cpp/legacy/`: pure C++, "today's v1.2 core, until Reevo 2 wins" (Phase 1's layout) |
+| Its C++ core in `shared/` | `packages/CoreEngine/cpp/legacy/`: pure C++, the current core until Reevo 2 replaces it (Phase 1's layout) |
 | `shared/NativePianoEngine.{h,cpp}`, the TurboModule | `packages/CoreEngine/bindings/`, the only C++ that sees React Native |
 | The C++ tests and benchmark in `test/` | `packages/CoreEngine/test/`; `run.sh` works as before |
 | `ios/PianoAcademyStudio/IosAudioInput.*` and `NativePianoEngineProvider.*` | `packages/CoreEngine/ios/` |
 | `android/app/src/main/jni/OboeInput.*` | `packages/CoreEngine/android/` |
-| The Apex v2.0 PDF and DOCX in the engine folder | `documentation/research/`, with the other documents |
+| Two design documents of an earlier engine, in the engine folder | `documentation/research/`; deleted on 4 November 2026, when the plan chose Reevo 2 only ([spec](reevo-2-only.md)) |
 | `test/benchmark_bin`, a Mac build of the benchmark committed by mistake | Removed from git; `run.sh` builds into the ignored `test/.build/` |
 
 The engine is imported as `@pianoacademy/core-engine` (question 2). The root `package.json` gets `"workspaces": ["packages/*"]` and that dependency. Metro 0.87 always follows the workspace link; Jest and TypeScript resolve it to the package's source.

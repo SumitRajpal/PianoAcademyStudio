@@ -17,15 +17,13 @@ Terms used in this project's code, docs and conversations.
 
 | Term | Meaning |
 |---|---|
-| Reevo 2 | The note engine being built, from the master plan in `documentation/`. One engine: DSP evidence, and later neural evidence, feed one decision layer. It replaces v1.2. |
-| v1.2 (legacy engine) | The engine the app runs today (`packages/CoreEngine/cpp/legacy`), built from the Apex v2.0 design. It gets no new detection work: Phase 0 measures it as the bar Reevo 2 must beat, it stays as a legacy toggle for comparison, and Phase 8 removes it. |
-| Apex v1, Apex v2, Reevo | Earlier engine designs, compared in the research report that started Reevo 2 (`documentation/research/`). Reevo 2 keeps Reevo's structure and v1.2 came from Apex v2; none is built on its own. |
+| Reevo 2 | The note engine being built, and the only one the plan follows, from the master plan in `documentation/`. One engine: DSP evidence, and later neural evidence, feed one decision layer. |
+| Current engine | The detection and calibration code the app runs today (`packages/CoreEngine/cpp/legacy`). It gets no new work, and Phase 7 replaces it with Reevo 2 and deletes it. |
 | Onset | The moment a key is struck: a jump in new energy, found before the pitch is sure. |
 | Partials / harmonics | The frequencies a piano string sounds above its fundamental; they make octave errors possible. |
-| MPM / NSDF | The pitch method used for single notes (McLeod pitch method, normalised square difference function). |
-| Polyphony | Several notes at once (chords); free mode handles up to 10 voices. |
-| Free mode / lesson mode | Free mode detects whatever is played; lesson mode checks against the expected notes. |
-| Calibration profile | What calibration measures for the owner's piano (tuning, stretch, soft and firm levels per key), saved as JSON. |
+| Polyphony | Several notes at once (chords); Reevo 2 tracks up to 32 voices (master 10.5). |
+| Modes | Learning, Practice and Free play (GuidedLesson, PracticeLesson and Free2Play in the app). Lessons check what is played against the expected notes; free play detects whatever is played. |
+| Calibration profile | Profile v3: what calibration measures for one piano heard through one phone, in four layers (instrument, placement, noise and route), each refreshed on its own (master 8). |
 | LiveKeys | The lock-free table (one slot per MIDI note) that the engine writes and the UI thread reads every frame. |
 | Key sink | `{ press(midi, level), release(midi) }`: two worklets a screen hands the engine, which calls them from its UI-thread frame callback for every key that changed. PianoMaster's key state makes one (`usePianoKeySink`). The engine and PianoMaster never import each other. |
 | NoteEventRing | The last 256 notes in order, read by JS listeners through `noteEventBus`. |
