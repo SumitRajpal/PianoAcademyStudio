@@ -1,6 +1,7 @@
-"""The rig's tests: the scripts and the log, played into a synthetic keyboard heard by a synthetic phone."""
+"""The rig's tests: the scripts, the log, and alignment, delays and labels on synthetic audio with known answers."""
 
 import io
+import json
 import os
 import tempfile
 import unittest
@@ -8,6 +9,9 @@ from contextlib import redirect_stdout
 
 import numpy as np
 
+import align
+import delays
+import label
 import play
 import scripts
 
@@ -249,6 +253,121 @@ class RealPort(unittest.TestCase):
         self.assertEqual(play.find_port(['Digital Keyboard'], ''), 'Digital Keyboard')
         with self.assertRaises(SystemExit):
             play.find_port(['A', 'B'], '')
+
+
+# ---- alignment, delays and labels ----------------------------------------------------
+
+class Alignment(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.script = scripts.build('velocity-sweep')
+        cls.messages, cls.audio, cls.truth = perform(cls.script)
+
+    def test_the_clock_fit_recovers_the_drift_and_the_offset(self):
+        fit = align.align(self.audio, self.messages)
+        self.assertEqual(fit['syncs'], 3)
+        self.assertAlmostEqual(fit['driftPpm'], 80.0, delta=0.5)
+        self.assertLess(fit['maxResidualMs'], 0.05)
+        self.assertTrue(fit['ok'])
+        # The sync note's own delay and the onset rule's few tenths of a ms are part of b.
+        sync_delay = true_delay_ms(96, 127) / 1000
+        self.assertGreaterEqual(fit['b'] - (B + sync_delay), -0.0001)
+        self.assertLess(fit['b'] - (B + sync_delay), 0.0005)
+
+    def test_a_sync_note_out_of_line_fails_the_check(self):
+        messages, audio, _ = perform(self.script, shift_sync=1)
+        fit = align.align(audio, messages)
+        self.assertFalse(fit['ok'])
+        self.assertGreater(fit['maxResidualMs'], 2.0)
+
+    def test_a_long_take_drifting_150_ppm_with_loud_noises_still_aligns(self):
+        script = scripts.build('noise')  # 7.6 minutes: 150 ppm drifts 68 ms by the end
+        a = 1 + 150e-6
+        rng = np.random.default_rng(12)
+        clear = [a * s + B for s in script.syncs]
+        bangs = []
+        while len(bangs) < 30:  # loud notes the log knows nothing about, as loud as the sync notes
+            t = float(rng.uniform(1.0, a * script.duration + B))
+            if all(abs(t - c) > 2.5 for c in clear):
+                bangs.append((t, int(rng.choice([84, 91, 96])), 127, 0.3))
+        messages, audio, _ = perform(script, seed=13, a=a, extra=bangs)
+        fit = align.align(audio, messages)
+        self.assertEqual(fit['syncs'], len(script.syncs))
+        self.assertAlmostEqual(fit['driftPpm'], 150.0, delta=0.5)
+        self.assertTrue(fit['ok'])
+
+    def test_a_missing_sync_note_is_an_error(self):
+        cut = self.audio[: int((A * self.script.syncs[-1] + B - 0.5) * RATE)]
+        with self.assertRaises(align.SyncError):
+            align.align(cut, self.messages)
+
+
+class DelaysAndLabels(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        messages, audio, _ = perform(scripts.build('delays'), seed=3)
+        cls.fit = align.align(audio, messages)
+        cls.table, cls.missing = delays.measure(audio, messages, cls.fit)
+
+    def test_each_key_s_delay_is_measured_relative_to_the_sync_note(self):
+        self.assertEqual(self.missing, [])
+        sync = true_delay_ms(96, 127)
+        for key in (36, 48, 60, 72, 84, 96):
+            for velocity in (40, 72, 120):
+                with self.subTest(key=key, velocity=velocity):
+                    # Within 0.3 ms: the onset rule's lead-in is a little longer for a soft bass note than for the sync note.
+                    self.assertAlmostEqual(self.table[key][velocity], true_delay_ms(key, velocity) - sync, delta=0.3)
+
+    def test_the_table_saves_and_loads(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'delays.json')
+            delays.save(path, self.table, take='delays-take')
+            delays.save_played(path, 1.5, take='played-take')
+            # Labelling the delay take again keeps your playing's delay.
+            delays.save(path, self.table, take='delays-take-2')
+            table, played = delays.load(path)
+            with open(path, encoding='utf-8') as f:
+                saved = json.load(f)
+        self.assertEqual(table, self.table)
+        self.assertEqual(played, 1.5)
+        self.assertEqual((saved['take'], saved['playedTake']), ('delays-take-2', 'played-take'))
+        self.assertAlmostEqual(delays.delay_ms(table, 60, 56), (table[60][40] + table[60][72]) / 2)
+
+    def test_labels_land_on_the_true_onsets(self):
+        for take in ('velocity-sweep', 'soft-under-loud', 'trills'):
+            messages, audio, truth = perform(scripts.build(take), seed=4)
+            fit = align.align(audio, messages)
+            labels = label.build(messages, fit, self.table, take=take)
+            with self.subTest(take=take):
+                onsets = sorted((n['midi'], n['onset']) for n in labels['notes'])
+                expected = sorted((key, onset) for onset, key, _, _ in truth)
+                self.assertEqual([k for k, _ in onsets], [k for k, _ in expected])
+                worst = max(abs(a - b) for (_, a), (_, b) in zip(onsets, expected))
+                self.assertLess(worst * 1000, 0.5, f'worst label error {worst * 1000:.3f} ms')
+
+    def test_labels_carry_the_pedal_and_audible_releases(self):
+        messages, audio, _ = perform(scripts.build('soft-under-loud'), seed=5)
+        labels = label.build(messages, align.align(audio, messages), self.table)
+        loud = [n for n in labels['notes'] if n['midi'] == 48]
+        self.assertEqual([n['pedal'] for n in loud], [False, True])
+        # The loud C3 is let go as the pedal lifts, so its release is heard both times;
+        # the soft notes are let go under the pedal the second time, so theirs isn't.
+        self.assertEqual([n['releaseObservable'] for n in loud], [True, True])
+        soft = [n for n in labels['notes'] if n['midi'] == 49]
+        self.assertEqual([n['releaseObservable'] for n in soft], [True, False])
+        self.assertEqual(sum(1 for n in labels['notes'] if n.get('sync')), 3)
+        self.assertTrue(labels['sync']['ok'])
+
+    def test_notes_you_play_use_your_measured_delay(self):
+        fit = {'a': 1.0, 'b': 2.0, 'driftPpm': 0.0, 'syncs': 3, 'residualsMs': [0, 0, 0], 'maxResidualMs': 0.0, 'ok': True}
+        messages = [
+            {'t': 10.0, 'type': 'note_on', 'midi': 72, 'velocity': 72, 'source': 'keyboard'},
+            {'t': 10.5, 'type': 'note_off', 'midi': 72, 'velocity': 0, 'source': 'keyboard'},
+        ]
+        labels = label.build(messages, fit, self.table, played_ms=7.0)
+        expected = 12.0 + (7.0 + self.table[72][72] - self.table[60][72]) / 1000
+        self.assertAlmostEqual(labels['notes'][0]['onset'], expected, places=6)
+        self.assertTrue(labels['notes'][0]['played'])
 
 
 if __name__ == '__main__':
